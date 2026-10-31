@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cc.antx.template.mapper.UserMapper">
+
+    <!--
+      复杂 SQL 示例：BaseMapper 无法满足时才需要 XML。
+      MyBatis-Plus 已自动处理单表 CRUD 与逻辑删除，多数场景无需自定义。
+      返回值可直接用实体，配合配置类开启下划线转驼峰。
+    -->
+
+</mapper>

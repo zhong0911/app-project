@@ -1,0 +1,24 @@
+# ============ 开发环境（本地） ============
+# 数据库连接直接明文写死，本地开发开箱即用；
+# 生产环境由 application-prod.yml 使用 ${DB_URL} 从环境变量读取
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/antx_template?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+mybatis-plus:
+  configuration:
+    # 开发环境打印 SQL
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+logging:
+  level:
+    cc.antx.template: debug
