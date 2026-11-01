@@ -18,7 +18,7 @@ app.use('/api/users', userRouter);
 
 // 健康检查
 app.get('/api/health', (req, res) => {
-  res.json(ApiResponse.successWith({ status: 'up', service: 'app-api-node' }));
+  res.json(ApiResponse.successWith({ status: 'up', service: 'nodejs' }));
 });
 
 // 404：未匹配任何路由 -> 统一响应

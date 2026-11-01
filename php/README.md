@@ -1,30 +1,32 @@
-# AntX Node.js 后端模板（对标 Spring Boot 模板）
+# AntX PHP 后端模板（对标 Spring Boot 模板）
 
-对标 `app-api`（Spring Boot 4）的统一规范，用 Node.js + Express 实现同一套后端骨架。
+对标 `springboot`（Spring Boot 4）的统一规范，用原生 PHP 实现同一套后端骨架。**无第三方框架依赖**，内置 PHP 服务器即可运行。
 
 ## 目录结构
 
 ```
-app-api-node/
-├── package.json
+php/
+├── public/
+│   └── index.php          # 入口：前端控制器 + 极简路由 + 全局异常处理
 ├── src/
-│   ├── app.js                  # 入口：Express 应用 + 路由挂载 + 全局异常处理
-│   ├── api-response.js         # 统一响应体（对标 Result）
-│   ├── paginated-data.js       # 分页封装（对标 PageResult）
-│   ├── result-code.js          # 状态码（code 分段设计）
-│   ├── business-exception.js   # 业务异常（对标 BusinessException）
-│   ├── global-error-handler.js # 全局异常处理中间件
-│   └── routes/
-│       └── user.routes.js      # RESTful 用户示例（内存数据）
+│   ├── ApiResponse.php    # 统一响应体（对标 Result）
+│   ├── PaginatedData.php  # 分页封装（对标 PageResult）
+│   ├── ResultCode.php     # 状态码枚举（code 分段设计）
+│   ├── BusinessException.php
+│   ├── GlobalExceptionHandler.php  # 全局异常处理器
+│   └── UserController.php # RESTful 用户示例（内存数据）
+├── composer.json
 └── README.md
 ```
 
 ## 运行
 
 ```bash
-npm install
-npm run dev       # 开发（node --watch）
-npm start         # 生产
+# 方式一：PHP 内置服务器（推荐，无需依赖）
+php -S 0.0.0.0:8080 public/index.php
+
+# 方式二：Composer 脚本
+composer serve
 ```
 
 ## RESTful 接口（对标 UserController）
@@ -76,11 +78,11 @@ npm start         # 生产
 
 ## 错误也统一返回
 
-业务层抛 `BusinessException`，由 `global-error-handler.js` 捕获并转成统一五字段响应，不向前端暴露异常细节：
+业务层抛 `BusinessException`，由 `GlobalExceptionHandler` 捕获并转成统一五字段响应，不向前端暴露异常细节：
 
-```js
-throw new BusinessException(ResultCode.NOT_FOUND, '用户不存在');
+```php
+throw new BusinessException(ResultCode::NOT_FOUND, '用户不存在');
 // -> { "code": 404, "success": false, "message": "用户不存在", "timestamp": ... }
 ```
 
-接入数据库时，把 `routes/user.routes.js` 的内存 Map 替换为 ORM 仓储层即可，路由、响应、异常处理骨架无需改动。
+接入数据库时，把 `UserController` 的内存数组替换为 PDO/ORM 仓储层即可，路由、响应、异常处理骨架无需改动。

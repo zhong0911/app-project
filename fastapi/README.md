@@ -1,11 +1,11 @@
 # AntX FastAPI 后端模板（对标 Spring Boot 模板）
 
-对标 `app-api`（Spring Boot 4）的统一规范，用 Python FastAPI 实现同一套后端骨架。
+对标 `springboot`（Spring Boot 4）的统一规范，用 Python FastAPI 实现同一套后端骨架。
 
 ## 目录结构
 
 ```
-app-api-python/
+fastapi/
 ├── main.py                      # 入口：创建 app、注册全局异常处理器、挂载路由
 ├── requirements.txt
 ├── app/

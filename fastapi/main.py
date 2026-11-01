@@ -26,4 +26,4 @@ app.include_router(user.router)
 def health() -> dict:
     """健康检查。"""
     from app.api_response import ApiResponse
-    return ApiResponse.success_with({"status": "up", "service": "app-api-python"})
+    return ApiResponse.success_with({"status": "up", "service": "fastapi"})
