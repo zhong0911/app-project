@@ -1,0 +1,20 @@
+# ---- 依赖与构建产物 ----
+node_modules/
+app-api-node/node_modules/
+target/
+app-api/target/
+app-api-python/__pycache__/
+*.pyc
+
+# ---- 运行日志 / 本地环境（含密码，勿提交） ----
+logs/
+*.log
+app-api/.env
+app-api-php/vendor/
+composer.lock
+
+# ---- 系统 / IDE ----
+.DS_Store
+.idea/
+*.iml
+.vscode/
