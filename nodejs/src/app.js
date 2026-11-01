@@ -1,7 +1,7 @@
 import express from 'express';
 import { Result } from './result.js';
 import { userRouter } from './routes/user.routes.js';
-import { authRouter } from './routes/auth.routes.js';
+import { authRouter, authApiRouter } from './routes/auth.routes.js';
 import { globalErrorHandler } from './global-error-handler.js';
 
 /**
@@ -20,12 +20,8 @@ app.use('/api/users', userRouter);
 // OAuth2 客户端路由（/oauth2/{provider}/authorize、/oauth2/{provider}/callback）
 app.use('/oauth2', authRouter);
 
-// 单点退出（POST /api/auth/logout，对标 Spring Boot AuthController#logout）：
-// 模板无服务端会话，销毁会话由前端清除本地凭证完成；
-// 返回 ssoLogoutUrl（env SSO_LOGOUT_URI）供前端整页跳转完成 SSO 全局退出
-app.post('/api/auth/logout', (req, res) => {
-  res.json(Result.successWith({ ssoLogoutUrl: process.env.SSO_LOGOUT_URI || null }));
-});
+// 认证 API（POST /api/auth/logout：撤销 refresh_token + 销毁服务端会话，对标 Spring Boot AuthController#logout）
+app.use('/api/auth', authApiRouter);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

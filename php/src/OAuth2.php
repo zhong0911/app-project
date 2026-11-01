@@ -32,6 +32,7 @@ final class OAuth2
                 'authorizationUri' => (string) getenv('SSO_AUTHORIZATION_URI') ?: ($issuer . '/oauth2/authorize'),
                 'tokenUri' => (string) getenv('SSO_TOKEN_URI') ?: ($issuer . '/oauth2/token'),
                 'userinfoUri' => (string) getenv('SSO_USERINFO_URI') ?: ($issuer ? $issuer . '/userinfo' : ''),
+                'revokeUri' => (string) getenv('SSO_REVOKE_URI') ?: ($issuer ? $issuer . '/oauth2/revoke' : ''),
                 'scope' => (string) getenv('SSO_SCOPE') ?: 'openid,profile,email,roles,permissions',
                 'loginSuccessUrl' => (string) getenv('SSO_LOGIN_SUCCESS_URL') ?: '/',
             ],
@@ -90,5 +91,40 @@ final class OAuth2
             throw new \RuntimeException('token 响应解析失败');
         }
         return $json;
+    }
+
+    /**
+     * 调用 SSO 的 revoke 端点（RFC 7009）撤销会话中的 token：优先 refresh_token。
+     * 撤销失败仅记日志，不阻塞退出流程。
+     */
+    public static function revokeToken(array $cfg, array $tokens): void
+    {
+        if (($cfg['revokeUri'] ?? '') === '') {
+            return;
+        }
+        $refresh = $tokens['refresh_token'] ?? null;
+        $token = $refresh ?: ($tokens['access_token'] ?? null);
+        if (!$token) {
+            return;
+        }
+        $body = http_build_query([
+            'token' => $token,
+            'token_type_hint' => $refresh ? 'refresh_token' : 'access_token',
+            'client_id' => $cfg['clientId'],
+            'client_secret' => $cfg['clientSecret'],
+        ]);
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: " . strlen($body) . "\r\n",
+                'content' => $body,
+                'ignore_errors' => true,
+                'timeout' => 10,
+            ],
+        ]);
+        $ok = @file_get_contents($cfg['revokeUri'], false, $context);
+        error_log($ok === false
+            ? '[SSO] revoke 失败（忽略，不阻塞退出）'
+            : '[SSO] revoke 完成');
     }
 }

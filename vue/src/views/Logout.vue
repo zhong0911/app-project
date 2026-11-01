@@ -32,8 +32,8 @@ async function handleLogout() {
 
 <template>
   <div class="logout-page">
-    <a-card class="logout-card" :bordered="false">
-      <a-spin :spinning="state === 'loading'" size="large" tip="正在退出登录…">
+    <a-card class="logout-card" variant="borderless">
+      <a-spin :spinning="state === 'loading'" size="large" description="正在退出登录…">
         <div class="logout-body">
           <!-- 待确认：点击后才请求退出 -->
           <a-result v-if="state === 'confirm'" title="退出登录">
@@ -47,7 +47,7 @@ async function handleLogout() {
           </a-result>
 
           <!-- 已退出：返回首页 / 重新登录 -->
-          <a-result v-else-if="state === 'done'" status="success" title="退出成功">
+          <a-result v-else-if="state === 'done'" status="success" title="退出成功" sub-title="退出成功，可返回首页或重新登录">
             <template #extra>
               <a-button @click="router.replace('/home')">返回首页</a-button>
               <a-button type="primary" @click="router.replace('/login')">重新登录</a-button>

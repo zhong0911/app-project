@@ -178,7 +178,10 @@ SSO_CLIENT_SECRET=xxxx                   # SSO 注册的 client-secret
 # SSO_TOKEN_URI=https://passport.antx.cc/oauth2/token
 # SSO_USERINFO_URI=https://passport.antx.cc/userinfo
 # SSO_JWKS_URI=https://passport.antx.cc/oauth2/jwks
+# SSO_REVOKE_URI=https://passport.antx.cc/oauth2/revoke   # token 撤销端点（退出登录时撤销 refresh_token）
 ```
+
+> **token 存储位置**：SSO 登录后换取的 access_token / refresh_token 由 Spring Security 存在 **HttpSession**（经 Spring Session 落 Redis），浏览器只持有会话 cookie，拿不到 token。前端 `POST /api/auth/logout` 时，后端先从会话取出 **refresh_token 调用 SSO `/oauth2/revoke`（RFC 7009）撤销**，再销毁本地会话；撤销失败仅记日志、不阻塞退出。
 
 #### 登录跳转 + callback
 

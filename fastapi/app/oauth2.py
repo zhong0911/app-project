@@ -25,6 +25,7 @@ class OAuthProviderConfig:
     authorization_uri: str
     token_uri: str
     userinfo_uri: str | None
+    revoke_uri: str | None
     scope: str
     login_success_url: str
 
@@ -50,6 +51,7 @@ def build_providers() -> dict[str, OAuthProviderConfig]:
             authorization_uri=_env("SSO_AUTHORIZATION_URI") or f"{issuer}/oauth2/authorize",
             token_uri=_env("SSO_TOKEN_URI") or f"{issuer}/oauth2/token",
             userinfo_uri=_env("SSO_USERINFO_URI") or (f"{issuer}/userinfo" if issuer else None),
+            revoke_uri=_env("SSO_REVOKE_URI") or (f"{issuer}/oauth2/revoke" if issuer else None),
             scope=_env("SSO_SCOPE", "openid,profile,email,roles,permissions"),
             login_success_url=_env("SSO_LOGIN_SUCCESS_URL", "/"),
         )
@@ -76,6 +78,28 @@ def consume_state(state: str, provider: str) -> bool:
     if saved_provider != provider or time.time() - created > _STATE_TTL:
         return False
     return True
+
+
+# ---- 会话存储（内存；保存 SSO 换取的 access_token / refresh_token，退出时用于撤销。
+#      token 仅存服务端，浏览器只持有 HttpOnly 的 app_session cookie；生产建议换 Redis） ----
+SESSION_COOKIE = "app_session"
+_SESSION_STORE: dict[str, dict] = {}
+
+
+def create_session(tokens: dict) -> str:
+    """登录成功后创建服务端会话，返回会话 id。"""
+    sid = secrets.token_urlsafe(32)
+    _SESSION_STORE[sid] = dict(tokens)
+    return sid
+
+
+def get_session(sid: str | None) -> dict | None:
+    return _SESSION_STORE.get(sid) if sid else None
+
+
+def destroy_session(sid: str | None) -> None:
+    if sid:
+        _SESSION_STORE.pop(sid, None)
 
 
 def build_authorize_url(provider: str, base_url: str) -> tuple[str, str]:

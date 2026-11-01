@@ -9,6 +9,8 @@ sso:
   login-success-url: ${SSO_LOGIN_SUCCESS_URL:/api/auth/me}
   # 单点退出地址（授权服务器登出端点；前端 /logout 页拿到后整页跳转完成全局退出，留空仅退出本应用）
   logout-uri: ${SSO_LOGOUT_URI:}
+  # token 撤销端点（Spring Authorization Server 标准路径；退出登录时后端撤销会话中的 refresh_token）
+  revoke-uri: ${SSO_REVOKE_URI:https://passport.antx.cc/oauth2/revoke}
 
 spring:
   application:

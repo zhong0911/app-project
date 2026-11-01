@@ -17,7 +17,7 @@ function handleSsoLogin() {
 
 <template>
   <div class="login-page">
-    <a-card class="login-card" :bordered="false">
+    <a-card class="login-card" variant="borderless">
       <!-- 应用图标占位 -->
       <div class="login-icon"><AppstoreOutlined /></div>
 

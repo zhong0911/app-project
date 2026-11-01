@@ -23,7 +23,7 @@ use AntX\Template\UserController;
  * OAuth2 客户端（全后端统一规范路径）：
  *   GET  /oauth2/{provider}/authorize   跳转到授权服务器
  *   GET  /oauth2/{provider}/callback    接受授权码 code，换取 token，重定向登录成功页
- *   POST /api/auth/logout               单点退出（返回 SSO 退出地址供前端整页跳转）
+ *   POST /api/auth/logout               单点退出（撤销 refresh_token + 销毁会话，返回 SSO 退出地址）
  */
 
 spl_autoload_register(static function (string $class): void {
@@ -76,19 +76,36 @@ try {
             throw new BusinessException(ResultCode::BAD_REQUEST, '缺少授权码 code');
         }
         // state 校验（模板简化为一次性授权码校验，生产建议结合会话防 CSRF）
-        OAuth2::exchangeCode($provider, $code, $baseUrl);
+        $token = OAuth2::exchangeCode($provider, $code, $baseUrl);
+        // token 存服务端会话（access_token/refresh_token 不进浏览器），cookie 仅存 PHPSESSID
+        session_start();
+        $_SESSION['oauth2_tokens'] = $token;
         $cfg = OAuth2::providers()[$provider];
         header('Location: ' . $cfg['loginSuccessUrl']);
         exit;
     }
 
     // ---- 单点退出（POST /api/auth/logout，对标 Spring Boot AuthController#logout）----
-    // 模板无服务端会话，销毁会话由前端清除本地凭证完成；
+    // 撤销 SSO 侧 refresh_token -> 销毁服务端会话；
     // 返回 ssoLogoutUrl（env SSO_LOGOUT_URI）供前端整页跳转完成 SSO 全局退出
     if ($path === '/api/auth/logout') {
         if ($method !== 'POST') {
             throw new BusinessException(ResultCode::METHOD_NOT_ALLOWED, '请求方法不支持');
         }
+        session_start();
+        $tokens = $_SESSION['oauth2_tokens'] ?? null;
+        if ($tokens) {
+            $providers = OAuth2::providers();
+            if (isset($providers['sso'])) {
+                OAuth2::revokeToken($providers['sso'], $tokens);
+            }
+        }
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $p = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        }
+        session_destroy();
         $logoutUri = getenv('SSO_LOGOUT_URI') ?: null;
         GlobalExceptionHandler::render(200, Result::successWith(['ssoLogoutUrl' => $logoutUri])->toArray());
         exit;

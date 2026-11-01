@@ -28,6 +28,7 @@ export function buildProviders() {
       authorizationUri: env('SSO_AUTHORIZATION_URI') || `${issuer}/oauth2/authorize`,
       tokenUri: env('SSO_TOKEN_URI') || `${issuer}/oauth2/token`,
       userinfoUri: env('SSO_USERINFO_URI') || (issuer ? `${issuer}/userinfo` : ''),
+      revokeUri: env('SSO_REVOKE_URI') || (issuer ? `${issuer}/oauth2/revoke` : ''),
       scope: env('SSO_SCOPE', 'openid,profile,email,roles,permissions'),
       loginSuccessUrl: env('SSO_LOGIN_SUCCESS_URL', '/'),
     };
@@ -51,6 +52,66 @@ export function consumeState(state, provider) {
   if (!entry) return false;
   stateStore.delete(state);
   return entry.provider === provider && Date.now() - entry.createdAt <= STATE_TTL;
+}
+
+// ---- 会话存储（内存；保存 SSO 换取的 access_token / refresh_token，退出时用于撤销。
+//      token 仅存服务端，浏览器只持有 HttpOnly 的 app_session cookie；生产建议换 Redis） ----
+export const SESSION_COOKIE = 'app_session';
+const sessionStore = new Map(); // sid -> tokens
+
+export function createSession(tokens) {
+  const sid = randomBytes(24).toString('hex');
+  sessionStore.set(sid, { ...tokens });
+  return sid;
+}
+
+export function getSession(sid) {
+  return sid ? sessionStore.get(sid) : undefined;
+}
+
+export function destroySession(sid) {
+  if (sid) sessionStore.delete(sid);
+}
+
+/** 解析请求 Cookie 中的会话 id（模板不引入 cookie-parser，手写极简解析）。 */
+export function parseSessionId(req) {
+  const raw = req.headers.cookie || '';
+  const m = raw.match(/(?:^|;\s*)app_session=([^;]+)/);
+  return m ? m[1] : null;
+}
+
+/** Set-Cookie 值：sid 为空串表示清除。 */
+export function sessionCookie(sid) {
+  return sid
+    ? `${SESSION_COOKIE}=${sid}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${60 * 60 * 24 * 7}`
+    : `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`;
+}
+
+/**
+ * 调用 SSO 的 revoke 端点（RFC 7009）撤销会话中的 token：优先 refresh_token。
+ * 撤销失败仅记日志，不阻塞退出流程。
+ */
+export async function revokeTokens(tokens) {
+  const cfg = buildProviders().sso;
+  if (!cfg?.revokeUri || !tokens) return;
+  const refresh = tokens.refresh_token;
+  const token = refresh || tokens.access_token;
+  if (!token) return;
+  try {
+    const resp = await fetch(cfg.revokeUri, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        token,
+        token_type_hint: refresh ? 'refresh_token' : 'access_token',
+        client_id: cfg.clientId,
+        client_secret: cfg.clientSecret,
+      }).toString(),
+    });
+    console.log(`[SSO] revoke 完成: status=${resp.status}`);
+  } catch (e) {
+    console.warn(`[SSO] revoke 失败（忽略，不阻塞退出）: ${e.message}`);
+  }
 }
 
 /** 构造授权服务器跳转 URL。 */
