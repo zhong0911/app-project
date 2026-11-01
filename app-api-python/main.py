@@ -1,0 +1,29 @@
+"""AntX FastAPI 模板 入口（对标 Spring Boot 模板 app-api）。
+
+运行：
+    pip install -r requirements.txt
+    uvicorn main:app --reload --host 0.0.0.0 --port 8080
+"""
+from fastapi import FastAPI
+
+from app.exception_handlers import register_exception_handlers
+from app.routers import user
+
+app = FastAPI(
+    title="AntX FastAPI Template",
+    description="对标 Spring Boot 模板的统一响应 ApiResponse / PaginatedData、ResultCode 分段、全局异常处理",
+    version="1.0.0",
+)
+
+# 注册全局异常处理器（业务 / 参数校验 / HTTP / 兜底）
+register_exception_handlers(app)
+
+# 注册 RESTful 路由
+app.include_router(user.router)
+
+
+@app.get("/api/health")
+def health() -> dict:
+    """健康检查。"""
+    from app.api_response import ApiResponse
+    return ApiResponse.success_with({"status": "up", "service": "app-api-python"})
