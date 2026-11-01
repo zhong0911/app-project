@@ -11,6 +11,7 @@
 - ⏳ **路由懒加载 + 加载指示**：`router-view v-slot` + `a-spin`，切换页面显示居中 loading
 - 💬 **全局弹层 JS 调用**：`message / notification / modal` 任意 JS 中可用，自动继承全局语言与主题
 - 🔌 **Axios 封装**：统一拦截器、`401` 只清凭证不跳转、解包响应结构
+- 🔐 **SSO 登录（OAuth2 客户端）**：顶栏一键跳转授权服务器，BFF 聚合登录态，会话 Cookie 由后端维护
 - 🎯 **Tailwind CSS**：关闭 preflight 避免与 antdv 冲突，`dark:` 变体跟随全局主题
 
 ## 技术栈
@@ -114,6 +115,24 @@ const userStore = useUserStore()
 await userStore.login({username: 'admin', password: '123456'})
 await userStore.fetchUserInfo()
 ```
+
+### 2.1 SSO 登录（OAuth2 客户端，全后端统一规范路径）
+
+前端作为 OAuth2 客户端的入口层，token 全程在后端（会话 Cookie），前端不接触 token：
+
+```
+点「SSO 登录」→ 整页跳转 /oauth2/sso/authorize（dev 由 vite 代理到后端）
+→ 后端 302 到授权服务器登录页 → 授权后回调后端 /oauth2/sso/callback
+→ 后端换 token、建会话 → 302 回前端首页（后端 SSO_LOGIN_SUCCESS_URL）
+→ 前端 onMounted 调 /api/bff/me 拉取登录态（uid / role / name）
+```
+
+- 登录入口：`userStore.loginWithSso()`（`BasicLayout.vue` 顶栏，未登录时显示）。
+- 登录态拉取：`userStore.fetchLoginUser()`（BFF 聚合接口 `GET /api/bff/me`，未登录 401 静默忽略）。
+- dev 代理：`vite.config.js` 已把 `/oauth2` 与 `/api` 一并代理到后端。
+- 生产部署：前端与后端同域（或反向代理 `/oauth2`、`/api` 到后端），并把后端的
+  `SSO_LOGIN_SUCCESS_URL` 指向前端首页地址。
+- provider 默认为 `sso`，对应后端 `application.yml` 的 `spring.security.oauth2.client.registration.sso`。
 
 ### 3. 路由（Vue Router）
 

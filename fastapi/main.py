@@ -1,4 +1,4 @@
-"""AntX FastAPI 模板 入口（对标 Spring Boot 模板 app-api）。
+"""AntX FastAPI 模板 入口（对标 Spring Boot 模板 springboot）。
 
 运行：
     pip install -r requirements.txt
@@ -7,11 +7,11 @@
 from fastapi import FastAPI
 
 from app.exception_handlers import register_exception_handlers
-from app.routers import user
+from app.routers import auth, user
 
 app = FastAPI(
     title="AntX FastAPI Template",
-    description="对标 Spring Boot 模板的统一响应 ApiResponse / PaginatedData、ResultCode 分段、全局异常处理",
+    description="对标 Spring Boot 模板的统一响应 Result / PageResult、ResultCode 分段、全局异常处理、OAuth2 客户端",
     version="1.0.0",
 )
 
@@ -21,9 +21,12 @@ register_exception_handlers(app)
 # 注册 RESTful 路由
 app.include_router(user.router)
 
+# 注册 OAuth2 客户端路由（/oauth2/{provider}/authorize、/oauth2/{provider}/callback）
+app.include_router(auth.router)
+
 
 @app.get("/api/health")
 def health() -> dict:
     """健康检查。"""
-    from app.api_response import ApiResponse
-    return ApiResponse.success_with({"status": "up", "service": "fastapi"})
+    from app.result import Result
+    return Result.success_with({"status": "up", "service": "fastapi"})

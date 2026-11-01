@@ -7,15 +7,18 @@
 ```
 nodejs/
 ├── package.json
+├── .env.example                # 环境变量示例（SSO_*，注入进程环境）
 ├── src/
 │   ├── app.js                  # 入口：Express 应用 + 路由挂载 + 全局异常处理
-│   ├── api-response.js         # 统一响应体（对标 Result）
-│   ├── paginated-data.js       # 分页封装（对标 PageResult）
+│   ├── result.js               # 统一响应体（对标 Result）
+│   ├── page-result.js          # 分页封装（对标 PageResult）
 │   ├── result-code.js          # 状态码（code 分段设计）
 │   ├── business-exception.js   # 业务异常（对标 BusinessException）
 │   ├── global-error-handler.js # 全局异常处理中间件
+│   ├── oauth2.js               # OAuth2 客户端（provider 注册 / state 校验 / 换 token）
 │   └── routes/
-│       └── user.routes.js      # RESTful 用户示例（内存数据）
+│       ├── user.routes.js      # RESTful 用户示例（内存数据）
+│       └── auth.routes.js      # OAuth2 客户端路由（authorize / callback）
 └── README.md
 ```
 
@@ -37,7 +40,32 @@ npm start         # 生产
 | GET    | `/api/users/{id}` | 用户详情 |
 | GET    | `/api/users?pageNum=1&pageSize=10` | 分页列表 |
 
-## 统一响应体（ApiResponse，对标 Result）
+## OAuth2 客户端（规范路径，全后端统一）
+
+对标 `springboot` 的 `spring.security.oauth2.client`（SSO 授权码登录）：
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/oauth2/{provider}/authorize` | **跳转到授权服务器**（provider 默认 `sso`） |
+| GET | `/oauth2/{provider}/callback` | **接受授权码 code**，换取 token，重定向登录成功页 |
+
+配置通过环境变量注入（对标 `application.yml` 的 `SSO_*`）：
+
+| 变量 | 说明 |
+|------|------|
+| `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` | 子应用在 SSO 控制台注册的 client-id / secret |
+| `SSO_ISSUER` | 授权服务器地址；端点留空时由它推导标准路径 |
+| `SSO_AUTHORIZATION_URI` / `SSO_TOKEN_URI` / `SSO_USERINFO_URI` | 端点非标准时显式指定（可留空） |
+| `SSO_SCOPE` | 授权范围（默认 `openid,profile,email,roles,permissions`） |
+| `SSO_LOGIN_SUCCESS_URL` | 登录成功后的重定向地址 |
+
+SSO 控制台登记的回调地址（`redirect_uri`）：
+
+```
+https://<你的域名>:<端口>/oauth2/sso/callback
+```
+
+## 统一响应体（Result，对标 Result）
 
 五字段，`data` 为 null 时省略（对标 `@JsonInclude(NON_NULL)`）：
 
@@ -51,7 +79,7 @@ npm start         # 生产
 }
 ```
 
-## 分页（PaginatedData，对标 PageResult）
+## 分页（PageResult，对标 PageResult）
 
 ```json
 {

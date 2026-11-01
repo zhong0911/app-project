@@ -1,13 +1,13 @@
 import { Router } from 'express';
-import { ApiResponse } from '../api-response.js';
-import { PaginatedData } from '../paginated-data.js';
+import { Result } from '../result.js';
+import { PageResult } from '../page-result.js';
 import { BusinessException } from '../business-exception.js';
 import { ResultCode } from '../result-code.js';
 
 /**
  * 用户接口（RESTful 示例，对标 Spring Boot UserController）。
  *
- * 统一返回 ApiResponse 五字段；分页返回 PaginatedData。
+ * 统一返回 Result 五字段；分页返回 PageResult。
  * 此处用内存 Map 模拟数据源，接入数据库时替换为仓储层即可。
  */
 const users = new Map([
@@ -32,7 +32,7 @@ userRouter.post('/', (req, res) => {
   seq += 1;
   const user = { id: seq, uid, role: 'USER', createTime: new Date().toISOString().slice(0, 19).replace('T', ' ') };
   users.set(seq, user);
-  res.json(ApiResponse.successWith(user));
+  res.json(Result.successWith(user));
 });
 
 // 更新用户（PUT，对标 @PutMapping）
@@ -45,7 +45,7 @@ userRouter.put('/', (req, res) => {
   if (role !== undefined) {
     user.role = role;
   }
-  res.json(ApiResponse.successWith(user));
+  res.json(Result.successWith(user));
 });
 
 // 删除用户（DELETE /{id}，对标 @DeleteMapping）
@@ -55,7 +55,7 @@ userRouter.delete('/:id', (req, res) => {
     throw new BusinessException(ResultCode.NOT_FOUND, '用户不存在');
   }
   users.delete(id);
-  res.json(ApiResponse.success());
+  res.json(Result.success());
 });
 
 // 查询用户详情（GET /{id}，对标 @GetMapping("/{id}")）
@@ -64,7 +64,7 @@ userRouter.get('/:id', (req, res) => {
   if (!user) {
     throw new BusinessException(ResultCode.NOT_FOUND, '用户不存在');
   }
-  res.json(ApiResponse.successWith(user));
+  res.json(Result.successWith(user));
 });
 
 // 分页查询用户列表（GET /，对标 @GetMapping 分页）
@@ -74,5 +74,5 @@ userRouter.get('/', (req, res) => {
   const all = [...users.values()];
   const total = all.length;
   const records = all.slice((pageNum - 1) * pageSize, pageNum * pageSize);
-  res.json(ApiResponse.successWith(new PaginatedData(pageNum, pageSize, total, records)));
+  res.json(Result.successWith(new PageResult(pageNum, pageSize, total, records)));
 });

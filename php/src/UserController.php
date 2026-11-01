@@ -7,7 +7,7 @@ namespace AntX\Template;
 /**
  * 用户接口（RESTful 示例，对标 Spring Boot UserController）。
  *
- * 统一返回 ApiResponse 五字段；分页返回 PaginatedData。
+ * 统一返回 Result 五字段；分页返回 PageResult。
  * 此处用内存数组模拟数据源，接入数据库时替换为仓储层即可。
  */
 final class UserController
@@ -20,7 +20,7 @@ final class UserController
     private static int $seq = 2;
 
     /** 创建用户（POST /api/users，对标 @PostMapping） */
-    public function create(array $body): ApiResponse
+    public function create(array $body): Result
     {
         $uid = $body['uid'] ?? null;
         if (!is_string($uid) || $uid === '') {
@@ -36,11 +36,11 @@ final class UserController
             'role' => 'USER',
             'createTime' => date('Y-m-d H:i:s'),
         ];
-        return ApiResponse::successWith(self::$users[$id]);
+        return Result::successWith(self::$users[$id]);
     }
 
     /** 更新用户（PUT /api/users，对标 @PutMapping） */
-    public function update(array $body): ApiResponse
+    public function update(array $body): Result
     {
         $id = (int) ($body['id'] ?? 0);
         if (!isset(self::$users[$id])) {
@@ -49,30 +49,30 @@ final class UserController
         if (isset($body['role'])) {
             self::$users[$id]['role'] = (string) $body['role'];
         }
-        return ApiResponse::successWith(self::$users[$id]);
+        return Result::successWith(self::$users[$id]);
     }
 
     /** 删除用户（DELETE /api/users/{id}，逻辑删除，对标 @DeleteMapping） */
-    public function delete(int $id): ApiResponse
+    public function delete(int $id): Result
     {
         if (!isset(self::$users[$id])) {
             throw new BusinessException(ResultCode::NOT_FOUND, '用户不存在');
         }
         unset(self::$users[$id]);
-        return ApiResponse::success();
+        return Result::success();
     }
 
     /** 查询用户详情（GET /api/users/{id}，对标 @GetMapping("/{id}")） */
-    public function detail(int $id): ApiResponse
+    public function detail(int $id): Result
     {
         if (!isset(self::$users[$id])) {
             throw new BusinessException(ResultCode::NOT_FOUND, '用户不存在');
         }
-        return ApiResponse::successWith(self::$users[$id]);
+        return Result::successWith(self::$users[$id]);
     }
 
     /** 分页查询用户列表（GET /api/users?pageNum=&pageSize=，对标 @GetMapping 分页） */
-    public function page(int $pageNum, int $pageSize): ApiResponse
+    public function page(int $pageNum, int $pageSize): Result
     {
         $pageNum = max(1, $pageNum);
         $pageSize = max(1, min(100, $pageSize));
@@ -80,6 +80,6 @@ final class UserController
         $total = count($all);
         $offset = ($pageNum - 1) * $pageSize;
         $records = array_slice($all, $offset, $pageSize);
-        return ApiResponse::successWith(new PaginatedData($pageNum, $pageSize, $total, $records));
+        return Result::successWith(new PageResult($pageNum, $pageSize, $total, $records));
     }
 }

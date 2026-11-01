@@ -41,7 +41,7 @@ springboot/
 │   │   ├── RedisSessionConfig.java  #   Spring Session 落 Redis（手动 @EnableRedisHttpSession）
 │   │   ├── WebConfig.java           #   CORS 跨域
 │   │   └── security/                #   Security/资源服务器（SecurityConfig、Rest*Handler、LocalRoleGrantedAuthoritiesConverter、ResourceServerConfig）
-│   ├── controller/                  # 控制器（UserController、AuthController、SecurityDemoController、BffController）
+│   ├── controller/                  # 控制器（UserController、AuthController、OAuth2LoginController、SecurityDemoController、BffController）
 │   ├── dto/                         # 请求入参模型（UserCreateDTO 等）
 │   ├── vo/                          # 响应出参模型（UserVO、BffUserVO）
 │   ├── entity/                      # 实体（对应数据库表）
@@ -162,10 +162,10 @@ HTTP GET /api/users | ip=127.0.0.1 | UserController.page | 耗时 12ms
 在 SSO 后台创建一个 OAuth 应用，获得 **client-id / client-secret**，并把回调地址（redirect_uri）登记为：
 
 ```
-http://localhost:8080/login/oauth2/code/sso
+http://localhost:8080/oauth2/sso/callback
 ```
 
-> `{registrationId}` 就是注册名 `sso`，回调路径固定为 `/login/oauth2/code/sso`。
+> `{registrationId}` 就是注册名 `sso`，回调路径规范为 `/oauth2/{provider}/callback`（全后端统一）。
 
 #### 第二步：配置 `.env`
 
@@ -184,11 +184,11 @@ SSO_CLIENT_SECRET=xxxx                    # SSO 注册的 client-secret
 
 | 场景 | 地址 | 说明 |
 |---|---|---|
-| **跳转 SSO 登录页** | 浏览器访问 `http://localhost:8080/oauth2/authorization/sso` | 302 到 SSO `/oauth2/authorize`，带 client_id/scope/redirect_uri/PKCE |
-| **SSO 授权回调** | `http://localhost:8080/login/oauth2/code/sso` | SSO 授权后重定向回来，Spring 用 client-secret 换 token、建会话，跳 `/api/auth/me` |
+| **跳转 SSO 登录页** | 浏览器访问 `http://localhost:8080/oauth2/sso/authorize` | 302 到 SSO `/oauth2/authorize`，带 client_id/scope/redirect_uri/state（见 `controller/OAuth2LoginController.java`） |
+| **SSO 授权回调** | `http://localhost:8080/oauth2/sso/callback` | SSO 授权后重定向回来，Spring 用 client-secret 换 token、建会话，跳 `SSO_LOGIN_SUCCESS_URL`（默认 `/api/auth/me`） |
 | **获取当前登录用户** | `GET /api/auth/me` | 返回 `type=sso-login` + SSO 用户资料 |
 
-> 服务端 → 前端跳转：给前端返回 `redirect_uri = http://localhost:8080/oauth2/authorization/sso` 即可。
+> 服务端 → 前端跳转：前端浏览器直接访问 `http://localhost:8080/oauth2/sso/authorize` 即可。
 
 #### API 场景（Bearer Token）
 
@@ -284,7 +284,7 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 | POST | `/api/mail/send` | 发送纯文本邮件 |
 | POST | `/api/mail/send/html` | 发送 HTML 邮件 |
 
-> 除 `/oauth2/**`、`/login/**`、`/error`、`/favicon.ico` 外均需认证（Bearer token 或本地 httpBasic）；邮件接口生产还需叠加限流，防止被滥用。
+> 除 `/oauth2/**`、`/error`、`/favicon.ico` 外均需认证（Bearer token 或本地 httpBasic）；邮件接口生产还需叠加限流，防止被滥用。
 
 ### BFF（Backend For Frontend，前端后端模式）
 
@@ -319,7 +319,7 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 > 说明：不是所有子应用都需要接 SSO，多数需要、少数不需要。不需要时按下述移除，接口即回到**免认证**状态，其余功能不受影响。
 
 1. **删依赖**（`pom.xml`）：删除 `spring-boot-starter-security`、`spring-boot-starter-oauth2-client`、`spring-boot-starter-oauth2-resource-server` 三个依赖。
-2. **删代码**：删除整个包 `src/main/java/cc/antx/template/config/security/`（`SecurityConfig`、`RestAuthenticationEntryPoint`、`RestAccessDeniedHandler`、`ResourceServerConfig`、`LocalRoleGrantedAuthoritiesConverter`），以及 `controller/AuthController.java`、`controller/SecurityDemoController.java`、`controller/BffController.java`、`vo/BffUserVO.java`（BFF 依赖 Security）。
+2. **删代码**：删除整个包 `src/main/java/cc/antx/template/config/security/`（`SecurityConfig`、`RestAuthenticationEntryPoint`、`RestAccessDeniedHandler`、`ResourceServerConfig`、`LocalRoleGrantedAuthoritiesConverter`），以及 `controller/AuthController.java`、`controller/OAuth2LoginController.java`、`controller/SecurityDemoController.java`、`controller/BffController.java`、`vo/BffUserVO.java`（BFF 依赖 Security）。
 3. **删配置**（`application.yml`）：删除 `spring.security` 段（内存用户 + `oauth2`）与 `.env` / `.env.example` 的 `SECURITY_ADMIN_*`、`SSO_*` 键。
 4. **删数据**（可选）：若不再按 SSO 区分角色，可删掉 `t_user` 的 `uid`、`role` 两列与 `uk_uid` 唯一键（见 `sql/init.sql` 注释）。
 5. （可选）`common/aspect/WebLogAspect` 等与安全无关的模块不受影响。

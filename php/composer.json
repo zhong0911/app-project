@@ -1,6 +1,6 @@
 {
   "name": "antx/php-template",
-  "description": "AntX PHP 后端模板：统一响应 ApiResponse / PaginatedData、ResultCode 分段、全局异常处理、RESTful",
+  "description": "AntX PHP 后端模板：统一响应 Result / PageResult、ResultCode 分段、全局异常处理、OAuth2 客户端、RESTful",
   "type": "project",
   "license": "MIT",
   "require": {

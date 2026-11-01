@@ -14,7 +14,7 @@ import { ResultCode, resultMessage } from './result-code.js';
  *
  * data 为 null 时省略（对标 @JsonInclude(NON_NULL)）。
  */
-export const ApiResponse = Object.freeze({
+export const Result = Object.freeze({
   /** 成功（无数据） */
   success() {
     return build(ResultCode.SUCCESS, true, resultMessage(ResultCode.SUCCESS), null);

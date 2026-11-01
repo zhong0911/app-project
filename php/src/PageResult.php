@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AntX\Template;
 
 /**
- * 分页数据封装（对标 Spring Boot 模板 PageResult），作为 ApiResponse.data 的载体。
+ * 分页数据封装（对标 Spring Boot 模板 PageResult），作为 Result.data 的载体。
  *
  * {
  *   "pageNum":  1,
@@ -15,7 +15,7 @@ namespace AntX\Template;
  *   "records":  [ ... ]
  * }
  */
-final class PaginatedData
+final class PageResult
 {
     public int $pageNum;
     public int $pageSize;

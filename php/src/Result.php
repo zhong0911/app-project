@@ -18,7 +18,7 @@ namespace AntX\Template;
  *
  * 说明：data 为 null 时按 Java @JsonInclude(NON_NULL) 语义从 JSON 中省略。
  */
-final class ApiResponse
+final class Result
 {
     public int $code;
     public bool $success;

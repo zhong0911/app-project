@@ -15,3 +15,11 @@ export function getUserInfoApi() {
 export function logoutApi() {
   return request.post('/auth/logout')
 }
+
+/**
+ * BFF 聚合登录态（SSO 身份 + 子应用角色，见 springboot BffController）
+ * 未登录时后端返回 401，由调用方捕获
+ */
+export function getBffMeApi() {
+  return request.get('/bff/me')
+}

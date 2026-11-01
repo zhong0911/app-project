@@ -1,6 +1,6 @@
 """用户接口（RESTful 示例，对标 Spring Boot UserController）。
 
-统一返回 ApiResponse 五字段；分页返回 PaginatedData。
+统一返回 Result 五字段；分页返回 PageResult。
 此处用内存字典模拟数据源，接入数据库时替换为仓储层即可。
 """
 from __future__ import annotations
@@ -8,8 +8,8 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 from fastapi import APIRouter, Path, Query
 
-from ..api_response import ApiResponse
-from ..paginated_data import PaginatedData
+from ..result import Result
+from ..page_result import PageResult
 from ..business_exception import BusinessException
 from ..result_code import ResultCode
 
@@ -44,7 +44,7 @@ def create_user(body: UserCreate) -> dict:
         raise BusinessException(ResultCode.DATA_CONFLICT, "uid 已存在")
     _seq += 1
     _users[_seq] = {"id": _seq, "uid": uid, "role": "USER", "createTime": "2026-11-01 12:00:00"}
-    return ApiResponse.success_with(_users[_seq])
+    return Result.success_with(_users[_seq])
 
 
 @router.put("")
@@ -55,7 +55,7 @@ def update_user(body: UserUpdate) -> dict:
         raise BusinessException(ResultCode.NOT_FOUND, "用户不存在")
     if body.role is not None:
         user["role"] = body.role
-    return ApiResponse.success_with(user)
+    return Result.success_with(user)
 
 
 @router.delete("/{user_id}")
@@ -64,7 +64,7 @@ def delete_user(user_id: int = Path(..., description="用户 id")) -> dict:
     if user_id not in _users:
         raise BusinessException(ResultCode.NOT_FOUND, "用户不存在")
     del _users[user_id]
-    return ApiResponse.success()
+    return Result.success()
 
 
 @router.get("/{user_id}")
@@ -73,7 +73,7 @@ def detail_user(user_id: int = Path(..., description="用户 id")) -> dict:
     user = _users.get(user_id)
     if user is None:
         raise BusinessException(ResultCode.NOT_FOUND, "用户不存在")
-    return ApiResponse.success_with(user)
+    return Result.success_with(user)
 
 
 @router.get("")
@@ -86,4 +86,4 @@ def page_user(
     total = len(all_users)
     offset = (page_num - 1) * page_size
     records = all_users[offset: offset + page_size]
-    return ApiResponse.success_with(PaginatedData(page_num, page_size, total, records).to_dict())
+    return Result.success_with(PageResult(page_num, page_size, total, records).to_dict())

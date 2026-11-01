@@ -1,5 +1,5 @@
 /**
- * 分页数据封装（对标 Spring Boot 模板 PageResult），作为 ApiResponse.data 的载体。
+ * 分页数据封装（对标 Spring Boot 模板 PageResult），作为 Result.data 的载体。
  *
  * {
  *   "pageNum":  1,
@@ -9,7 +9,7 @@
  *   "records":  [ ... ]
  * }
  */
-export class PaginatedData {
+export class PageResult {
   constructor(pageNum, pageSize, total, records) {
     this.pageNum = Math.max(1, pageNum);
     this.pageSize = Math.max(1, Math.min(100, pageSize));

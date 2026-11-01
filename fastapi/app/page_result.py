@@ -1,4 +1,4 @@
-"""分页数据封装（对标 Spring Boot 模板 PageResult），作为 ApiResponse.data 的载体。
+"""分页数据封装（对标 Spring Boot 模板 PageResult），作为 Result.data 的载体。
 
 {
   "pageNum":  1,
@@ -16,7 +16,7 @@ from typing import Any, Generic, TypeVar
 T = TypeVar("T")
 
 
-class PaginatedData(Generic[T]):
+class PageResult(Generic[T]):
     """分页封装，字段固定为 pageNum / pageSize / total / pages / records。"""
 
     def __init__(self, page_num: int, page_size: int, total: int, records: list[T]) -> None:

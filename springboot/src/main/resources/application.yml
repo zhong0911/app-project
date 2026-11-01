@@ -80,8 +80,8 @@ spring:
             client-secret: ${SSO_CLIENT_SECRET:your-sso-client-secret}
             scope: openid,profile,email,roles,permissions
             authorization-grant-type: authorization_code
-            # callback 回调地址（需在 SSO 控制台注册为 redirect_uri）
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            # callback 回调地址（规范路径 /oauth2/{provider}/callback，需在 SSO 控制台注册为 redirect_uri）
+            redirect-uri: "{baseUrl}/oauth2/{registrationId}/callback"
             client-name: AntX SSO
         provider:
           sso:

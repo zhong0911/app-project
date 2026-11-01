@@ -1,10 +1,11 @@
 import express from 'express';
-import { ApiResponse } from './api-response.js';
+import { Result } from './result.js';
 import { userRouter } from './routes/user.routes.js';
+import { authRouter } from './routes/auth.routes.js';
 import { globalErrorHandler } from './global-error-handler.js';
 
 /**
- * AntX Node.js 模板 入口（对标 Spring Boot 模板 app-api）。
+ * AntX Node.js 模板 入口（对标 Spring Boot 模板 springboot）。
  *
  * 运行：node src/app.js （开发：node --watch src/app.js）
  */
@@ -16,14 +17,17 @@ app.use(express.json());
 // RESTful 用户路由
 app.use('/api/users', userRouter);
 
+// OAuth2 客户端路由（/oauth2/{provider}/authorize、/oauth2/{provider}/callback）
+app.use('/oauth2', authRouter);
+
 // 健康检查
 app.get('/api/health', (req, res) => {
-  res.json(ApiResponse.successWith({ status: 'up', service: 'nodejs' }));
+  res.json(Result.successWith({ status: 'up', service: 'nodejs' }));
 });
 
 // 404：未匹配任何路由 -> 统一响应
 app.use((req, res) => {
-  res.status(404).json(ApiResponse.errorMsg(404, '请求资源不存在'));
+  res.status(404).json(Result.errorMsg(404, '请求资源不存在'));
 });
 
 // 全局异常处理（必须放在最后）

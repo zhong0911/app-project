@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBreakpoint } from 'antdv-next'
 import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
@@ -61,6 +61,11 @@ async function handleLogout() {
   await userStore.logout()
   router.push('/home')
 }
+
+// 进入应用时拉取 SSO 登录态（会话 Cookie 由后端维护；未登录静默忽略）
+onMounted(() => {
+  userStore.fetchLoginUser()
+})
 </script>
 
 <template>
@@ -138,8 +143,17 @@ async function handleLogout() {
               @click="appStore.toggleDark()"
             />
           </a-tooltip>
-          <!-- 用户菜单 -->
+          <!-- 用户菜单：未登录显示 SSO 登录入口（OAuth2 客户端，跳转后端 /oauth2/sso/authorize） -->
+          <a-button
+            v-if="!userStore.isLoggedIn"
+            size="small"
+            type="primary"
+            @click="userStore.loginWithSso()"
+          >
+            SSO 登录
+          </a-button>
           <a-dropdown
+            v-else
             :trigger="['click']"
             :menu="{ items: [{ key: 'logout', label: '退出登录', icon: LogoutOutlined }] }"
             @menu-click="handleLogout"

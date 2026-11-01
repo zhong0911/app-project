@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use AntX\Template\ApiResponse;
 use AntX\Template\GlobalExceptionHandler;
+use AntX\Template\OAuth2;
 use AntX\Template\ResultCode;
 use AntX\Template\UserController;
 
@@ -18,6 +18,10 @@ use AntX\Template\UserController;
  *   DELETE /api/users/{id}
  *   GET    /api/users/{id}
  *   GET    /api/users?pageNum=1&pageSize=10
+ *
+ * OAuth2 客户端（全后端统一规范路径）：
+ *   GET /oauth2/{provider}/authorize   跳转到授权服务器
+ *   GET /oauth2/{provider}/callback    接受授权码 code，换取 token，重定向登录成功页
  */
 
 spl_autoload_register(static function (string $class): void {
@@ -37,10 +41,46 @@ $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
 $path = rtrim($path, '/') ?: '/';
 $query = $_GET;
 
+// ---- baseUrl（对标 Spring Security {baseUrl}）----
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$baseUrl = $scheme . '://' . $host;
+
 $controller = new UserController();
 
 try {
-    // RESTful 用户路由
+    // ---- OAuth2 客户端路由 ----
+    if (preg_match('#^/oauth2/([a-z0-9_-]+)/(authorize|callback)$#', $path, $m)) {
+        $provider = $m[1];
+        $action = $m[2];
+        if (!OAuth2::has($provider)) {
+            throw new BusinessException(ResultCode::NOT_FOUND, '请求资源不存在');
+        }
+        if ($action === 'authorize') {
+            if ($method !== 'GET') {
+                throw new BusinessException(ResultCode::METHOD_NOT_ALLOWED, '请求方法不支持');
+            }
+            [$url] = OAuth2::authorizeUrl($provider, $baseUrl);
+            header('Location: ' . $url);
+            exit;
+        }
+        // callback
+        if ($method !== 'GET') {
+            throw new BusinessException(ResultCode::METHOD_NOT_ALLOWED, '请求方法不支持');
+        }
+        $code = $query['code'] ?? null;
+        $state = $query['state'] ?? null;
+        if (!is_string($code) || $code === '') {
+            throw new BusinessException(ResultCode::BAD_REQUEST, '缺少授权码 code');
+        }
+        // state 校验（模板简化为一次性授权码校验，生产建议结合会话防 CSRF）
+        OAuth2::exchangeCode($provider, $code, $baseUrl);
+        $cfg = OAuth2::providers()[$provider];
+        header('Location: ' . $cfg['loginSuccessUrl']);
+        exit;
+    }
+
+    // ---- RESTful 用户路由 ----
     if ($path === '/api/users') {
         if ($method === 'POST') {
             $result = $controller->create(json_decode(file_get_contents('php://input'), true) ?? []);
