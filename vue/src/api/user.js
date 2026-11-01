@@ -13,7 +13,8 @@ export function getUserInfoApi() {
 }
 
 export function logoutApi() {
-  return request.post('/auth/logout')
+  // skipErrorToast：退出接口失败（含 401 会话已过期）不弹 toast，由 /logout 页直接展示退出成功
+  return request.post('/auth/logout', null, { skipErrorToast: true })
 }
 
 /**

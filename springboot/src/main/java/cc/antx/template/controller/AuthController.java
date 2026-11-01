@@ -1,13 +1,17 @@
 package cc.antx.template.controller;
 
 import cc.antx.template.common.result.Result;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +32,10 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
+
+    /** SSO 单点退出地址（授权服务器登出端点，env SSO_LOGOUT_URI；未配置则仅退出本应用会话） */
+    @Value("${sso.logout-uri:}")
+    private String ssoLogoutUrl;
 
     /**
      * 获取当前登录用户信息。
@@ -66,6 +74,20 @@ public class AuthController {
         // 场景三：本地联调 httpBasic（内存用户）
         data.put("type", "basic");
         data.put("name", authentication.getName());
+        return Result.success(data);
+    }
+
+    /**
+     * 单点退出：销毁本应用会话（SecurityContext + HttpSession）。
+     *
+     * <p>返回的 ssoLogoutUrl 为授权服务器登出端点（配置了 sso.logout-uri 时），
+     * 前端整页跳转该地址可完成 SSO 全局退出；未配置则仅退出本应用。</p>
+     */
+    @PostMapping("/logout")
+    public Result<Map<String, Object>> logout(HttpServletRequest request, Authentication authentication) {
+        new SecurityContextLogoutHandler().logout(request, null, authentication);
+        Map<String, Object> data = new HashMap<>();
+        data.put("ssoLogoutUrl", ssoLogoutUrl.isBlank() ? null : ssoLogoutUrl);
         return Result.success(data);
     }
 }

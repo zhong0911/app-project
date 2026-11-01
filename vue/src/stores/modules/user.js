@@ -35,8 +35,15 @@ export const useUserStore = defineStore('user', () => {
    * SSO 登录（OAuth2 客户端，全后端统一规范路径）：
    * 整页跳转到后端 /oauth2/{provider}/authorize，后端 302 到授权服务器；
    * 授权后回调 /oauth2/{provider}/callback 换 token 建会话，再跳回前端首页。
+   *
+   * @param redirectUri 登录成功后的回跳地址（/login?redirect_uri=xxx 传入）：
+   *   暂存 sessionStorage，回到前端且确认已登录后由 BasicLayout 完成跳转
+   *   （授权回调链路的最终落地地址由后端 sso.login-success-url 决定）
    */
-  function loginWithSso(provider = 'sso') {
+  function loginWithSso(provider = 'sso', redirectUri = '') {
+    if (redirectUri) {
+      sessionStorage.setItem('sso_redirect_uri', redirectUri)
+    }
     window.location.href = `/oauth2/${provider}/authorize`
   }
 
@@ -51,14 +58,26 @@ export const useUserStore = defineStore('user', () => {
     return userInfo.value
   }
 
+  /**
+   * 单点退出：请求后端 POST /api/auth/logout 销毁服务端会话，
+   * 并清除本地凭证（token/用户信息/localStorage）；接口失败（含 401 会话已过期）
+   * 不抛出、不弹 toast，仍视为退出成功；
+   * 成功时返回后端的 ssoLogoutUrl（配置了 SSO_LOGOUT_URI 时），
+   * 由调用方（/logout 页）整页跳转完成 SSO 全局退出。
+   */
   async function logout() {
+    let ssoLogoutUrl = ''
     try {
-      await logoutApi()
+      const { data } = await logoutApi()
+      ssoLogoutUrl = data?.ssoLogoutUrl || ''
+    } catch {
+      // 后端退出失败（如会话已过期 401）不影响本地登出
     } finally {
       token.value = ''
       userInfo.value = null
       localStorage.removeItem('token')
     }
+    return ssoLogoutUrl
   }
 
   return { token, userInfo, isLoggedIn, displayName, login, fetchUserInfo, loginWithSso, fetchLoginUser, logout }

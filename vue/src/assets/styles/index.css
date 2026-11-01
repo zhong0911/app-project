@@ -34,6 +34,25 @@ ol {
   list-style: none;
 }
 
+/* ==============================
+   全局设计令牌（亮/暗两套）
+   自建页面/组件直接使用 var(--xxx)，无需再按主题写死颜色；
+   html.dark 类由 App.vue 根据主题 store 切换，全站自动生效。
+   ============================== */
+:root {
+  /* 次要/提示文字（antd colorTextDescription / colorTextQuaternary 对齐） */
+  --text-secondary: rgba(0, 0, 0, 0.45);
+  --text-tertiary: rgba(0, 0, 0, 0.35);
+  /* 页面渐变底色（与 html::before 一致，供需要铺底的页面引用） */
+  --bg-page: linear-gradient(135deg, #e8edf7 0%, #f0f4fc 100%);
+}
+
+html.dark {
+  --text-secondary: rgba(255, 255, 255, 0.45);
+  --text-tertiary: rgba(255, 255, 255, 0.35);
+  --bg-page: linear-gradient(135deg, #12141b 0%, #1a1c28 100%);
+}
+
 /* 全局背景：渐变（亮/暗两套），由 html::before 固定铺满全屏；
    暗色下布局/内容区透明（colorBgLayout: transparent）正好露出该底 */
 html::before {
@@ -45,11 +64,7 @@ html::before {
   height: 100vh;
   z-index: -1;
   pointer-events: none;
-  background: linear-gradient(135deg, #e8edf7 0%, #f0f4fc 100%);
-}
-
-html.dark::before {
-  background: linear-gradient(135deg, #12141b 0%, #1a1c28 100%);
+  background: var(--bg-page);
 }
 
 /* ==============================

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use AntX\Template\GlobalExceptionHandler;
 use AntX\Template\OAuth2;
+use AntX\Template\Result;
 use AntX\Template\ResultCode;
 use AntX\Template\UserController;
 
@@ -20,8 +21,9 @@ use AntX\Template\UserController;
  *   GET    /api/users?pageNum=1&pageSize=10
  *
  * OAuth2 客户端（全后端统一规范路径）：
- *   GET /oauth2/{provider}/authorize   跳转到授权服务器
- *   GET /oauth2/{provider}/callback    接受授权码 code，换取 token，重定向登录成功页
+ *   GET  /oauth2/{provider}/authorize   跳转到授权服务器
+ *   GET  /oauth2/{provider}/callback    接受授权码 code，换取 token，重定向登录成功页
+ *   POST /api/auth/logout               单点退出（返回 SSO 退出地址供前端整页跳转）
  */
 
 spl_autoload_register(static function (string $class): void {
@@ -77,6 +79,18 @@ try {
         OAuth2::exchangeCode($provider, $code, $baseUrl);
         $cfg = OAuth2::providers()[$provider];
         header('Location: ' . $cfg['loginSuccessUrl']);
+        exit;
+    }
+
+    // ---- 单点退出（POST /api/auth/logout，对标 Spring Boot AuthController#logout）----
+    // 模板无服务端会话，销毁会话由前端清除本地凭证完成；
+    // 返回 ssoLogoutUrl（env SSO_LOGOUT_URI）供前端整页跳转完成 SSO 全局退出
+    if ($path === '/api/auth/logout') {
+        if ($method !== 'POST') {
+            throw new BusinessException(ResultCode::METHOD_NOT_ALLOWED, '请求方法不支持');
+        }
+        $logoutUri = getenv('SSO_LOGOUT_URI') ?: null;
+        GlobalExceptionHandler::render(200, Result::successWith(['ssoLogoutUrl' => $logoutUri])->toArray());
         exit;
     }
 

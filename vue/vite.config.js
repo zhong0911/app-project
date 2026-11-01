@@ -35,13 +35,13 @@ export default defineConfig(({ mode }) => {
       // 开发环境代理：将 /api 与 /oauth2（SSO 登录入口）转发到后端服务
       proxy: {
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+          target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
           // rewrite: (path) => path.replace(/^\/api/, ''),
         },
         // OAuth2 客户端规范路径：/oauth2/{provider}/authorize、/oauth2/{provider}/callback
         '/oauth2': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:8080',
+          target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
         },
       },

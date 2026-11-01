@@ -22,7 +22,9 @@ register_exception_handlers(app)
 app.include_router(user.router)
 
 # 注册 OAuth2 客户端路由（/oauth2/{provider}/authorize、/oauth2/{provider}/callback）
+# 与单点退出接口（POST /api/auth/logout）
 app.include_router(auth.router)
+app.include_router(auth.auth_api_router)
 
 
 @app.get("/api/health")

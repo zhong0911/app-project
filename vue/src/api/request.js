@@ -32,7 +32,10 @@ service.interceptors.response.use(
       if (res.code === 401) {
         localStorage.removeItem('token')
       }
-      message.error(res.message || '请求失败')
+      // 调用方标记 skipErrorToast（如退出登录接口）：不弹提示，由页面自行处理
+      if (!response.config?.skipErrorToast) {
+        message.error(res.message || '请求失败')
+      }
       return Promise.reject(new Error(res.message || 'Error'))
     }
     return response
@@ -42,8 +45,10 @@ service.interceptors.response.use(
     if (status === 401) {
       // 登录过期：清除凭证（不跳转，由业务层自行处理）
       localStorage.removeItem('token')
-      message.error('登录已过期，请重新登录')
-    } else {
+      if (!error.config?.skipErrorToast) {
+        message.error('登录已过期，请重新登录')
+      }
+    } else if (!error.config?.skipErrorToast) {
       message.error(error.response?.data?.message || error.message || '网络异常')
     }
     return Promise.reject(error)

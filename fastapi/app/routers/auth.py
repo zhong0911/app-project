@@ -1,7 +1,8 @@
 """OAuth2 客户端路由（全后端统一规范路径）。
 
-  - GET /oauth2/{provider}/authorize   跳转到授权服务器
-  - GET /oauth2/{provider}/callback    接收授权码 code，换取 token，重定向回登录成功页
+  - GET  /oauth2/{provider}/authorize   跳转到授权服务器
+  - GET  /oauth2/{provider}/callback    接收授权码 code，换取 token，重定向回登录成功页
+  - POST /api/auth/logout               单点退出（返回 SSO 退出地址供前端整页跳转）
 """
 from __future__ import annotations
 
@@ -11,13 +12,27 @@ import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import RedirectResponse
 
-from ..oauth2 import build_authorize_url, build_providers, consume_state
+from ..oauth2 import _env, build_authorize_url, build_providers, consume_state
 from ..result import Result
 from ..result_code import ResultCode
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/oauth2", tags=["OAuth"])
+
+# 认证 API 路由（/api/auth/*，对标 Spring Boot AuthController）
+auth_api_router = APIRouter(prefix="/api/auth", tags=["Auth"])
+
+
+@auth_api_router.post("/logout")
+async def logout() -> dict:
+    """单点退出：模板无服务端会话，销毁会话由前端清除本地凭证完成；
+
+    返回 ssoLogoutUrl（env SSO_LOGOUT_URI，授权服务器登出端点），
+    前端整页跳转该地址可完成 SSO 全局退出；未配置则仅退出本应用。
+    """
+    logout_uri = _env("SSO_LOGOUT_URI")
+    return Result.success_with({"ssoLogoutUrl": logout_uri or None})
 
 
 def _base_url(request: Request) -> str:

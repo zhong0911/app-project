@@ -170,14 +170,14 @@ http://localhost:8080/oauth2/sso/callback
 #### 第二步：配置 `.env`
 
 ```bash
-SSO_ISSUER=http://localhost:9000          # SSO issuer 地址
-SSO_CLIENT_ID=my-app                      # SSO 注册的 client-id
-SSO_CLIENT_SECRET=xxxx                    # SSO 注册的 client-secret
-# 可选（默认已指向 localhost:9000 的 SAS 标准端点）
-# SSO_AUTHORIZATION_URI=http://localhost:9000/oauth2/authorize
-# SSO_TOKEN_URI=http://localhost:9000/oauth2/token
-# SSO_USERINFO_URI=http://localhost:9000/userinfo
-# SSO_JWKS_URI=http://localhost:9000/oauth2/jwks
+SSO_ISSUER=https://passport.antx.cc      # SSO issuer 地址（默认已指向 passport.antx.cc）
+SSO_CLIENT_ID=app                        # SSO 注册的 client-id（先用 app 占位）
+SSO_CLIENT_SECRET=xxxx                   # SSO 注册的 client-secret
+# 可选（默认已指向 passport.antx.cc 的 SAS 标准端点）
+# SSO_AUTHORIZATION_URI=https://passport.antx.cc/oauth2/authorize
+# SSO_TOKEN_URI=https://passport.antx.cc/oauth2/token
+# SSO_USERINFO_URI=https://passport.antx.cc/userinfo
+# SSO_JWKS_URI=https://passport.antx.cc/oauth2/jwks
 ```
 
 #### 登录跳转 + callback

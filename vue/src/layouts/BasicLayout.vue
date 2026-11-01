@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useBreakpoint } from 'antdv-next'
@@ -49,6 +49,9 @@ function handleLocaleChange({ key }) {
 
 const selectedKeys = computed(() => [route.path])
 
+// 当前页面对应的菜单标题（显示在顶栏左侧）
+const currentMenuTitle = computed(() => menuItems.find((m) => m.key === route.path)?.label || '')
+
 function handleMenuClick({ key }) {
   router.push(key)
   // 移动端：选中后关闭抽屉
@@ -57,14 +60,20 @@ function handleMenuClick({ key }) {
   }
 }
 
-async function handleLogout() {
-  await userStore.logout()
-  router.push('/home')
+// 退出登录：进入 /logout 页，由该页请求后端单点退出并跳转
+function handleLogout() {
+  router.push('/logout')
 }
 
 // 进入应用时拉取 SSO 登录态（会话 Cookie 由后端维护；未登录静默忽略）
-onMounted(() => {
-  userStore.fetchLoginUser()
+// 若存在 /login?redirect_uri 暂存的回跳地址且已登录，登录后跳转该地址
+onMounted(async () => {
+  await userStore.fetchLoginUser()
+  const redirect = sessionStorage.getItem('sso_redirect_uri')
+  if (redirect && userStore.isLoggedIn) {
+    sessionStorage.removeItem('sso_redirect_uri')
+    router.replace(redirect)
+  }
 })
 </script>
 
@@ -119,6 +128,8 @@ onMounted(() => {
             class="trigger"
             @click="isMobile ? (drawerOpen = true) : appStore.toggleCollapsed()"
           />
+          <!-- 当前页面标题（对应左侧菜单） -->
+          <span v-if="currentMenuTitle" class="page-title">{{ currentMenuTitle }}</span>
         </div>
         <div class="header-right">
           <!-- 语言切换：走全局 locale 配置（config/locale.js） -->
@@ -137,20 +148,18 @@ onMounted(() => {
             </a-button>
           </a-dropdown>
           <a-tooltip :title="appStore.isDark ? '切换浅色' : '切换暗色'">
-            <component
-              :is="appStore.isDark ? SunOutlined : MoonOutlined"
-              class="trigger"
-              @click="appStore.toggleDark()"
-            />
+            <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
+              <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
+            </a-button>
           </a-tooltip>
-          <!-- 用户菜单：未登录显示 SSO 登录入口（OAuth2 客户端，跳转后端 /oauth2/sso/authorize） -->
+          <!-- 用户菜单：未登录显示登录入口（跳转 /login 页） -->
           <a-button
             v-if="!userStore.isLoggedIn"
             size="small"
             type="primary"
-            @click="userStore.loginWithSso()"
+            @click="router.push('/login')"
           >
-            SSO 登录
+            登录
           </a-button>
           <a-dropdown
             v-else
@@ -218,6 +227,18 @@ onMounted(() => {
   transition: color 0.3s;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 当前页面标题（对应左侧菜单），顶栏靠左显示 */
+.page-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
 .header-right {
   display: flex;
   align-items: center;
@@ -228,6 +249,13 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 主题切换按钮（图标尺寸对齐原 trigger） */
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
 }
 
 .user-info {

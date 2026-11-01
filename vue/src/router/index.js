@@ -5,6 +5,20 @@ import BasicLayout from '@/layouts/BasicLayout.vue'
 const APP_TITLE = import.meta.env.VITE_APP_TITLE || ''
 
 const routes = [
+  // 登录页（独立全屏，不在 BasicLayout 内）
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/Login.vue'),
+    meta: { title: '登录' },
+  },
+  // 退出登录页（独立全屏）：请求后端单点退出后回登录页
+  {
+    path: '/logout',
+    name: 'Logout',
+    component: () => import('@/views/Logout.vue'),
+    meta: { title: '退出登录' },
+  },
   {
     path: '/',
     component: BasicLayout,
