@@ -17,7 +17,7 @@ import java.util.Collections;
  *
  * <p><b>设计原则：SSO 只认证（token 证明"你是谁"），子应用负责授权（"你能干什么"）。</b></p>
  *
- * <p>流程：token 取 {@code sub}（passport-sso 的 sub 就是用户 uid）→ 查子应用本地 {@code t_user.uid}
+ * <p>流程：token 取 {@code sub}（passport-sso 的 sub 就是用户 uid）→ 查子应用本地 {@code users.uid}
  * → 取其 {@code role}（如 VPN_ADMIN / VPN_USER）→ 包装为 {@code ROLE_VPN_ADMIN} / {@code ROLE_VPN_USER}
  * 注入 Spring Security。子应用接口用 {@code @PreAuthorize("hasRole('VPN_ADMIN')")} 判定。</p>
  *

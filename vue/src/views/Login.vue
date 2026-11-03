@@ -1,5 +1,5 @@
 <script setup>
-// 登录页（独立于 BasicLayout）：标题/介绍为占位文案，按业务替换
+// 登录页（独立于 ConsoleLayout）：标题/介绍为占位文案，按业务替换
 // 暗色适配：页面底色用全局渐变（html::before），文字色用全局 CSS 变量，
 // 卡片/按钮等 antd 组件由 ConfigProvider 主题算法自动切换，无需页面级处理
 // 支持 ?redirect_uri=/xxx：SSO 登录成功后回跳该地址（见 stores/modules/user.js#loginWithSso）

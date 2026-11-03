@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 角色权限示例接口（方案A：子应用角色本地化 + @PreAuthorize 用法）。
  *
- * <p>角色由 SSO token 的 sub(=uid) 查本地 t_user 表注入，业务接口用 @PreAuthorize 控制：</p>
+ * <p>角色由 SSO token 的 sub(=uid) 查本地 users 表注入，业务接口用 @PreAuthorize 控制：</p>
  * <ul>
  *   <li>{@code @PreAuthorize("hasRole('ADMIN')")} —— 仅管理员</li>
  *   <li>{@code @PreAuthorize("hasAnyRole('ADMIN','USER')")} —— 已登录用户（管理员或普通用户）</li>

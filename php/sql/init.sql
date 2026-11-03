@@ -5,7 +5,10 @@
 
 USE antx_template;
 
-CREATE TABLE IF NOT EXISTS `t_user`
+-- 存量库若之前用 t_user，先改名（新库可忽略）：
+-- RENAME TABLE t_user TO users;
+
+CREATE TABLE IF NOT EXISTS `users`
 (
     `id`          BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
     `uid`         VARCHAR(64) NOT NULL COMMENT 'SSO 用户 uid（access_token 的 sub，唯一标识）',
@@ -22,6 +25,6 @@ CREATE TABLE IF NOT EXISTS `t_user`
   COLLATE = utf8mb4_general_ci COMMENT ='用户表（以 SSO uid 为身份键）';
 
 -- 初始管理员：uid=1（管理员判定以 SSO_ADMIN_UID 配置为准，默认 1）
-INSERT INTO t_user (id, uid, role, status, deleted)
+INSERT INTO users (id, uid, role, status, deleted)
 VALUES (1, '1', 'ADMIN', 1, 0)
 ON DUPLICATE KEY UPDATE role = 'ADMIN';

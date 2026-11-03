@@ -65,9 +65,9 @@ SSO 控制台登记的回调地址（`redirect_uri`）：
 https://<你的域名>:<端口>/sso/callback
 ```
 
-## 管理后台用户管理（MySQL t_user）
+## 管理后台用户管理（MySQL users）
 
-- 身份键：`t_user.uid` = SSO `access_token` 的 `sub`，唯一；默认 `uid=1` 为管理员。
+- 身份键：`users.uid` = SSO `access_token` 的 `sub`，唯一；默认 `uid=1` 为管理员。
 - 管理员判定：`SSO_ADMIN_UID`（默认 `1`）。
 - 建表：执行 `sql/init.sql`；数据库连接用 `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD`。
 - 管理接口（仅管理员；未登录 401，非管理员 403）：

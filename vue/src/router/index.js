@@ -1,21 +1,28 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import BasicLayout from '@/layouts/BasicLayout.vue'
+import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
+import LandingLayout from '@/layouts/LandingLayout.vue'
 import { useUserStore } from '@/stores/modules/user'
 
 const APP_TITLE = import.meta.env.VITE_APP_TITLE || ''
 
 const routes = [
-  // 首页：独立落地页（自带 header，无侧边菜单），介绍技术栈与使用方法
+  // 首页：营销落地页（LandingLayout 自带 header / footer，无侧边菜单）
   {
     path: '/',
-    name: 'Home',
-    component: () => import('@/views/Home.vue'),
-    meta: { title: '首页' },
+    component: LandingLayout,
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/views/Home.vue'),
+        meta: { title: '首页' },
+      },
+    ],
   },
   // 兼容旧链接
   { path: '/home', redirect: '/' },
-  // 登录页（独立全屏，不在 BasicLayout 内）
+  // 登录页（独立全屏，不在布局内）
   {
     path: '/login',
     name: 'Login',
@@ -29,10 +36,10 @@ const routes = [
     component: () => import('@/views/Logout.vue'),
     meta: { title: '退出登录' },
   },
-  // 示例页面：沿用带侧边菜单的 BasicLayout
+  // 示例页面：沿用带侧边菜单的 ConsoleLayout
   {
     path: '/about',
-    component: BasicLayout,
+    component: ConsoleLayout,
     children: [
       {
         path: '',
@@ -44,7 +51,7 @@ const routes = [
   },
   {
     path: '/components',
-    component: BasicLayout,
+    component: ConsoleLayout,
     children: [
       {
         path: '',
@@ -54,10 +61,10 @@ const routes = [
       },
     ],
   },
-  // 管理后台（BasicLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
+  // 管理后台（ConsoleLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
   {
     path: '/admin',
-    component: BasicLayout,
+    component: ConsoleLayout,
     redirect: '/admin/users',
     meta: { requiresAdmin: true },
     children: [

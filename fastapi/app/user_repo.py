@@ -1,4 +1,4 @@
-"""用户仓储层（MySQL t_user，对标 Spring Boot UserMapper）。
+"""用户仓储层（MySQL users，对标 Spring Boot UserMapper）。
 
 字段：id / uid / role / status / deleted / version / create_time / update_time。
 删除均为软删除（deleted=1 进入回收站）。
@@ -44,10 +44,10 @@ def page(page_num: int, page_size: int, uid: str | None, status: int | None,
     offset = (max(1, page_num) - 1) * max(1, min(100, page_size))
     with connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute(f"SELECT COUNT(*) AS total FROM t_user WHERE {where_sql}", params)
+            cursor.execute(f"SELECT COUNT(*) AS total FROM users WHERE {where_sql}", params)
             total = int(cursor.fetchone()["total"])
             cursor.execute(
-                f"SELECT {_COLUMNS} FROM t_user WHERE {where_sql} "
+                f"SELECT {_COLUMNS} FROM users WHERE {where_sql} "
                 "ORDER BY create_time DESC, id DESC LIMIT %s, %s",
                 [*params, offset, max(1, min(100, page_size))],
             )
@@ -56,7 +56,7 @@ def page(page_num: int, page_size: int, uid: str | None, status: int | None,
 
 
 def get_by_uid(uid: str, include_deleted: bool = False) -> dict[str, Any] | None:
-    sql = f"SELECT {_COLUMNS} FROM t_user WHERE uid = %s"
+    sql = f"SELECT {_COLUMNS} FROM users WHERE uid = %s"
     if not include_deleted:
         sql += " AND deleted = 0"
     with connection() as conn:
@@ -66,7 +66,7 @@ def get_by_uid(uid: str, include_deleted: bool = False) -> dict[str, Any] | None
 
 
 def get_by_id(user_id: int, include_deleted: bool = False) -> dict[str, Any] | None:
-    sql = f"SELECT {_COLUMNS} FROM t_user WHERE id = %s"
+    sql = f"SELECT {_COLUMNS} FROM users WHERE id = %s"
     if not include_deleted:
         sql += " AND deleted = 0"
     with connection() as conn:
@@ -84,7 +84,7 @@ def create(uid: str) -> dict[str, Any]:
     with connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO t_user (uid, role, status, deleted, version) VALUES (%s, 'USER', 1, 0, 1)",
+                "INSERT INTO users (uid, role, status, deleted, version) VALUES (%s, 'USER', 1, 0, 1)",
                 [uid],
             )
             user_id = int(cursor.lastrowid)
@@ -98,7 +98,7 @@ def update_status(user_id: int, status: int) -> dict[str, Any]:
         raise BusinessException(ResultCode.NOT_FOUND, "用户不存在")
     with connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE t_user SET status = %s WHERE id = %s AND deleted = 0", [status, user_id])
+            cursor.execute("UPDATE users SET status = %s WHERE id = %s AND deleted = 0", [status, user_id])
     return get_by_id(user_id)  # type: ignore[return-value]
 
 
@@ -107,7 +107,7 @@ def soft_delete(user_id: int) -> None:
         raise BusinessException(ResultCode.NOT_FOUND, "用户不存在")
     with connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE t_user SET deleted = 1 WHERE id = %s AND deleted = 0", [user_id])
+            cursor.execute("UPDATE users SET deleted = 1 WHERE id = %s AND deleted = 0", [user_id])
 
 
 def restore(user_id: int) -> dict[str, Any]:
@@ -116,14 +116,14 @@ def restore(user_id: int) -> dict[str, Any]:
         raise BusinessException(ResultCode.NOT_FOUND, "回收站中不存在该用户")
     with connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("UPDATE t_user SET deleted = 0 WHERE id = %s AND deleted = 1", [user_id])
+            cursor.execute("UPDATE users SET deleted = 0 WHERE id = %s AND deleted = 1", [user_id])
     return get_by_id(user_id)  # type: ignore[return-value]
 
 
 def purge(user_id: int) -> None:
     with connection() as conn:
         with conn.cursor() as cursor:
-            cursor.execute("DELETE FROM t_user WHERE id = %s AND deleted = 1", [user_id])
+            cursor.execute("DELETE FROM users WHERE id = %s AND deleted = 1", [user_id])
             affected = cursor.rowcount
     if affected == 0:
         raise BusinessException(ResultCode.NOT_FOUND, "回收站中不存在该用户")

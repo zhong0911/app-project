@@ -207,18 +207,18 @@ curl -H "Authorization: Bearer <access_token>" "http://localhost:8080/api/auth/m
 
 **核心原则：SSO 负责认证（token 证明"你是谁"），子应用负责授权（"你能干什么"）。**
 
-子应用的管理员/用户角色不放进 SSO token，由**本地表 `t_user`** 管理。token 取 `sub`（passport-sso 的 **sub 就是用户 uid**）→ 查本地表 → 注入 `ROLE_*`：
+子应用的管理员/用户角色不放进 SSO token，由**本地表 `users`** 管理。token 取 `sub`（passport-sso 的 **sub 就是用户 uid**）→ 查本地表 → 注入 `ROLE_*`：
 
 ```
 Bearer access_token（sub=uid）
   → 校验 JWT（issuer-uri 验签）
   → 取 sub(=uid)
-  → 查 t_user.uid → 取 role（如 ADMIN / USER）
+  → 查 users.uid → 取 role（如 ADMIN / USER）
   → 注入 ROLE_ADMIN / ROLE_USER
   → @PreAuthorize("hasRole('ADMIN')") 控制接口
 ```
 
-`t_user` 表以 **SSO uid 为身份键**，去掉本地的用户名/昵称/邮箱（资料由 SSO 提供，本地不维护）。字段如下（见 `sql/init.sql`，存量表用注释里的 ALTER）：
+`users` 表以 **SSO uid 为身份键**，去掉本地的用户名/昵称/邮箱（资料由 SSO 提供，本地不维护）。字段如下（见 `sql/init.sql`，存量表用注释里的 ALTER）：
 
 | 字段 | 说明 |
 |---|---|
@@ -233,11 +233,11 @@ Bearer access_token（sub=uid）
 
 ```sql
 -- 初始管理员（uid=1，init.sql 已内置）
-INSERT INTO t_user (id, uid, role) VALUES (1, '1', 'ADMIN')
+INSERT INTO users (id, uid, role) VALUES (1, '1', 'ADMIN')
 ON DUPLICATE KEY UPDATE role = 'ADMIN';
 
 -- 注册/赋角色：把 uid=1001 的用户设为管理员
-INSERT INTO t_user (uid, role) VALUES ('1001', 'ADMIN')
+INSERT INTO users (uid, role) VALUES ('1001', 'ADMIN')
 ON DUPLICATE KEY UPDATE role = 'ADMIN';
 ```
 
@@ -269,9 +269,9 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 
 > 权限规则见 `config/security/SecurityConfig.java`（放行公开接口、调整角色、`@PreAuthorize` 用法）。
 
-## 管理后台用户管理（MySQL t_user）
+## 管理后台用户管理（MySQL users）
 
-- 身份键：`t_user.uid` = SSO `access_token` 的 `sub`，唯一；默认 `uid=1` 为管理员。
+- 身份键：`users.uid` = SSO `access_token` 的 `sub`，唯一；默认 `uid=1` 为管理员。
 - 管理员判定：`application.yml` 的 `sso.admin-uid`（环境变量 `SSO_ADMIN_UID`，默认 `1`）。
 - 建表：`src/main/resources/sql/init.sql`（含 `status` 启停、`deleted` 软删除字段）。
 - 管理接口（仅管理员；未登录 401，非管理员 403）：
@@ -339,7 +339,7 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 1. **删依赖**（`pom.xml`）：删除 `spring-boot-starter-security`、`spring-boot-starter-oauth2-client`、`spring-boot-starter-oauth2-resource-server` 三个依赖。
 2. **删代码**：删除整个包 `src/main/java/cc/antx/template/config/security/`（`SecurityConfig`、`RestAuthenticationEntryPoint`、`RestAccessDeniedHandler`、`ResourceServerConfig`、`LocalRoleGrantedAuthoritiesConverter`），以及 `controller/AuthController.java`、`controller/OAuth2LoginController.java`、`controller/SecurityDemoController.java`、`controller/BffController.java`、`vo/BffUserVO.java`（BFF 依赖 Security）。
 3. **删配置**（`application.yml`）：删除 `spring.security` 段（内存用户 + `oauth2`）与 `.env` / `.env.example` 的 `SECURITY_ADMIN_*`、`SSO_*` 键。
-4. **删数据**（可选）：若不再按 SSO 区分角色，可删掉 `t_user` 的 `uid`、`role` 两列与 `uk_uid` 唯一键（见 `sql/init.sql` 注释）。
+4. **删数据**（可选）：若不再按 SSO 区分角色，可删掉 `users` 的 `uid`、`role` 两列与 `uk_uid` 唯一键（见 `sql/init.sql` 注释）。
 5. （可选）`common/aspect/WebLogAspect` 等与安全无关的模块不受影响。
 
 > 若只想保留"某些接口公开、其余需认证"，只需改 `SecurityConfig` 的 `.requestMatchers(...).permitAll()` 放行规则，不用删安全。

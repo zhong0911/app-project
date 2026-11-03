@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace AntX\Template;
 
 /**
- * 用户仓储层（MySQL t_user，对标 Spring Boot UserMapper）。
+ * 用户仓储层（MySQL users，对标 Spring Boot UserMapper）。
  *
  * 字段：id / uid / role / status / deleted / version / create_time / update_time。
  * 删除均为软删除（deleted=1 进入回收站）。
@@ -36,12 +36,12 @@ final class UserRepository
         }
         $whereSql = implode(' AND ', $wheres);
 
-        $countStmt = $this->pdo()->prepare("SELECT COUNT(*) AS total FROM t_user WHERE {$whereSql}");
+        $countStmt = $this->pdo()->prepare("SELECT COUNT(*) AS total FROM users WHERE {$whereSql}");
         $countStmt->execute($params);
         $total = (int) $countStmt->fetchColumn();
 
         $offset = ($pageNum - 1) * $pageSize;
-        $sql = 'SELECT ' . self::COLUMNS . " FROM t_user WHERE {$whereSql} "
+        $sql = 'SELECT ' . self::COLUMNS . " FROM users WHERE {$whereSql} "
             . 'ORDER BY create_time DESC, id DESC LIMIT :offset, :limit';
         $stmt = $this->pdo()->prepare($sql);
         foreach ($params as $key => $value) {
@@ -57,7 +57,7 @@ final class UserRepository
 
     public function getByUid(string $uid, bool $includeDeleted = false): ?array
     {
-        $sql = 'SELECT ' . self::COLUMNS . ' FROM t_user WHERE uid = :uid';
+        $sql = 'SELECT ' . self::COLUMNS . ' FROM users WHERE uid = :uid';
         if (!$includeDeleted) {
             $sql .= ' AND deleted = 0';
         }
@@ -69,7 +69,7 @@ final class UserRepository
 
     public function getById(int $id, bool $includeDeleted = false): ?array
     {
-        $sql = 'SELECT ' . self::COLUMNS . ' FROM t_user WHERE id = :id';
+        $sql = 'SELECT ' . self::COLUMNS . ' FROM users WHERE id = :id';
         if (!$includeDeleted) {
             $sql .= ' AND deleted = 0';
         }
@@ -89,7 +89,7 @@ final class UserRepository
             throw new BusinessException(ResultCode::DATA_CONFLICT, 'SSO 用户已存在: ' . $uid);
         }
         $stmt = $this->pdo()->prepare(
-            "INSERT INTO t_user (uid, role, status, deleted, version) VALUES (:uid, 'USER', 1, 0, 1)"
+            "INSERT INTO users (uid, role, status, deleted, version) VALUES (:uid, 'USER', 1, 0, 1)"
         );
         $stmt->execute([':uid' => $uid]);
         $id = (int) $this->pdo()->lastInsertId();
@@ -104,7 +104,7 @@ final class UserRepository
         if ($this->getById($id) === null) {
             throw new BusinessException(ResultCode::NOT_FOUND, '用户不存在');
         }
-        $stmt = $this->pdo()->prepare('UPDATE t_user SET status = :status WHERE id = :id AND deleted = 0');
+        $stmt = $this->pdo()->prepare('UPDATE users SET status = :status WHERE id = :id AND deleted = 0');
         $stmt->execute([':status' => $status, ':id' => $id]);
         return $this->getById($id);
     }
@@ -114,7 +114,7 @@ final class UserRepository
         if ($this->getById($id) === null) {
             throw new BusinessException(ResultCode::NOT_FOUND, '用户不存在');
         }
-        $stmt = $this->pdo()->prepare('UPDATE t_user SET deleted = 1 WHERE id = :id AND deleted = 0');
+        $stmt = $this->pdo()->prepare('UPDATE users SET deleted = 1 WHERE id = :id AND deleted = 0');
         $stmt->execute([':id' => $id]);
     }
 
@@ -124,14 +124,14 @@ final class UserRepository
         if ($row === null || (int) $row['deleted'] !== 1) {
             throw new BusinessException(ResultCode::NOT_FOUND, '回收站中不存在该用户');
         }
-        $stmt = $this->pdo()->prepare('UPDATE t_user SET deleted = 0 WHERE id = :id AND deleted = 1');
+        $stmt = $this->pdo()->prepare('UPDATE users SET deleted = 0 WHERE id = :id AND deleted = 1');
         $stmt->execute([':id' => $id]);
         return $this->getById($id);
     }
 
     public function purge(int $id): void
     {
-        $stmt = $this->pdo()->prepare('DELETE FROM t_user WHERE id = :id AND deleted = 1');
+        $stmt = $this->pdo()->prepare('DELETE FROM users WHERE id = :id AND deleted = 1');
         $stmt->execute([':id' => $id]);
         if ($stmt->rowCount() === 0) {
             throw new BusinessException(ResultCode::NOT_FOUND, '回收站中不存在该用户');

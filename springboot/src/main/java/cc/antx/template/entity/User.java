@@ -13,13 +13,13 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 /**
- * 用户实体（对应表 t_user）。
+ * 用户实体（对应表 users）。
  *
  * <p>实体只负责持久化映射，不直接暴露给前端；出参统一走 {@link cc.antx.template.vo.UserVO}。</p>
  */
 @Getter
 @Setter
-@TableName("t_user")
+@TableName("users")
 public class User {
 
     /** 主键（数据库自增） */

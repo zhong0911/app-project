@@ -20,7 +20,7 @@
 
     <select id="selectPageIncludingDeleted" resultMap="UserMap">
         SELECT id, uid, role, status, deleted, version, create_time, update_time
-        FROM t_user
+        FROM users
         <where>
             deleted = #{deleted}
             <if test="uid != null and uid != ''">
@@ -35,38 +35,38 @@
 
     <select id="selectByUidIncludingDeleted" resultMap="UserMap">
         SELECT id, uid, role, status, deleted, version, create_time, update_time
-        FROM t_user
+        FROM users
         WHERE uid = #{uid}
         LIMIT 1
     </select>
 
     <select id="selectByIdIncludingDeleted" resultMap="UserMap">
         SELECT id, uid, role, status, deleted, version, create_time, update_time
-        FROM t_user
+        FROM users
         WHERE id = #{id}
         LIMIT 1
     </select>
 
     <update id="updateStatusById">
-        UPDATE t_user
+        UPDATE users
         SET status = #{status}, update_time = NOW()
         WHERE id = #{id}
     </update>
 
     <update id="softDeleteById">
-        UPDATE t_user
+        UPDATE users
         SET deleted = 1, update_time = NOW()
         WHERE id = #{id} AND deleted = 0
     </update>
 
     <update id="restoreById">
-        UPDATE t_user
+        UPDATE users
         SET deleted = 0, update_time = NOW()
         WHERE id = #{id} AND deleted = 1
     </update>
 
     <delete id="purgeById">
-        DELETE FROM t_user
+        DELETE FROM users
         WHERE id = #{id} AND deleted = 1
     </delete>
 

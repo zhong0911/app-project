@@ -53,7 +53,8 @@ vue3-antdv-template/
     │   ├── locale.js           # 全局 locale 配置中心（语言列表、antdv 语言包、切换）
     │   └── theme.js            # 全局主题配置（亮/暗 token、组件级覆盖）
     ├── layouts/
-    │   ├── BasicLayout.vue     # 基础布局（桌面固定侧边栏 / 移动端抽屉菜单 + 顶栏 + 亮暗适配 + 语言切换）
+    │   ├── ConsoleLayout.vue   # 控制台布局（桌面固定侧边栏 / 移动端抽屉菜单 + 顶栏，供 /admin 与示例页）
+    │   ├── LandingLayout.vue   # 落地页布局（品牌 header + 语言/主题/登录 + footer，供首页使用）
     │   └── SideMenu.vue        # 侧边菜单内容（logo + 菜单），Sider 与移动端 Drawer 复用
     ├── router/
     │   └── index.js            # 路由配置（含标题守卫）
@@ -127,7 +128,7 @@ await userStore.fetchUserInfo()
 → 前端 onMounted 调 /api/bff/me 拉取登录态（uid / role / name）
 ```
 
-- 登录入口：`userStore.loginWithSso()`（`BasicLayout.vue` 顶栏，未登录时显示）。
+- 登录入口：`userStore.loginWithSso()`（`LandingLayout.vue` / `ConsoleLayout.vue` 顶栏，未登录时显示）。
 - 登录态拉取：`userStore.fetchLoginUser()`（BFF 聚合接口 `GET /api/bff/me`，未登录 401 静默忽略）。
 - dev 代理：`vite.config.js` 已把 `/sso` 与 `/api` 一并代理到后端。
 - 生产部署：前端与后端同域（或反向代理 `/sso`、`/api` 到后端），并把后端的

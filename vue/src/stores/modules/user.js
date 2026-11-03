@@ -39,7 +39,7 @@ export const useUserStore = defineStore('user', () => {
    * 授权后回调 /sso/callback 换 token 建会话，再跳回前端首页。
    *
    * @param redirectUri 登录成功后的回跳地址（/login?redirect_uri=xxx 传入）：
-   *   暂存 sessionStorage，回到前端且确认已登录后由 BasicLayout 完成跳转
+   *   暂存 sessionStorage，回到前端且确认已登录后由布局组件完成跳转
    *   （授权回调链路的最终落地地址由后端 sso.login-success-url 决定）
    */
   function loginWithSso(redirectUri = '') {

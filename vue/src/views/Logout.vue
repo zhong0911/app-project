@@ -1,5 +1,5 @@
 <script setup>
-// 退出登录页（独立于 BasicLayout）：
+// 退出登录页（独立于 ConsoleLayout）：
 // 进入不自动请求，点击「退出登录」按钮后才请求后端单点退出接口 POST /api/auth/logout，
 // 请求期间 a-spin 展示 loading；请求结束显示 a-result 退出成功 + 「首页 / 登录」两个按钮；
 // 若后端返回 ssoLogoutUrl（配置了 SSO_LOGOUT_URI）则直接整页跳转授权服务器完成全局退出。

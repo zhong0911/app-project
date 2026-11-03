@@ -26,7 +26,7 @@ import org.springframework.security.web.SecurityFilterChain;
  *   <li><b>OAuth2 Client</b>：浏览器访问 /sso/authorize 跳转 SSO 登录页（规范路径，见 OAuth2LoginController），
  *       SSO 授权后回调 /sso/callback 换取 token、建立会话</li>
  *   <li><b>资源服务器</b>：API 校验 SSO 签发的 Bearer JWT（issuer 自动发现 JWKS 验签）</li>
- *   <li><b>角色本地化（方案B：子应用自治）</b>：token 取 sub(=uid) → 查本地 t_user 表 role →
+ *   <li><b>角色本地化（方案B：子应用自治）</b>：token 取 sub(=uid) → 查本地 users 表 role →
  *       注入 ROLE_*（如 ROLE_VPN_ADMIN），子应用接口用 @PreAuthorize("hasRole('VPN_ADMIN')") 判定，
  *       SSO 只管认证，业务角色由子应用本地表管理</li>
  *   <li>httpBasic + 内存用户：仅本地联调用，生产子应用请删除（见删除方法）</li>
@@ -94,7 +94,7 @@ public class SecurityConfig {
 
     /**
      * JWT → authorities 转换器（方案B：子应用自治）。
-     * token 取 sub(=uid) → 查本地 t_user 表 role → 注入 ROLE_*（见 {@link LocalRoleGrantedAuthoritiesConverter}）。
+     * token 取 sub(=uid) → 查本地 users 表 role → 注入 ROLE_*（见 {@link LocalRoleGrantedAuthoritiesConverter}）。
      */
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {

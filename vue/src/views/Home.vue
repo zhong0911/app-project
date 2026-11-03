@@ -1,7 +1,6 @@
 <script setup>
-// 首页落地页：独立布局（顶部 header，无左侧菜单），介绍前端技术栈与使用方法
-import { computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+// 首页内容：header / footer 与页面宽度由 LandingLayout 提供
+import { useRouter } from 'vue-router'
 import {
   CodeOutlined,
   ThunderboltOutlined,
@@ -11,24 +10,14 @@ import {
   SettingOutlined,
   BgColorsOutlined,
   SafetyCertificateOutlined,
-  GlobalOutlined,
-  SunOutlined,
-  MoonOutlined,
   LoginOutlined,
-  LogoutOutlined,
-  UserOutlined,
   ArrowRightOutlined,
   CheckCircleOutlined,
   FolderOutlined,
 } from '@antdv-next/icons'
-import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
-import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
-import { toggleTheme } from '@/utils/app'
 
-const route = useRoute()
 const router = useRouter()
-const appStore = useAppStore()
 const userStore = useUserStore()
 
 // 技术栈介绍
@@ -94,115 +83,20 @@ const steps = [
 // 目录说明
 const directories = [
   { path: 'src/api', desc: '接口封装与统一 axios 实例' },
-  { path: 'src/layouts', desc: 'BasicLayout 侧边菜单布局与 SideMenu' },
+  { path: 'src/layouts', desc: 'ConsoleLayout 侧边菜单布局与 LandingLayout 落地页布局' },
   { path: 'src/views', desc: '页面组件（含 admin 用户管理）' },
   { path: 'src/router', desc: '路由表与全局守卫' },
   { path: 'src/stores', desc: 'Pinia 模块（app / user）' },
   { path: 'src/config', desc: '语言、主题等全局配置' },
 ]
 
-const currentLocaleLabel = computed(() => currentLocale.value.label)
-const userMenuItems = computed(() => {
-  const items = []
-  if (userStore.isAdmin) {
-    items.push({ key: 'admin', label: '管理后台', icon: SettingOutlined })
-  }
-  items.push({ key: 'logout', label: '退出登录', icon: LogoutOutlined })
-  return items
-})
-
-function handleLocaleChange({ key }) {
-  setLocale(key)
-}
-
-function handleUserMenu({ key }) {
-  if (key === 'admin') {
-    router.push('/admin/users')
-  } else if (key === 'logout') {
-    router.push('/logout')
-  }
-}
-
 function goLogin() {
-  router.push({ path: '/login', query: { redirect_uri: route.fullPath } })
+  router.push({ path: '/login', query: { redirect_uri: '/' } })
 }
-
-onMounted(async () => {
-  await userStore.fetchLoginUser()
-  // 从 /login?redirect_uri=/ 登录回来后恢复跳转
-  const redirect = sessionStorage.getItem('sso_redirect_uri')
-  if (redirect && userStore.isLoggedIn) {
-    sessionStorage.removeItem('sso_redirect_uri')
-    router.replace(redirect)
-  }
-})
 </script>
 
 <template>
-  <div class="home-page">
-    <!-- 顶部 header：品牌 + 导航 + 语言 / 主题 / 登录 -->
-    <header class="site-header">
-      <div class="header-inner">
-        <router-link to="/" class="brand">
-          <span class="brand-icon"><CodeOutlined /></span>
-          <span class="brand-text">
-            <strong>AntX Frontend</strong>
-            <small>Vue 3 通用前端模板</small>
-          </span>
-        </router-link>
-
-        <nav class="site-nav">
-          <a href="#stack">技术栈</a>
-          <a href="#usage">使用指南</a>
-          <a href="#structure">目录结构</a>
-          <router-link to="/components">组件预览</router-link>
-        </nav>
-
-        <div class="header-actions">
-          <!-- 语言切换 -->
-          <a-dropdown
-            :trigger="['click']"
-            :menu="{
-              items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
-              selectable: true,
-              selectedKeys: [localeKey],
-            }"
-            @menu-click="handleLocaleChange"
-          >
-            <a-button type="text" class="icon-btn">
-              <GlobalOutlined />
-              <span class="lang-label">{{ currentLocaleLabel }}</span>
-            </a-button>
-          </a-dropdown>
-
-          <!-- 主题切换 -->
-          <a-tooltip :title="appStore.isDark ? '切换浅色' : '切换暗色'">
-            <a-button type="text" shape="circle" class="icon-btn" @click="toggleTheme">
-              <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
-            </a-button>
-          </a-tooltip>
-
-          <!-- 登录 / 用户菜单 -->
-          <a-button v-if="!userStore.isLoggedIn" type="primary" @click="goLogin">
-            <LoginOutlined />
-            登录
-          </a-button>
-          <a-dropdown
-            v-else
-            :trigger="['click']"
-            :menu="{ items: userMenuItems }"
-            @menu-click="handleUserMenu"
-          >
-            <a-button class="user-btn">
-              <UserOutlined />
-              <span class="user-name">{{ userStore.displayName || '已登录' }}</span>
-            </a-button>
-          </a-dropdown>
-        </div>
-      </div>
-    </header>
-
-    <main class="page-main">
+  <div class="home-content">
       <!-- Hero -->
       <section class="hero">
         <a-tag color="blue" class="hero-badge">Vue 3 + Vite 前端模板</a-tag>
@@ -333,130 +227,11 @@ npm run build</code></pre>
           </a-button>
         </div>
       </section>
-    </main>
-
-    <footer class="site-footer">
-      <span>AntX Frontend Template</span>
-      <span>Vue 3 · Vite · Pinia · AntdvNext</span>
-    </footer>
   </div>
 </template>
 
 <style scoped>
-.home-page {
-  min-height: 100vh;
-}
-
-/* ---------- header ---------- */
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(14px);
-  background: rgba(255, 255, 255, 0.72);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-html.dark .site-header {
-  background: rgba(18, 20, 27, 0.72);
-  border-bottom-color: rgba(255, 255, 255, 0.08);
-}
-
-.header-inner {
-  max-width: 1120px;
-  height: 64px;
-  margin: 0 auto;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: inherit;
-  text-decoration: none;
-  flex-shrink: 0;
-}
-
-.brand-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 18px;
-  background: linear-gradient(135deg, #4c8bf5, #7b5bf5);
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-
-.brand-text strong {
-  font-size: 15px;
-}
-
-.brand-text small {
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-.site-nav {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-left: 8px;
-}
-
-.site-nav a {
-  color: var(--text-secondary);
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.site-nav a:hover {
-  color: #4c8bf5;
-}
-
-.header-actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.icon-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.lang-label {
-  font-size: 13px;
-}
-
-.user-name {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* ---------- main ---------- */
-.page-main {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 0 24px 32px;
-}
-
+/* ---------- hero ---------- */
 .hero {
   padding: 88px 0 56px;
   text-align: center;
@@ -751,23 +526,6 @@ html.dark .dir-item {
   color: var(--text-secondary);
 }
 
-/* ---------- footer ---------- */
-.site-footer {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 28px 24px 40px;
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
-  color: var(--text-tertiary);
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
-}
-
-html.dark .site-footer {
-  border-top-color: rgba(255, 255, 255, 0.08);
-}
-
 /* ---------- responsive ---------- */
 @media (max-width: 1023px) {
   .stack-grid,
@@ -781,21 +539,6 @@ html.dark .site-footer {
 }
 
 @media (max-width: 767px) {
-  .header-inner {
-    gap: 12px;
-    padding: 0 16px;
-  }
-
-  .site-nav {
-    display: none;
-  }
-
-  .brand-text small,
-  .lang-label,
-  .user-name {
-    display: none;
-  }
-
   .hero {
     padding: 56px 0 32px;
   }
@@ -810,10 +553,6 @@ html.dark .site-footer {
   .admin-callout {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .site-footer {
-    flex-direction: column;
   }
 }
 </style>

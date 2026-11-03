@@ -15,7 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * {@link LocalRoleGrantedAuthoritiesConverter} 单测（方案B：token 取 sub(=uid) 查本地 t_user.role 注入 ROLE_*）。
+ * {@link LocalRoleGrantedAuthoritiesConverter} 单测（方案B：token 取 sub(=uid) 查本地 users.role 注入 ROLE_*）。
  */
 class LocalRoleGrantedAuthoritiesConverterTest {
 

@@ -4,9 +4,9 @@
 
 本模板（OAuth2 Client + Resource Server + 方案B 本地角色 + BFF + Redis 会话）与 passport-sso **完全对接**。
 
-**方案B 成立的关键**：SSO 的 access_token 中 `sub` 固定为**用户数据库自增 id**（`SsoUser.getId()`），不是用户名。子应用取 `sub` → 查本地 `t_user.uid` → 注入 `ROLE_*`。
+**方案B 成立的关键**：SSO 的 access_token 中 `sub` 固定为**用户数据库自增 id**（`SsoUser.getId()`），不是用户名。子应用取 `sub` → 查本地 `users.uid` → 注入 `ROLE_*`。
 
-> ⚠️ `sub` 是 SSO 库里用户的真实自增 id。本地造数据的 `uid='1001'/'2000'` 仅作测试；真实环境要把 SSO 用户的实际 id 注册进子应用 `t_user.uid`。
+> ⚠️ `sub` 是 SSO 库里用户的真实自增 id。本地造数据的 `uid='1001'/'2000'` 仅作测试；真实环境要把 SSO 用户的实际 id 注册进子应用 `users.uid`。
 
 ## 二、逐项核对表
 
@@ -39,7 +39,7 @@ SSO 按申请的 scope 往 token 里写声明（`applyScopedClaims`）：
 
 1. **SSO 后台注册应用**：新建 OAuth2 应用，拿 `client-id` / `client-secret`，登记回调地址
    `https://{app}.antx.cc/sso/callback`
-2. **写入本地用户**：把 SSO 用户 id 写入子应用 `t_user.uid` 并赋角色（`ADMIN`/`USER`），未注册用户无权限（403）
+2. **写入本地用户**：把 SSO 用户 id 写入子应用 `users.uid` 并赋角色（`ADMIN`/`USER`），未注册用户无权限（403）
 3. **配置 `.env`**：
    ```properties
    SSO_CLIENT_ID=你的-client-id
