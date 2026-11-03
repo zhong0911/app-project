@@ -30,6 +30,12 @@ public class BffUserVO implements Serializable {
     /** 子应用角色：ADMIN / USER（新登录用户默认 USER） */
     private String role;
 
+    /** 是否管理员（由 sso.admin-uid 配置判定） */
+    private Boolean isAdmin;
+
+    /** 本地启停状态：1-启用，0-禁用（本地无记录时为 null） */
+    private Integer status;
+
     /** 用户名（SSO preferred_username；basic 为内存用户名） */
     private String name;
 }

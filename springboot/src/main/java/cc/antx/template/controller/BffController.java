@@ -2,6 +2,7 @@ package cc.antx.template.controller;
 
 import cc.antx.template.common.result.Result;
 import cc.antx.template.entity.User;
+import cc.antx.template.service.CurrentUserService;
 import cc.antx.template.service.UserService;
 import cc.antx.template.vo.BffUserVO;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ import java.util.Map;
 public class BffController {
 
     private final UserService userService;
+    private final CurrentUserService currentUserService;
 
     /**
      * 聚合登录态：SSO 身份（uid / name）+ 子应用角色（本地表），前端友好出参。
@@ -69,13 +71,15 @@ public class BffController {
 
         vo.setName(name);
 
-        // 聚合本地角色（查本地表；未注册则无角色）
+        // 聚合本地角色与启停状态（查本地表；未注册则无角色）
         if (StringUtils.hasText(uid)) {
             vo.setUid(uid);
+            vo.setIsAdmin(currentUserService.isAdmin(uid));
             User user = userService.getByUid(uid);
             if (user != null) {
                 vo.setLocalId(user.getId());
                 vo.setRole(user.getRole());
+                vo.setStatus(user.getStatus());
             }
         }
         return Result.success(vo);

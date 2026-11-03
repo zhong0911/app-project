@@ -1,8 +1,10 @@
 """OAuth2 客户端路由（全后端统一规范路径）。
 
-  - GET  /oauth2/{provider}/authorize   跳转到授权服务器
-  - GET  /oauth2/{provider}/callback    接收授权码 code，换取 token，重定向回登录成功页
-  - POST /api/auth/logout               单点退出（撤销 refresh_token + 销毁会话，返回 SSO 退出地址）
+  - GET  /sso/authorize   跳转到授权服务器
+  - GET  /sso/callback    接收授权码 code，换取 token，重定向回登录成功页
+  - POST /api/auth/logout 单点退出（撤销 refresh_token + 销毁会话，返回 SSO 退出地址）
+
+本模板只接入 AntX SSO，provider 固定为 sso。
 """
 from __future__ import annotations
 
@@ -27,7 +29,10 @@ from ..result_code import ResultCode
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/oauth2", tags=["OAuth"])
+router = APIRouter(prefix="/sso", tags=["OAuth"])
+
+# 本模板只接入 AntX SSO，固定 provider 为 sso
+PROVIDER = "sso"
 
 # 认证 API 路由（/api/auth/*，对标 Spring Boot AuthController）
 auth_api_router = APIRouter(prefix="/api/auth", tags=["Auth"])
@@ -84,24 +89,24 @@ def _base_url(request: Request) -> str:
     return str(request.base_url).rstrip("/")
 
 
-@router.get("/{provider}/authorize")
-async def authorize(provider: str, request: Request) -> RedirectResponse:
+@router.get("/authorize")
+async def authorize(request: Request) -> RedirectResponse:
     """跳转到授权服务器（对标 Spring Security 授权入口）。"""
-    if provider not in build_providers():
+    if PROVIDER not in build_providers():
         raise HTTPException(status_code=404, detail="请求资源不存在")
-    url, _state = build_authorize_url(provider, _base_url(request))
-    logger.info("[OAuth] 跳转授权服务器: provider=%s", provider)
+    url, _state = build_authorize_url(PROVIDER, _base_url(request))
+    logger.info("[OAuth] 跳转授权服务器: provider=%s", PROVIDER)
     return RedirectResponse(url)
 
 
-@router.get("/{provider}/callback")
+@router.get("/callback")
 async def callback(
-    provider: str,
     request: Request,
     code: str = Query(...),
     state: str = Query(...),
 ) -> RedirectResponse:
     """接受授权码，换取 token（对标 Spring Security 回调处理）。"""
+    provider = PROVIDER
     if provider not in build_providers():
         raise HTTPException(status_code=404, detail="请求资源不存在")
     if not consume_state(state, provider):
@@ -109,7 +114,7 @@ async def callback(
         raise HTTPException(status_code=400, detail="state 校验失败")
 
     cfg = build_providers()[provider]
-    redirect_uri = f"{_base_url(request)}/oauth2/{provider}/callback"
+    redirect_uri = f"{_base_url(request)}/sso/callback"
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(

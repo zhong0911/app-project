@@ -34,10 +34,13 @@ public class User {
      */
     private String uid;
 
-    /** 子应用角色：ADMIN-管理员，USER-普通用户（默认 USER；初始数据 uid=1 为 ADMIN） */
+    /** 子应用角色：ADMIN-管理员，USER-普通用户（默认 USER；管理员由 sso.admin-uid 指定） */
     private String role;
 
-    /** 逻辑删除标记：0-未删除，1-已删除 */
+    /** 启停状态：1-启用，0-禁用（禁用后该用户无法访问管理接口） */
+    private Integer status;
+
+    /** 逻辑删除标记：0-未删除，1-已删除（进入回收站） */
     @TableLogic
     private Integer deleted;
 

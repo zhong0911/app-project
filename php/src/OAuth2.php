@@ -8,10 +8,10 @@ namespace AntX\Template;
  * OAuth2 客户端（授权码模式，对标 Spring Boot 模板 spring.security.oauth2.client）。
  *
  * 规范路径（全后端统一）：
- *   - 跳转到授权服务器：GET /oauth2/{provider}/authorize
- *   - 接受授权码     ：GET /oauth2/{provider}/callback?code=...&state=...
+ *   - 跳转到授权服务器：GET /sso/authorize
+ *   - 接受授权码     ：GET /sso/callback?code=...&state=...
  *
- * 默认注册一个 provider：sso（对标 Spring Security registration "sso"），
+ * 本模板只接入 AntX SSO，provider 固定为 sso（对标 Spring Security registration "sso"），
  * 配置从环境变量读取（对标 application.yml 的 SSO_*）。
  */
 final class OAuth2
@@ -50,7 +50,7 @@ final class OAuth2
     {
         $cfg = self::providers()[$provider];
         $state = bin2hex(random_bytes(24));
-        $redirectUri = $baseUrl . '/oauth2/' . $provider . '/callback';
+        $redirectUri = $baseUrl . '/sso/callback';
         $params = http_build_query([
             'response_type' => 'code',
             'client_id' => $cfg['clientId'],
@@ -65,7 +65,7 @@ final class OAuth2
     public static function exchangeCode(string $provider, string $code, string $baseUrl): array
     {
         $cfg = self::providers()[$provider];
-        $redirectUri = $baseUrl . '/oauth2/' . $provider . '/callback';
+        $redirectUri = $baseUrl . '/sso/callback';
         $body = http_build_query([
             'grant_type' => 'authorization_code',
             'code' => $code,

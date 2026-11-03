@@ -32,4 +32,7 @@ public class UserQueryDTO implements Serializable {
 
     /** 子应用角色（精确查询） */
     private String role;
+
+    /** 启停状态（精确查询：1-启用，0-禁用） */
+    private Integer status;
 }

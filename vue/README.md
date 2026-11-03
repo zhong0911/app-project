@@ -121,18 +121,25 @@ await userStore.fetchUserInfo()
 前端作为 OAuth2 客户端的入口层，token 全程在后端（会话 Cookie），前端不接触 token：
 
 ```
-点「SSO 登录」→ 整页跳转 /oauth2/sso/authorize（dev 由 vite 代理到后端）
-→ 后端 302 到授权服务器登录页 → 授权后回调后端 /oauth2/sso/callback
+点「SSO 登录」→ 整页跳转 /sso/authorize（dev 由 vite 代理到后端）
+→ 后端 302 到授权服务器登录页 → 授权后回调后端 /sso/callback
 → 后端换 token、建会话 → 302 回前端首页（后端 SSO_LOGIN_SUCCESS_URL）
 → 前端 onMounted 调 /api/bff/me 拉取登录态（uid / role / name）
 ```
 
 - 登录入口：`userStore.loginWithSso()`（`BasicLayout.vue` 顶栏，未登录时显示）。
 - 登录态拉取：`userStore.fetchLoginUser()`（BFF 聚合接口 `GET /api/bff/me`，未登录 401 静默忽略）。
-- dev 代理：`vite.config.js` 已把 `/oauth2` 与 `/api` 一并代理到后端。
-- 生产部署：前端与后端同域（或反向代理 `/oauth2`、`/api` 到后端），并把后端的
+- dev 代理：`vite.config.js` 已把 `/sso` 与 `/api` 一并代理到后端。
+- 生产部署：前端与后端同域（或反向代理 `/sso`、`/api` 到后端），并把后端的
   `SSO_LOGIN_SUCCESS_URL` 指向前端首页地址。
 - provider 默认为 `sso`，对应后端 `application.yml` 的 `spring.security.oauth2.client.registration.sso`。
+
+### 2.2 管理后台（`/admin`，仅管理员）
+
+- `/admin/users`：用户管理（列表 / 按 SSO uid 添加 / 启停 / 软删除）
+- `/admin/recycle`：回收站（恢复 / 彻底删除）
+- 管理员由后端按 `SSO_ADMIN_UID` 判定（默认 uid=1），通过 `/api/bff/me` 的 `isAdmin` 下发；路由守卫会自动拦截非管理员。
+- 接口封装见 `src/api/admin.js`，页面见 `src/views/admin/`。
 
 ### 3. 路由（Vue Router）
 

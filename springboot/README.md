@@ -162,10 +162,10 @@ HTTP GET /api/users | ip=127.0.0.1 | UserController.page | 耗时 12ms
 在 SSO 后台创建一个 OAuth 应用，获得 **client-id / client-secret**，并把回调地址（redirect_uri）登记为：
 
 ```
-http://localhost:8080/oauth2/sso/callback
+http://localhost:8080/sso/callback
 ```
 
-> `{registrationId}` 就是注册名 `sso`，回调路径规范为 `/oauth2/{provider}/callback`（全后端统一）。
+> 回调路径规范为 `/sso/callback`（全后端统一，本模板只接入 AntX SSO）。
 
 #### 第二步：配置 `.env`
 
@@ -187,11 +187,11 @@ SSO_CLIENT_SECRET=xxxx                   # SSO 注册的 client-secret
 
 | 场景 | 地址 | 说明 |
 |---|---|---|
-| **跳转 SSO 登录页** | 浏览器访问 `http://localhost:8080/oauth2/sso/authorize` | 302 到 SSO `/oauth2/authorize`，带 client_id/scope/redirect_uri/state（见 `controller/OAuth2LoginController.java`） |
-| **SSO 授权回调** | `http://localhost:8080/oauth2/sso/callback` | SSO 授权后重定向回来，Spring 用 client-secret 换 token、建会话，跳 `SSO_LOGIN_SUCCESS_URL`（默认 `/api/auth/me`） |
+| **跳转 SSO 登录页** | 浏览器访问 `http://localhost:8080/sso/authorize` | 302 到 SSO `/oauth2/authorize`，带 client_id/scope/redirect_uri/state（见 `controller/OAuth2LoginController.java`） |
+| **SSO 授权回调** | `http://localhost:8080/sso/callback` | SSO 授权后重定向回来，Spring 用 client-secret 换 token、建会话，跳 `SSO_LOGIN_SUCCESS_URL`（默认 `/api/auth/me`） |
 | **获取当前登录用户** | `GET /api/auth/me` | 返回 `type=sso-login` + SSO 用户资料 |
 
-> 服务端 → 前端跳转：前端浏览器直接访问 `http://localhost:8080/oauth2/sso/authorize` 即可。
+> 服务端 → 前端跳转：前端浏览器直接访问 `http://localhost:8080/sso/authorize` 即可。
 
 #### API 场景（Bearer Token）
 
@@ -268,6 +268,21 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 ```
 
 > 权限规则见 `config/security/SecurityConfig.java`（放行公开接口、调整角色、`@PreAuthorize` 用法）。
+
+## 管理后台用户管理（MySQL t_user）
+
+- 身份键：`t_user.uid` = SSO `access_token` 的 `sub`，唯一；默认 `uid=1` 为管理员。
+- 管理员判定：`application.yml` 的 `sso.admin-uid`（环境变量 `SSO_ADMIN_UID`，默认 `1`）。
+- 建表：`src/main/resources/sql/init.sql`（含 `status` 启停、`deleted` 软删除字段）。
+- 管理接口（仅管理员；未登录 401，非管理员 403）：
+  - `GET /api/admin/users`：用户列表（不含回收站）
+  - `POST /api/admin/users`：添加用户，body `{"uid":"..."}`
+  - `PUT /api/admin/users/{id}/status`：启用/禁用，body `{"status":1|0}`
+  - `DELETE /api/admin/users/{id}`：软删除（移入回收站）
+  - `GET /api/admin/users/recycle`：回收站列表
+  - `POST /api/admin/users/{id}/restore`：恢复
+  - `DELETE /api/admin/users/{id}/purge`：彻底删除
+- 前端页面：`/admin/users`（用户管理）、`/admin/recycle`（回收站）；BFF 登录态 `/api/bff/me` 会返回 `isAdmin`。
 
 ## API 接口一览
 
@@ -374,5 +389,5 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 - **MyBatis-Plus 3.5.9+ 模块化拆分**：分页/乐观锁插件需额外依赖 `mybatis-plus-jsqlparser`，`IService/ServiceImpl` 包名已迁移到 `com.baomidou.mybatisplus.spring.service`——本模板已适配。
 - **Spring Boot 4 已迁移 Jackson 3**（`tools.jackson` 包），`GenericJackson2JsonRedisSerializer` 会报 `TypeResolverBuilder` 找不到——模板已改用 String 序列化 + fastjson2 规避。
 - **Spring Boot 4 已移除 `spring-boot-starter-aop`**——AOP 改用 `spring-aop` + `org.aspectj:aspectjweaver`。
-- **Spring Boot 4 重构了自动配置**：把各功能模块拆成独立 jar（如 `spring-boot-data-redis`），**Spring Session 的自动配置已不在其中**——必须手动加 `@EnableRedisHttpSession`（见 `config/RedisSessionConfig.java`），否则会话仍走 Tomcat 内存。引入 `spring-session-data-redis` + 该注解后，OAuth2 会话（含 access_token / refresh_token）才真正落 Redis。
+- **Spring Boot 4 重构了自动配置**：把各功能模块拆成独立 jar（如 `spring-boot-data-redis`），**Spring Session 的自动配置已不在其中**——必须手动加 `@EnableRedisHttpSession`（见 `config/RedisSessionConfig.java`），否则会话仍走 Tomcat 内存。另外 Spring Security 默认把 OAuth2 token 放在 `InMemoryOAuth2AuthorizedClientService`（JVM 内存）；模板已在 `SecurityConfig#authorizedClientRepository` 显式声明 `HttpSessionOAuth2AuthorizedClientRepository`，access_token / refresh_token 才会随 Redis 会话一起持久化。
 - 示例业务模块（User）用于演示分层写法，实际开发按业务删除或替换。

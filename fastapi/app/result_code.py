@@ -9,22 +9,6 @@ from __future__ import annotations
 from enum import IntEnum
 
 
-# code -> 默认提示语
-_MESSAGES = {
-    ResultCode.SUCCESS: "操作成功",
-    ResultCode.BAD_REQUEST: "请求参数错误",
-    ResultCode.UNAUTHORIZED: "未登录或登录已过期",
-    ResultCode.FORBIDDEN: "无访问权限",
-    ResultCode.NOT_FOUND: "请求资源不存在",
-    ResultCode.METHOD_NOT_ALLOWED: "请求方法不支持",
-    ResultCode.INTERNAL_ERROR: "服务器内部错误",
-    ResultCode.BUSINESS_ERROR: "业务处理失败",
-    ResultCode.DATA_CONFLICT: "数据冲突",
-    ResultCode.DB_ERROR: "数据库操作失败",
-    ResultCode.FILE_ERROR: "文件操作失败",
-}
-
-
 class ResultCode(IntEnum):
     # ---- HTTP 语义段 ----
     SUCCESS = 200
@@ -45,3 +29,19 @@ class ResultCode(IntEnum):
     def message(self) -> str:
         """默认提示语（对标 Java 枚举的 message 字段）。"""
         return _MESSAGES[self]
+
+
+# code -> 默认提示语（定义在枚举之后，供 message 属性运行时读取）
+_MESSAGES = {
+    ResultCode.SUCCESS: "操作成功",
+    ResultCode.BAD_REQUEST: "请求参数错误",
+    ResultCode.UNAUTHORIZED: "未登录或登录已过期",
+    ResultCode.FORBIDDEN: "无访问权限",
+    ResultCode.NOT_FOUND: "请求资源不存在",
+    ResultCode.METHOD_NOT_ALLOWED: "请求方法不支持",
+    ResultCode.INTERNAL_ERROR: "服务器内部错误",
+    ResultCode.BUSINESS_ERROR: "业务处理失败",
+    ResultCode.DATA_CONFLICT: "数据冲突",
+    ResultCode.DB_ERROR: "数据库操作失败",
+    ResultCode.FILE_ERROR: "文件操作失败",
+}

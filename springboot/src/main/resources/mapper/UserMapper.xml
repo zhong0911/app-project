@@ -4,9 +4,70 @@
 <mapper namespace="cc.antx.template.mapper.UserMapper">
 
     <!--
-      复杂 SQL 示例：BaseMapper 无法满足时才需要 XML。
-      MyBatis-Plus 已自动处理单表 CRUD 与逻辑删除，多数场景无需自定义。
-      返回值可直接用实体，配合配置类开启下划线转驼峰。
+      回收站/物理删除相关 SQL：需要绕开 @TableLogic 的自动 deleted=0 条件，
+      因此显式按 deleted 查询。
     -->
+    <resultMap id="UserMap" type="cc.antx.template.entity.User">
+        <id column="id" property="id"/>
+        <result column="uid" property="uid"/>
+        <result column="role" property="role"/>
+        <result column="status" property="status"/>
+        <result column="deleted" property="deleted"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectPageIncludingDeleted" resultMap="UserMap">
+        SELECT id, uid, role, status, deleted, version, create_time, update_time
+        FROM t_user
+        <where>
+            deleted = #{deleted}
+            <if test="uid != null and uid != ''">
+                AND uid = #{uid}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY create_time DESC, id DESC
+    </select>
+
+    <select id="selectByUidIncludingDeleted" resultMap="UserMap">
+        SELECT id, uid, role, status, deleted, version, create_time, update_time
+        FROM t_user
+        WHERE uid = #{uid}
+        LIMIT 1
+    </select>
+
+    <select id="selectByIdIncludingDeleted" resultMap="UserMap">
+        SELECT id, uid, role, status, deleted, version, create_time, update_time
+        FROM t_user
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="updateStatusById">
+        UPDATE t_user
+        SET status = #{status}, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="softDeleteById">
+        UPDATE t_user
+        SET deleted = 1, update_time = NOW()
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="restoreById">
+        UPDATE t_user
+        SET deleted = 0, update_time = NOW()
+        WHERE id = #{id} AND deleted = 1
+    </update>
+
+    <delete id="purgeById">
+        DELETE FROM t_user
+        WHERE id = #{id} AND deleted = 1
+    </delete>
 
 </mapper>

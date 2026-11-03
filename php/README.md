@@ -47,8 +47,8 @@ composer serve
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | `/oauth2/{provider}/authorize` | **跳转到授权服务器**（provider 默认 `sso`） |
-| GET | `/oauth2/{provider}/callback` | **接受授权码 code**，换取 token，重定向登录成功页 |
+| GET | `/sso/authorize` | **跳转到授权服务器**（本模板只接 AntX SSO） |
+| GET | `/sso/callback` | **接受授权码 code**，换取 token，重定向登录成功页 |
 
 配置通过环境变量注入（对标 `application.yml` 的 `SSO_*`，见 `.env.example`）：
 
@@ -63,8 +63,19 @@ composer serve
 SSO 控制台登记的回调地址（`redirect_uri`）：
 
 ```
-https://<你的域名>:<端口>/oauth2/sso/callback
+https://<你的域名>:<端口>/sso/callback
 ```
+
+## 管理后台用户管理（MySQL t_user）
+
+- 身份键：`t_user.uid` = SSO `access_token` 的 `sub`，唯一；默认 `uid=1` 为管理员。
+- 管理员判定：`SSO_ADMIN_UID`（默认 `1`）。
+- 建表：执行 `sql/init.sql`；数据库连接用 `DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWORD`。
+- 管理接口（仅管理员；未登录 401，非管理员 403）：
+  - `GET /api/admin/users`、`POST /api/admin/users`（body `{"uid":"..."}`）
+  - `PUT /api/admin/users/{id}/status`（body `{"status":1|0}`）、`DELETE /api/admin/users/{id}`（软删除）
+  - `GET /api/admin/users/recycle`、`POST /api/admin/users/{id}/restore`、`DELETE /api/admin/users/{id}/purge`
+- BFF 登录态：`GET /api/bff/me` 返回 `uid / role / isAdmin / status`。
 
 ## 统一响应体（Result）
 

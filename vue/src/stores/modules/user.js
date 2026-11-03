@@ -16,6 +16,8 @@ export const useUserStore = defineStore('user', () => {
   // getters
   const isLoggedIn = computed(() => !!token.value || !!userInfo.value)
   const displayName = computed(() => userInfo.value?.nickname || userInfo.value?.username || userInfo.value?.name || '')
+  // 管理员由后端按 SSO_ADMIN_UID 判定（默认 uid=1），通过 BFF /api/bff/me 下发
+  const isAdmin = computed(() => userInfo.value?.isAdmin === true)
 
   // actions
   async function login(payload) {
@@ -33,18 +35,18 @@ export const useUserStore = defineStore('user', () => {
 
   /**
    * SSO 登录（OAuth2 客户端，全后端统一规范路径）：
-   * 整页跳转到后端 /oauth2/{provider}/authorize，后端 302 到授权服务器；
-   * 授权后回调 /oauth2/{provider}/callback 换 token 建会话，再跳回前端首页。
+   * 整页跳转到后端 /sso/authorize，后端 302 到授权服务器；
+   * 授权后回调 /sso/callback 换 token 建会话，再跳回前端首页。
    *
    * @param redirectUri 登录成功后的回跳地址（/login?redirect_uri=xxx 传入）：
    *   暂存 sessionStorage，回到前端且确认已登录后由 BasicLayout 完成跳转
    *   （授权回调链路的最终落地地址由后端 sso.login-success-url 决定）
    */
-  function loginWithSso(provider = 'sso', redirectUri = '') {
+  function loginWithSso(redirectUri = '') {
     if (redirectUri) {
       sessionStorage.setItem('sso_redirect_uri', redirectUri)
     }
-    window.location.href = `/oauth2/${provider}/authorize`
+    window.location.href = '/sso/authorize'
   }
 
   /** 拉取 SSO 登录态（BFF 聚合接口；未登录返回 401 时静默忽略） */
@@ -80,5 +82,16 @@ export const useUserStore = defineStore('user', () => {
     return ssoLogoutUrl
   }
 
-  return { token, userInfo, isLoggedIn, displayName, login, fetchUserInfo, loginWithSso, fetchLoginUser, logout }
+  return {
+    token,
+    userInfo,
+    isLoggedIn,
+    displayName,
+    isAdmin,
+    login,
+    fetchUserInfo,
+    loginWithSso,
+    fetchLoginUser,
+    logout,
+  }
 })

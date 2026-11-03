@@ -38,7 +38,7 @@ SSO 按申请的 scope 往 token 里写声明（`applyScopedClaims`）：
 ## 四、子应用接入清单（三件事）
 
 1. **SSO 后台注册应用**：新建 OAuth2 应用，拿 `client-id` / `client-secret`，登记回调地址
-   `https://{app}.antx.cc/oauth2/sso/callback`
+   `https://{app}.antx.cc/sso/callback`
 2. **写入本地用户**：把 SSO 用户 id 写入子应用 `t_user.uid` 并赋角色（`ADMIN`/`USER`），未注册用户无权限（403）
 3. **配置 `.env`**：
    ```properties
@@ -51,8 +51,8 @@ SSO 按申请的 scope 往 token 里写声明（`applyScopedClaims`）：
 ## 五、登录与 token 流转（服务端会话）
 
 ```
-前端 {app}.antx.cc → /oauth2/sso/authorize → 后端 → 302 SSO
-→ sso.antx.cc 登录/同意 → 回调 {app}.antx.cc/oauth2/sso/callback
+前端 {app}.antx.cc → /sso/authorize → 后端 → 302 SSO
+→ sso.antx.cc 登录/同意 → 回调 {app}.antx.cc/sso/callback
 → 后端换 access+refresh → 存 Redis session → 下 SESSION Cookie
 → 302 SSO_LOGIN_SUCCESS_URL → 前端回首页 → /api/bff/me 拿 uid/role/name
 ```

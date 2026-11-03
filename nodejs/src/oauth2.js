@@ -4,10 +4,10 @@ import { randomBytes } from 'node:crypto';
  * OAuth2 客户端（授权码模式，对标 Spring Boot 模板 spring.security.oauth2.client）。
  *
  * 规范路径（全后端统一）：
- *   - 跳转到授权服务器：GET /oauth2/{provider}/authorize
- *   - 接受授权码     ：GET /oauth2/{provider}/callback?code=...&state=...
+ *   - 跳转到授权服务器：GET /sso/authorize
+ *   - 接受授权码     ：GET /sso/callback?code=...&state=...
  *
- * 默认注册一个 provider：sso（对标 Spring Security registration "sso"），
+ * 本模板只接入 AntX SSO，provider 固定为 sso（对标 Spring Security registration "sso"），
  * 配置从环境变量读取（对标 application.yml 的 SSO_*）。
  */
 
@@ -118,7 +118,7 @@ export async function revokeTokens(tokens) {
 export function buildAuthorizeUrl(provider, baseUrl) {
   const cfg = buildProviders()[provider];
   if (!cfg) throw new Error('provider not found');
-  const redirectUri = `${baseUrl}/oauth2/${provider}/callback`;
+  const redirectUri = `${baseUrl}/sso/callback`;
   const state = newState(provider);
   const params = new URLSearchParams({
     response_type: 'code',
@@ -133,7 +133,7 @@ export function buildAuthorizeUrl(provider, baseUrl) {
 /** 用授权码换取 token（POST token 端点）。 */
 export async function exchangeCode(provider, code, baseUrl) {
   const cfg = buildProviders()[provider];
-  const redirectUri = `${baseUrl}/oauth2/${provider}/callback`;
+  const redirectUri = `${baseUrl}/sso/callback`;
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,

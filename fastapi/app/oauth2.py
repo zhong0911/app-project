@@ -1,10 +1,10 @@
 """OAuth2 客户端（授权码模式，对标 Spring Boot 模板 spring.security.oauth2.client）。
 
 规范路径（全后端统一）：
-  - 跳转到授权服务器：GET /oauth2/{provider}/authorize
-  - 接受授权码     ：GET /oauth2/{provider}/callback?code=...&state=...
+  - 跳转到授权服务器：GET /sso/authorize
+  - 接受授权码     ：GET /sso/callback?code=...&state=...
 
-默认注册一个 provider：sso（对标 Spring Security registration "sso"），
+本模板只接入 AntX SSO，provider 固定为 sso（对标 Spring Security registration "sso"），
 配置从环境变量读取（对标 application.yml 的 SSO_*）。
 """
 from __future__ import annotations
@@ -105,7 +105,7 @@ def destroy_session(sid: str | None) -> None:
 def build_authorize_url(provider: str, base_url: str) -> tuple[str, str]:
     """构造授权服务器跳转 URL，返回 (url, state)。"""
     cfg = build_providers()[provider]
-    redirect_uri = f"{base_url}/oauth2/{provider}/callback"
+    redirect_uri = f"{base_url}/sso/callback"
     state = _new_state(provider)
     params = urllib.parse.urlencode({
         "response_type": "code",

@@ -18,6 +18,9 @@ import {
   LogoutOutlined,
   SunOutlined,
   MoonOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  DeleteOutlined,
 } from '@antdv-next/icons'
 
 const route = useRoute()
@@ -33,12 +36,25 @@ const isMobile = computed(() => !screens.value?.md)
 // 移动端菜单抽屉
 const drawerOpen = ref(false)
 
-// 菜单数据：与路由 meta 对应（布局文案固定中文）
-const menuItems = [
-  { key: '/home', label: '首页', icon: HomeOutlined },
-  { key: '/components', label: '组件预览', icon: AppstoreOutlined },
-  { key: '/about', label: '关于', icon: InfoCircleOutlined },
-]
+// 菜单数据：管理后台（/admin）显示后台 tabs；示例页面显示演示菜单
+const isAdminArea = computed(() => route.path.startsWith('/admin'))
+const menuItems = computed(() => {
+  if (isAdminArea.value) {
+    return [
+      { key: '/admin/users', label: '用户管理', icon: TeamOutlined },
+      { key: '/admin/recycle', label: '回收站', icon: DeleteOutlined },
+    ]
+  }
+  const items = [
+    { key: '/', label: '首页', icon: HomeOutlined },
+    { key: '/components', label: '组件预览', icon: AppstoreOutlined },
+    { key: '/about', label: '关于', icon: InfoCircleOutlined },
+  ]
+  if (userStore.isAdmin) {
+    items.push({ key: '/admin/users', label: '管理后台', icon: SettingOutlined })
+  }
+  return items
+})
 
 // 当前语言显示名（响应式）
 const currentLocaleLabel = computed(() => currentLocale.value.label)
@@ -50,7 +66,7 @@ function handleLocaleChange({ key }) {
 const selectedKeys = computed(() => [route.path])
 
 // 当前页面对应的菜单标题（显示在顶栏左侧）
-const currentMenuTitle = computed(() => menuItems.find((m) => m.key === route.path)?.label || '')
+const currentMenuTitle = computed(() => menuItems.value.find((m) => m.key === route.path)?.label || '')
 
 function handleMenuClick({ key }) {
   router.push(key)

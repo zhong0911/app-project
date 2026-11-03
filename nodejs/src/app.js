@@ -2,6 +2,8 @@ import express from 'express';
 import { Result } from './result.js';
 import { userRouter } from './routes/user.routes.js';
 import { authRouter, authApiRouter } from './routes/auth.routes.js';
+import { adminUserRouter } from './routes/admin-user.routes.js';
+import { bffRouter } from './routes/bff.routes.js';
 import { globalErrorHandler } from './global-error-handler.js';
 
 /**
@@ -17,8 +19,12 @@ app.use(express.json());
 // RESTful 用户路由
 app.use('/api/users', userRouter);
 
-// OAuth2 客户端路由（/oauth2/{provider}/authorize、/oauth2/{provider}/callback）
-app.use('/oauth2', authRouter);
+// 管理后台用户管理（仅管理员）与 BFF 登录态
+app.use('/api/admin/users', adminUserRouter);
+app.use('/api/bff', bffRouter);
+
+// OAuth2 客户端路由（/sso/authorize、/sso/callback）
+app.use('/sso', authRouter);
 
 // 认证 API（POST /api/auth/logout：撤销 refresh_token + 销毁服务端会话，对标 Spring Boot AuthController#logout）
 app.use('/api/auth', authApiRouter);

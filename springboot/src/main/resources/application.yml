@@ -7,6 +7,8 @@ server:
 # SSO 登录成功后的重定向地址（生产子应用通常指向前端首页，如 https://tools.antx.cc）
 sso:
   login-success-url: ${SSO_LOGIN_SUCCESS_URL:/api/auth/me}
+  # 管理员 SSO uid（access_token 的 sub）；默认 uid=1，可按部署在 .env / application-*.yml 覆盖
+  admin-uid: ${SSO_ADMIN_UID:1}
   # 单点退出地址（授权服务器登出端点；前端 /logout 页拿到后整页跳转完成全局退出，留空仅退出本应用）
   logout-uri: ${SSO_LOGOUT_URI:}
   # token 撤销端点（Spring Authorization Server 标准路径；退出登录时后端撤销会话中的 refresh_token）
@@ -34,13 +36,8 @@ spring:
           max-idle: 8
           min-idle: 0
 
-  # 会话（Session）存储：默认内存 HttpSession，改为 Redis 后多实例共享、重启不掉线
-  # 会连同 OAuth2 的 access_token / refresh_token 一起存进 Redis
-  session:
-    store-type: redis
-    timeout: 30m
-    redis:
-      namespace: spring:session
+  # 会话（Session）存储：由 config/RedisSessionConfig 的 @EnableRedisHttpSession 启用，
+  # 复用上面的 spring.data.redis 连接；OAuth2 的 access_token / refresh_token 随会话一起写入 Redis
 
   # Jackson 序列化（HTTP JSON 响应全局格式）
   jackson:
@@ -79,13 +76,13 @@ spring:
       client:
         registration:
           sso:
-            # 子应用在 SSO 控制台注册的 client-id / client-secret（默认 passport.antx.cc，client-id 先用 app 占位）
-            client-id: ${SSO_CLIENT_ID:app}
+            # 子应用在 SSO 控制台注册的 client-id / client-secret（默认 passport.antx.cc，均先用占位值）
+            client-id: ${SSO_CLIENT_ID:your-sso-client-id}
             client-secret: ${SSO_CLIENT_SECRET:your-sso-client-secret}
             scope: openid,profile,email,roles,permissions
             authorization-grant-type: authorization_code
-            # callback 回调地址（规范路径 /oauth2/{provider}/callback，需在 SSO 控制台注册为 redirect_uri）
-            redirect-uri: "{baseUrl}/oauth2/{registrationId}/callback"
+            # callback 回调地址（规范路径 /sso/callback，需在 SSO 控制台注册为 redirect_uri）
+            redirect-uri: "{baseUrl}/sso/callback"
             client-name: AntX SSO
         provider:
           sso:

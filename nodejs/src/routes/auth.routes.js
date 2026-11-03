@@ -17,11 +17,16 @@ import {
 /**
  * OAuth2 客户端路由（全后端统一规范路径）。
  *
- *   - GET  /oauth2/{provider}/authorize   跳转到授权服务器
- *   - GET  /oauth2/{provider}/callback    接收授权码 code，换取 token，重定向回登录成功页
- *   - POST /api/auth/logout               单点退出（撤销 refresh_token + 销毁会话）
+ *   - GET  /sso/authorize   跳转到授权服务器
+ *   - GET  /sso/callback    接收授权码 code，换取 token，重定向回登录成功页
+ *   - POST /api/auth/logout 单点退出（撤销 refresh_token + 销毁会话）
+ *
+ * 本模板只接入 AntX SSO，provider 固定为 sso。
  */
 export const authRouter = Router();
+
+// 本模板只接入 AntX SSO，固定 provider 为 sso
+const PROVIDER = 'sso';
 
 // 认证 API 路由（/api/auth/*，对标 Spring Boot AuthController）
 export const authApiRouter = Router();
@@ -31,8 +36,8 @@ function baseUrl(req) {
 }
 
 // 跳转到授权服务器（对标 Spring Security 授权入口）
-authRouter.get('/:provider/authorize', (req, res) => {
-  const { provider } = req.params;
+authRouter.get('/authorize', (req, res) => {
+  const provider = PROVIDER;
   if (!buildProviders()[provider]) {
     return res.status(404).json(Result.error(ResultCode.NOT_FOUND));
   }
@@ -42,8 +47,8 @@ authRouter.get('/:provider/authorize', (req, res) => {
 });
 
 // 接受授权码，换取 token（对标 Spring Security 回调处理）
-authRouter.get('/:provider/callback', async (req, res, next) => {
-  const { provider } = req.params;
+authRouter.get('/callback', async (req, res, next) => {
+  const provider = PROVIDER;
   const { code, state } = req.query;
   if (!buildProviders()[provider]) {
     return res.status(404).json(Result.error(ResultCode.NOT_FOUND));

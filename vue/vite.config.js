@@ -32,15 +32,15 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: 3000,
       open: true,
-      // 开发环境代理：将 /api 与 /oauth2（SSO 登录入口）转发到后端服务
+      // 开发环境代理：将 /api 与 /sso（SSO 登录入口）转发到后端服务
       proxy: {
         '/api': {
           target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
           // rewrite: (path) => path.replace(/^\/api/, ''),
         },
-        // OAuth2 客户端规范路径：/oauth2/{provider}/authorize、/oauth2/{provider}/callback
-        '/oauth2': {
+        // OAuth2 客户端规范路径：/sso/authorize、/sso/callback
+        '/sso': {
           target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
         },

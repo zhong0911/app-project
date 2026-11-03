@@ -28,16 +28,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserVO createUser(UserCreateDTO dto) {
-        // 业务校验：SSO 用户 uid 唯一
-        long count = this.count(new LambdaQueryWrapper<User>().eq(User::getUid, dto.getUid()));
-        if (count > 0) {
+        // 业务校验：SSO 用户 uid 唯一（包含回收站记录，避免软删除后重复创建）
+        User exists = baseMapper.selectByUidIncludingDeleted(dto.getUid());
+        if (exists != null) {
+            if (Integer.valueOf(1).equals(exists.getDeleted())) {
+                throw new BusinessException(ResultCode.DATA_CONFLICT,
+                        "该 uid 已在回收站，请先恢复: " + dto.getUid());
+            }
             throw new BusinessException(ResultCode.DATA_CONFLICT, "SSO 用户已存在: " + dto.getUid());
         }
 
         User user = new User();
         BeanUtils.copyProperties(dto, user);
-        // 逻辑删除、乐观锁、默认角色（新用户默认 USER）
+        // 逻辑删除、启停、乐观锁、默认角色（新用户默认 USER）
         user.setDeleted(0);
+        user.setStatus(1);
         user.setVersion(1);
         user.setRole("USER");
         this.save(user);
@@ -85,12 +90,51 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<User>()
                 .eq(StringUtils.hasText(dto.getUid()), User::getUid, dto.getUid())
                 .eq(StringUtils.hasText(dto.getRole()), User::getRole, dto.getRole())
+                .eq(dto.getStatus() != null, User::getStatus, dto.getStatus())
                 .orderByDesc(User::getCreateTime);
 
         IPage<User> page = this.page(new Page<>(dto.getPageNum(), dto.getPageSize()), wrapper);
 
         // 实体分页 -> VO 分页
         return page.convert(this::toVO);
+    }
+
+    @Override
+    public IPage<UserVO> pageRecycle(UserQueryDTO dto) {
+        Page<User> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+        return baseMapper.selectPageIncludingDeleted(page, dto.getUid(), dto.getStatus(), 1)
+                .convert(this::toVO);
+    }
+
+    @Override
+    public UserVO updateStatus(Long id, Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "状态仅支持 0-禁用 / 1-启用");
+        }
+        User user = baseMapper.selectById(id);
+        if (user == null) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在: " + id);
+        }
+        baseMapper.updateStatusById(id, status);
+        return toVO(this.getById(id));
+    }
+
+    @Override
+    public UserVO restore(Long id) {
+        User user = baseMapper.selectByIdIncludingDeleted(id);
+        if (user == null || !Integer.valueOf(1).equals(user.getDeleted())) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "回收站中不存在该用户: " + id);
+        }
+        baseMapper.restoreById(id);
+        return toVO(baseMapper.selectById(id));
+    }
+
+    @Override
+    public void purge(Long id) {
+        int rows = baseMapper.purgeById(id);
+        if (rows == 0) {
+            throw new BusinessException(ResultCode.NOT_FOUND, "回收站中不存在该用户: " + id);
+        }
     }
 
     @Override
@@ -116,6 +160,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User user = new User();
         user.setUid(uid);
         user.setRole("USER");
+        user.setStatus(1);
         user.setDeleted(0);
         user.setVersion(1);
         try {

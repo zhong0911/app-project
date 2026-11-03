@@ -1,10 +1,20 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import BasicLayout from '@/layouts/BasicLayout.vue'
+import { useUserStore } from '@/stores/modules/user'
 
 const APP_TITLE = import.meta.env.VITE_APP_TITLE || ''
 
 const routes = [
+  // 首页：独立落地页（自带 header，无侧边菜单），介绍技术栈与使用方法
+  {
+    path: '/',
+    name: 'Home',
+    component: () => import('@/views/Home.vue'),
+    meta: { title: '首页' },
+  },
+  // 兼容旧链接
+  { path: '/home', redirect: '/' },
   // 登录页（独立全屏，不在 BasicLayout 内）
   {
     path: '/login',
@@ -19,28 +29,49 @@ const routes = [
     component: () => import('@/views/Logout.vue'),
     meta: { title: '退出登录' },
   },
+  // 示例页面：沿用带侧边菜单的 BasicLayout
   {
-    path: '/',
+    path: '/about',
     component: BasicLayout,
-    redirect: '/home',
     children: [
       {
-        path: 'home',
-        name: 'Home',
-        component: () => import('@/views/Home.vue'),
-        meta: { title: '首页' },
-      },
-      {
-        path: 'about',
+        path: '',
         name: 'About',
         component: () => import('@/views/About.vue'),
         meta: { title: '关于' },
       },
+    ],
+  },
+  {
+    path: '/components',
+    component: BasicLayout,
+    children: [
       {
-        path: 'components',
+        path: '',
         name: 'Components',
         component: () => import('@/views/Components.vue'),
         meta: { title: '组件预览' },
+      },
+    ],
+  },
+  // 管理后台（BasicLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
+  {
+    path: '/admin',
+    component: BasicLayout,
+    redirect: '/admin/users',
+    meta: { requiresAdmin: true },
+    children: [
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/views/admin/AdminUsers.vue'),
+        meta: { title: '用户管理', requiresAdmin: true },
+      },
+      {
+        path: 'recycle',
+        name: 'AdminRecycle',
+        component: () => import('@/views/admin/AdminRecycle.vue'),
+        meta: { title: '回收站', requiresAdmin: true },
       },
     ],
   },
@@ -58,9 +89,22 @@ const router = createRouter({
   routes,
 })
 
-// 全局前置守卫：动态设置页面标题
-router.beforeEach((to) => {
+// 全局前置守卫：动态设置页面标题 + 管理后台管理员校验
+router.beforeEach(async (to) => {
   document.title = to.meta?.title ? `${to.meta.title} - ${APP_TITLE}` : APP_TITLE
+  if (!to.meta?.requiresAdmin) {
+    return true
+  }
+  const userStore = useUserStore()
+  if (!userStore.isLoggedIn) {
+    await userStore.fetchLoginUser()
+  }
+  if (!userStore.isAdmin) {
+    // 未登录 -> 走 SSO 登录并回跳；已登录非管理员 -> 回首页
+    return userStore.isLoggedIn
+      ? { path: '/' }
+      : { path: '/login', query: { redirect_uri: to.fullPath } }
+  }
   return true
 })
 

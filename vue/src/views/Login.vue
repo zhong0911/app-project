@@ -11,7 +11,7 @@ const route = useRoute()
 const userStore = useUserStore()
 
 function handleSsoLogin() {
-  userStore.loginWithSso('sso', route.query.redirect_uri || '')
+  userStore.loginWithSso(route.query.redirect_uri || '')
 }
 </script>
 
@@ -29,7 +29,7 @@ function handleSsoLogin() {
         应用介绍占位文案
       </a-typography-paragraph>
 
-      <!-- SSO 登录（整页跳转后端 /oauth2/sso/authorize；带 redirect_uri 时登录后回跳） -->
+      <!-- SSO 登录（整页跳转后端 /sso/authorize；带 redirect_uri 时登录后回跳） -->
       <a-button type="primary" size="large" block @click="handleSsoLogin">
         <LoginOutlined />
         SSO 登录

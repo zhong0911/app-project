@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizedClientRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
@@ -21,8 +23,8 @@ import org.springframework.security.web.SecurityFilterChain;
  * <p>本模板作为子应用接入 AntX passport-sso（OAuth2 / OIDC 授权服务器）：</p>
  * <ul>
  *   <li>关闭 CSRF（前后端分离 API）</li>
- *   <li><b>OAuth2 Client</b>：浏览器访问 /oauth2/{provider}/authorize 跳转 SSO 登录页（规范路径，见 OAuth2LoginController），
- *       SSO 授权后回调 /oauth2/{provider}/callback 换取 token、建立会话</li>
+ *   <li><b>OAuth2 Client</b>：浏览器访问 /sso/authorize 跳转 SSO 登录页（规范路径，见 OAuth2LoginController），
+ *       SSO 授权后回调 /sso/callback 换取 token、建立会话</li>
  *   <li><b>资源服务器</b>：API 校验 SSO 签发的 Bearer JWT（issuer 自动发现 JWKS 验签）</li>
  *   <li><b>角色本地化（方案B：子应用自治）</b>：token 取 sub(=uid) → 查本地 t_user 表 role →
  *       注入 ROLE_*（如 ROLE_VPN_ADMIN），子应用接口用 @PreAuthorize("hasRole('VPN_ADMIN')") 判定，
@@ -53,7 +55,7 @@ public class SecurityConfig {
                 // 路径授权：放行登录/回调/错误；其余需认证（Bearer token、SSO 会话或本地 Basic）
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/oauth2/**",   // SSO 登录入口 /oauth2/{provider}/authorize 与回调 /oauth2/{provider}/callback
+                                "/sso/**",   // SSO 登录入口 /sso/authorize 与回调 /sso/callback
                                 "/error",
                                 "/favicon.ico"
                         ).permitAll()
@@ -62,10 +64,10 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint))
                 // API 场景不跳表单登录页
                 .formLogin(form -> form.disable())
-                // OAuth2 Client：回调路径规范为 /oauth2/{provider}/callback（与 authorize 入口同级，全后端统一）；
+                // OAuth2 Client：回调路径规范为 /sso/callback（与 authorize 入口同级，全后端统一）；
                 // 登录成功后重定向到 loginSuccessUrl（前端首页或 /api/auth/me）
                 .oauth2Login(oauth2 -> oauth2
-                        .loginProcessingUrl("/oauth2/*/callback")
+                        .loginProcessingUrl("/sso/callback")
                         .defaultSuccessUrl(loginSuccessUrl, true))
                 // 资源服务器：校验 SSO 签发的 JWT（Bearer token），认证失败走统一 401 JSON
                 .oauth2ResourceServer(rs -> rs
@@ -76,6 +78,18 @@ public class SecurityConfig {
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler));
         return http.build();
+    }
+
+    /**
+     * OAuth2 客户端 token 存储：显式使用 HttpSession。
+     *
+     * <p>Spring Boot 默认给的是 InMemoryOAuth2AuthorizedClientService（JVM 内存）。
+     * 这里换成 HttpSessionOAuth2AuthorizedClientRepository，让 access_token / refresh_token
+     * 跟随后端会话一起写入 Redis（Spring Session，见 RedisSessionConfig）。</p>
+     */
+    @Bean
+    public OAuth2AuthorizedClientRepository authorizedClientRepository() {
+        return new HttpSessionOAuth2AuthorizedClientRepository();
     }
 
     /**

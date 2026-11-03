@@ -30,6 +30,18 @@ public interface UserService extends IService<User> {
     /** 分页查询（出参 VO 分页） */
     IPage<UserVO> pageQuery(UserQueryDTO dto);
 
+    /** 分页查询回收站（逻辑删除）用户 */
+    IPage<UserVO> pageRecycle(UserQueryDTO dto);
+
+    /** 设置用户启停状态：1-启用，0-禁用 */
+    UserVO updateStatus(Long id, Integer status);
+
+    /** 从回收站恢复用户 */
+    UserVO restore(Long id);
+
+    /** 物理删除回收站中的用户 */
+    void purge(Long id);
+
     /**
      * 按 SSO 用户 uid（access_token 的 sub）查询本地用户。
      *

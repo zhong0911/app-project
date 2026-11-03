@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use AntX\Template\AdminUserController;
+use AntX\Template\BffController;
 use AntX\Template\GlobalExceptionHandler;
 use AntX\Template\OAuth2;
 use AntX\Template\Result;
 use AntX\Template\ResultCode;
+use AntX\Template\Security;
 use AntX\Template\UserController;
 
 /**
@@ -20,10 +23,20 @@ use AntX\Template\UserController;
  *   GET    /api/users/{id}
  *   GET    /api/users?pageNum=1&pageSize=10
  *
- * OAuth2 客户端（全后端统一规范路径）：
- *   GET  /oauth2/{provider}/authorize   跳转到授权服务器
- *   GET  /oauth2/{provider}/callback    接受授权码 code，换取 token，重定向登录成功页
- *   POST /api/auth/logout               单点退出（撤销 refresh_token + 销毁会话，返回 SSO 退出地址）
+ * 管理后台用户管理（仅管理员，管理员 uid 由 SSO_ADMIN_UID 配置，默认 1）：
+ *   GET    /api/admin/users
+ *   POST   /api/admin/users
+ *   PUT    /api/admin/users/{id}/status
+ *   DELETE /api/admin/users/{id}
+ *   GET    /api/admin/users/recycle
+ *   POST   /api/admin/users/{id}/restore
+ *   DELETE /api/admin/users/{id}/purge
+ *   GET    /api/bff/me
+ *
+ * OAuth2 客户端（全后端统一规范路径，本模板只接入 AntX SSO，provider 固定为 sso）：
+ *   GET  /sso/authorize   跳转到授权服务器
+ *   GET  /sso/callback    接受授权码 code，换取 token，重定向登录成功页
+ *   POST /api/auth/logout 单点退出（撤销 refresh_token + 销毁会话，返回 SSO 退出地址）
  */
 
 spl_autoload_register(static function (string $class): void {
@@ -49,12 +62,14 @@ $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 $baseUrl = $scheme . '://' . $host;
 
 $controller = new UserController();
+$adminController = new AdminUserController();
+$bffController = new BffController();
 
 try {
     // ---- OAuth2 客户端路由 ----
-    if (preg_match('#^/oauth2/([a-z0-9_-]+)/(authorize|callback)$#', $path, $m)) {
-        $provider = $m[1];
-        $action = $m[2];
+    if (preg_match('#^/sso/(authorize|callback)$#', $path, $m)) {
+        $provider = 'sso';
+        $action = $m[1];
         if (!OAuth2::has($provider)) {
             throw new BusinessException(ResultCode::NOT_FOUND, '请求资源不存在');
         }
@@ -79,6 +94,8 @@ try {
         $token = OAuth2::exchangeCode($provider, $code, $baseUrl);
         // token 存服务端会话（access_token/refresh_token 不进浏览器），cookie 仅存 PHPSESSID
         session_start();
+        // 会话中冗余存一份 sub(uid)，供管理接口鉴权直接读取
+        $token['uid'] = Security::decodeSub($token['access_token'] ?? null);
         $_SESSION['oauth2_tokens'] = $token;
         $cfg = OAuth2::providers()[$provider];
         header('Location: ' . $cfg['loginSuccessUrl']);
@@ -111,8 +128,45 @@ try {
         exit;
     }
 
+    // ---- BFF 登录态 ----
+    if ($path === '/api/bff/me' && $method === 'GET') {
+        $result = $bffController->me();
+        GlobalExceptionHandler::render(200, $result->toArray());
+        exit;
+    }
+
+    // ---- 管理后台用户管理（仅管理员） ----
+    if ($path === '/api/admin/users') {
+        if ($method === 'GET') {
+            $result = $adminController->page(
+                (int) ($query['pageNum'] ?? 1),
+                (int) ($query['pageSize'] ?? 10),
+                isset($query['uid']) ? (string) $query['uid'] : null,
+                isset($query['status']) && $query['status'] !== '' ? (int) $query['status'] : null
+            );
+        } elseif ($method === 'POST') {
+            $result = $adminController->create(json_decode(file_get_contents('php://input'), true) ?? []);
+        } else {
+            throw new BusinessException(ResultCode::METHOD_NOT_ALLOWED, '请求方法不支持');
+        }
+    } elseif ($path === '/api/admin/users/recycle' && $method === 'GET') {
+        $result = $adminController->recycle(
+            (int) ($query['pageNum'] ?? 1),
+            (int) ($query['pageSize'] ?? 10),
+            isset($query['uid']) ? (string) $query['uid'] : null
+        );
+    } elseif (preg_match('#^/api/admin/users/(\d+)/status$#', $path, $m) && $method === 'PUT') {
+        $result = $adminController->updateStatus((int) $m[1], json_decode(file_get_contents('php://input'), true) ?? []);
+    } elseif (preg_match('#^/api/admin/users/(\d+)/restore$#', $path, $m) && $method === 'POST') {
+        $result = $adminController->restore((int) $m[1]);
+    } elseif (preg_match('#^/api/admin/users/(\d+)/purge$#', $path, $m) && $method === 'DELETE') {
+        $result = $adminController->purge((int) $m[1]);
+    } elseif (preg_match('#^/api/admin/users/(\d+)$#', $path, $m) && $method === 'DELETE') {
+        $result = $adminController->delete((int) $m[1]);
+    }
+
     // ---- RESTful 用户路由 ----
-    if ($path === '/api/users') {
+    elseif ($path === '/api/users') {
         if ($method === 'POST') {
             $result = $controller->create(json_decode(file_get_contents('php://input'), true) ?? []);
         } elseif ($method === 'PUT') {

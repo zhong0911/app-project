@@ -12,8 +12,8 @@ namespace AntX\Template;
  */
 final class BusinessException extends \RuntimeException
 {
-    /** 错误码 */
-    private int $code;
+    /** 错误码（避免与 Exception::$code 冲突，单独命名） */
+    private int $errorCode;
 
     /** 业务异常（默认 1000） */
     public static function of(string $message): self
@@ -31,11 +31,11 @@ final class BusinessException extends \RuntimeException
     public function __construct(int $code, string $message)
     {
         parent::__construct($message);
-        $this->code = $code;
+        $this->errorCode = $code;
     }
 
     public function getErrorCode(): int
     {
-        return $this->code;
+        return $this->errorCode;
     }
 }

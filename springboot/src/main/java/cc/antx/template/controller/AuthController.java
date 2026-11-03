@@ -2,14 +2,15 @@ package cc.antx.template.controller;
 
 import cc.antx.template.common.result.Result;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -62,11 +63,11 @@ public class AuthController {
     @Value("${spring.security.oauth2.client.registration.sso.client-secret:}")
     private String ssoClientSecret;
 
-    /** 会话中保存的 OAuth2 token（access_token / refresh_token）来源 */
-    private final OAuth2AuthorizedClientService authorizedClientService;
+    /** 会话中保存的 OAuth2 token（access_token / refresh_token）来源（HttpSession → Redis） */
+    private final OAuth2AuthorizedClientRepository authorizedClientRepository;
 
-    public AuthController(OAuth2AuthorizedClientService authorizedClientService) {
-        this.authorizedClientService = authorizedClientService;
+    public AuthController(OAuth2AuthorizedClientRepository authorizedClientRepository) {
+        this.authorizedClientRepository = authorizedClientRepository;
     }
 
     /**
@@ -112,29 +113,36 @@ public class AuthController {
     /**
      * 单点退出：先向 SSO 的 revoke 端点撤销 refresh_token，再销毁本应用会话（SecurityContext + HttpSession）。
      *
-     * <p>access_token / refresh_token 由 Spring Security 存在会话（Redis）中，
-     * 撤销失败仅记日志、不阻塞本地退出。返回的 ssoLogoutUrl 为授权服务器登出端点
+     * <p>access_token / refresh_token 由 Spring Security 存在 HttpSession 中，
+     * 会话由 Spring Session 落到 Redis；撤销失败仅记日志、不阻塞本地退出。
+     * 返回的 ssoLogoutUrl 为授权服务器登出端点
      * （配置了 sso.logout-uri 时），前端整页跳转该地址可完成 SSO 全局退出。</p>
      */
     @PostMapping("/logout")
-    public Result<Map<String, Object>> logout(HttpServletRequest request, Authentication authentication) {
+    public Result<Map<String, Object>> logout(HttpServletRequest request, HttpServletResponse response,
+                                             Authentication authentication) {
         // 1. 撤销 SSO 侧 refresh_token（优先），无 refresh_token 则撤销 access_token
-        revokeSsoToken(authentication);
-        // 2. 销毁本应用会话（token 随会话一起清除）
-        new SecurityContextLogoutHandler().logout(request, null, authentication);
+        revokeSsoToken(authentication, request);
+        // 2. 清理会话中的 OAuth2 客户端 token（Redis 会话随 HttpSession 一起删除）
+        if (authentication instanceof OAuth2AuthenticationToken token) {
+            authorizedClientRepository.removeAuthorizedClient(
+                    token.getAuthorizedClientRegistrationId(), token, request, response);
+        }
+        // 3. 销毁本应用会话（SecurityContext + HttpSession）
+        new SecurityContextLogoutHandler().logout(request, response, authentication);
         Map<String, Object> data = new HashMap<>();
         data.put("ssoLogoutUrl", ssoLogoutUrl.isBlank() ? null : ssoLogoutUrl);
         return Result.success(data);
     }
 
     /** 调用授权服务器 RFC 7009 revoke 端点撤销会话中的 token；任何异常仅告警。 */
-    private void revokeSsoToken(Authentication authentication) {
+    private void revokeSsoToken(Authentication authentication, HttpServletRequest request) {
         if (revokeUri.isBlank() || !(authentication instanceof OAuth2AuthenticationToken token)) {
             return;
         }
         try {
-            OAuth2AuthorizedClient client = authorizedClientService.loadAuthorizedClient(
-                    token.getAuthorizedClientRegistrationId(), token.getName());
+            OAuth2AuthorizedClient client = authorizedClientRepository.loadAuthorizedClient(
+                    token.getAuthorizedClientRegistrationId(), token, request);
             if (client == null) {
                 return;
             }

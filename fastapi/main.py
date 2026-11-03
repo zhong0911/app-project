@@ -7,7 +7,7 @@
 from fastapi import FastAPI
 
 from app.exception_handlers import register_exception_handlers
-from app.routers import auth, user
+from app.routers import admin_user, auth, bff, user
 
 app = FastAPI(
     title="AntX FastAPI Template",
@@ -21,7 +21,11 @@ register_exception_handlers(app)
 # 注册 RESTful 路由
 app.include_router(user.router)
 
-# 注册 OAuth2 客户端路由（/oauth2/{provider}/authorize、/oauth2/{provider}/callback）
+# 管理后台用户管理（/api/admin/users，仅管理员）与 BFF 登录态（/api/bff/me）
+app.include_router(admin_user.router)
+app.include_router(bff.router)
+
+# 注册 OAuth2 客户端路由（/sso/authorize、/sso/callback）
 # 与单点退出接口（POST /api/auth/logout）
 app.include_router(auth.router)
 app.include_router(auth.auth_api_router)
