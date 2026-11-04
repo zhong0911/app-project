@@ -3,6 +3,7 @@
 // 用于首页等对外展示页面；后台/示例页面使用 ConsoleLayout
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   GlobalOutlined,
   SunOutlined,
@@ -22,14 +23,15 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 const currentLocaleLabel = computed(() => currentLocale.value.label)
 const userMenuItems = computed(() => {
   const items = []
   if (userStore.isAdmin) {
-    items.push({ key: 'admin', label: '管理后台', icon: SettingOutlined })
+    items.push({ key: 'admin', label: t('common.adminPanel'), icon: SettingOutlined })
   }
-  items.push({ key: 'logout', label: '退出登录', icon: LogoutOutlined })
+  items.push({ key: 'logout', label: t('common.logout'), icon: LogoutOutlined })
   return items
 })
 
@@ -69,16 +71,16 @@ onMounted(async () => {
           <AppIcon :size="36" />
           <span class="brand-text">
             <strong>AntX Frontend</strong>
-            <small>Vue 3 通用前端模板</small>
+            <small>{{ t('landing.brandSubtitle') }}</small>
           </span>
         </router-link>
 
         <nav class="site-nav">
-          <a href="#intro">项目介绍</a>
-          <a href="#stack">技术栈</a>
-          <a href="#usage">使用指南</a>
-          <a href="#structure">目录结构</a>
-          <router-link to="/components">组件预览</router-link>
+          <a href="#intro">{{ t('nav.intro') }}</a>
+          <a href="#stack">{{ t('nav.stack') }}</a>
+          <a href="#usage">{{ t('nav.usage') }}</a>
+          <a href="#structure">{{ t('nav.structure') }}</a>
+          <router-link to="/components">{{ t('nav.components') }}</router-link>
         </nav>
 
         <div class="header-actions">
@@ -99,7 +101,7 @@ onMounted(async () => {
           </a-dropdown>
 
           <!-- 主题切换 -->
-          <a-tooltip :title="appStore.isDark ? '切换浅色' : '切换暗色'">
+          <a-tooltip :title="appStore.isDark ? t('common.toLight') : t('common.toDark')">
             <a-button type="text" shape="circle" class="icon-btn" @click="toggleTheme">
               <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
             </a-button>
@@ -108,7 +110,7 @@ onMounted(async () => {
           <!-- 登录 / 用户菜单 -->
           <a-button v-if="!userStore.isLoggedIn" type="primary" @click="goLogin">
             <LoginOutlined />
-            登录
+            {{ t('common.login') }}
           </a-button>
           <a-dropdown
             v-else
@@ -118,7 +120,7 @@ onMounted(async () => {
           >
             <a-button class="user-btn">
               <UserOutlined />
-              <span class="user-name">{{ userStore.displayName || '已登录' }}</span>
+              <span class="user-name">{{ userStore.displayName || t('common.loggedIn') }}</span>
             </a-button>
           </a-dropdown>
         </div>
@@ -132,7 +134,7 @@ onMounted(async () => {
 
     <footer class="site-footer">
       <span>AntX Frontend Template</span>
-      <span>Vue 3 · Vite · Pinia · AntdvNext</span>
+      <span>{{ t('landing.footer') }}</span>
     </footer>
   </div>
 </template>
@@ -271,6 +273,19 @@ html.dark .site-footer {
   .lang-label,
   .user-name {
     display: none;
+  }
+
+  /* 隐藏文字后两个图标按钮统一为等大方块，保证间距一致 */
+  .header-actions {
+    gap: 8px;
+  }
+
+  .header-actions .icon-btn {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
   }
 
   .site-footer {

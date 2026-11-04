@@ -5,6 +5,7 @@
 // 支持 ?redirect_uri=/xxx：SSO 登录成功后回跳该地址（见 stores/modules/user.js#loginWithSso）
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { LoginOutlined } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
 import { APP_TITLE } from '@/config/app'
@@ -13,6 +14,7 @@ import { useUserStore } from '@/stores/modules/user'
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // 已登录用户访问登录页时直接回跳，避免重复走 SSO 授权
 onMounted(async () => {
@@ -36,16 +38,16 @@ function handleSsoLogin() {
       <a-typography-title :level="3" class="login-title">{{ APP_TITLE }}</a-typography-title>
 
       <a-typography-paragraph class="login-subtitle">
-        使用统一身份认证（SSO）安全登录
+        {{ t('login.subtitle') }}
       </a-typography-paragraph>
 
       <!-- SSO 登录（整页跳转后端 /sso/authorize；带 redirect_uri 时登录后回跳） -->
       <a-button type="primary" size="large" block @click="handleSsoLogin">
         <LoginOutlined />
-        SSO 登录
+        {{ t('login.ssoButton') }}
       </a-button>
 
-      <p class="login-hint">将跳转 passport.antx.cc 完成认证后自动返回</p>
+      <p class="login-hint">{{ t('login.hint') }}</p>
     </a-card>
   </div>
 </template>

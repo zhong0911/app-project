@@ -6,10 +6,12 @@
 // 暗色适配走全局 CSS 变量 + antd 主题，页面本身无需处理。
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/modules/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // 退出状态：confirm 待确认 / loading 请求后端中 / done 已退出
 const state = ref('confirm')
@@ -33,24 +35,29 @@ async function handleLogout() {
 <template>
   <div class="logout-page">
     <a-card class="logout-card" variant="borderless">
-      <a-spin :spinning="state === 'loading'" size="large" description="正在退出登录…">
+      <a-spin :spinning="state === 'loading'" size="large" :description="t('logout.loading')">
         <div class="logout-body">
           <!-- 待确认：点击后才请求退出 -->
-          <a-result v-if="state === 'confirm'" title="退出登录">
+          <a-result v-if="state === 'confirm'" :title="t('common.logout')">
             <template #subTitle>
-              <p class="logout-sub">确认退出当前登录？</p>
+              <p class="logout-sub">{{ t('logout.confirm') }}</p>
             </template>
             <template #extra>
-              <a-button @click="router.back()">取消退出</a-button>
-              <a-button type="primary" danger @click="handleLogout">退出登录</a-button>
+              <a-button @click="router.back()">{{ t('logout.cancel') }}</a-button>
+              <a-button type="primary" danger @click="handleLogout">{{ t('common.logout') }}</a-button>
             </template>
           </a-result>
 
           <!-- 已退出：返回首页 / 重新登录 -->
-          <a-result v-else-if="state === 'done'" status="success" title="退出成功" sub-title="退出成功，可返回首页或重新登录">
+          <a-result
+            v-else-if="state === 'done'"
+            status="success"
+            :title="t('logout.successTitle')"
+            :sub-title="t('logout.successDesc')"
+          >
             <template #extra>
-              <a-button @click="router.replace('/home')">返回首页</a-button>
-              <a-button type="primary" @click="router.replace('/login')">重新登录</a-button>
+              <a-button @click="router.replace('/home')">{{ t('logout.home') }}</a-button>
+              <a-button type="primary" @click="router.replace('/login')">{{ t('logout.relogin') }}</a-button>
             </template>
           </a-result>
         </div>

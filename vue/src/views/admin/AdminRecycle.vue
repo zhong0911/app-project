@@ -1,6 +1,7 @@
 <script setup>
 // 回收站：展示软删除用户，支持恢复与彻底删除
 import { computed, onMounted, reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import {
@@ -9,6 +10,8 @@ import {
   restoreAdminUserApi,
 } from '@/api/admin'
 
+const { t } = useI18n()
+
 const loading = ref(false)
 const records = ref([])
 const total = ref(0)
@@ -16,20 +19,20 @@ const pageNum = ref(1)
 const pageSize = ref(10)
 const filters = reactive({ uid: '' })
 
-const columns = [
-  { title: 'ID', dataIndex: 'id', key: 'id', width: 80 },
-  { title: 'SSO UID', dataIndex: 'uid', key: 'uid' },
-  { title: '角色', dataIndex: 'role', key: 'role', width: 110 },
-  { title: '删除时间', dataIndex: 'updateTime', key: 'updateTime', width: 180 },
-  { title: '操作', key: 'action', width: 180 },
-]
+const columns = computed(() => [
+  { title: t('adminRecycle.columns.id'), dataIndex: 'id', key: 'id', width: 80 },
+  { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid' },
+  { title: t('adminRecycle.columns.role'), dataIndex: 'role', key: 'role', width: 110 },
+  { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 180 },
+  { title: t('adminRecycle.columns.action'), key: 'action', width: 180 },
+])
 
 const pagination = computed(() => ({
   current: pageNum.value,
   pageSize: pageSize.value,
   total: total.value,
   showSizeChanger: true,
-  showTotal: (t) => `共 ${t} 条`,
+  showTotal: (count) => t('common.total', { total: count }),
 }))
 
 async function load() {
@@ -64,11 +67,12 @@ function handleTableChange(p) {
 
 function handleRestore(record) {
   modal.confirm({
-    title: '恢复用户',
-    content: `确认恢复用户 uid=${record.uid}？恢复后将回到用户列表。`,
+    title: t('adminRecycle.restoreTitle'),
+    content: t('adminRecycle.restoreConfirm', { uid: record.uid }),
+    okText: t('adminRecycle.restore'),
     onOk: async () => {
       await restoreAdminUserApi(record.id)
-      message.success('已恢复')
+      message.success(t('adminRecycle.restoreSuccess'))
       if (records.value.length === 1 && pageNum.value > 1) pageNum.value -= 1
       await load()
     },
@@ -77,13 +81,13 @@ function handleRestore(record) {
 
 function handlePurge(record) {
   modal.confirm({
-    title: '彻底删除',
-    content: `确认彻底删除用户 uid=${record.uid}？该操作不可恢复。`,
-    okText: '彻底删除',
+    title: t('adminRecycle.purgeTitle'),
+    content: t('adminRecycle.purgeConfirm', { uid: record.uid }),
+    okText: t('adminRecycle.purgeOk'),
     okButtonProps: { danger: true },
     onOk: async () => {
       await purgeAdminUserApi(record.id)
-      message.success('已彻底删除')
+      message.success(t('adminRecycle.purgeSuccess'))
       if (records.value.length === 1 && pageNum.value > 1) pageNum.value -= 1
       await load()
     },
@@ -95,19 +99,19 @@ onMounted(load)
 
 <template>
   <a-card :bordered="false" class="admin-card">
-    <template #title>回收站</template>
+    <template #title>{{ t('adminRecycle.title') }}</template>
     <template #extra>
       <a-space>
         <a-input
           v-model:value="filters.uid"
-          placeholder="按 SSO uid 搜索"
+          :placeholder="t('adminRecycle.searchUid')"
           allow-clear
           style="width: 180px"
           @press-enter="handleSearch"
         />
         <a-button type="primary" @click="handleSearch">
           <ReloadOutlined />
-          查询
+          {{ t('common.query') }}
         </a-button>
       </a-space>
     </template>
@@ -115,7 +119,7 @@ onMounted(load)
     <a-alert
       type="info"
       show-icon
-      message="回收站中的用户为软删除状态，可恢复到用户列表，或彻底删除（不可恢复）。"
+      :message="t('adminRecycle.hint')"
       style="margin-bottom: 16px"
     />
 
@@ -137,8 +141,8 @@ onMounted(load)
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space>
-            <a-button type="link" size="small" @click="handleRestore(record)">恢复</a-button>
-            <a-button type="link" size="small" danger @click="handlePurge(record)">彻底删除</a-button>
+            <a-button type="link" size="small" @click="handleRestore(record)">{{ t('adminRecycle.restore') }}</a-button>
+            <a-button type="link" size="small" danger @click="handlePurge(record)">{{ t('adminRecycle.purge') }}</a-button>
           </a-space>
         </template>
       </template>

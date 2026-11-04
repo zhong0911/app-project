@@ -1,6 +1,7 @@
 ﻿<script setup>
 import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
 import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
@@ -27,6 +28,7 @@ const route = useRoute()
 const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
+const { t } = useI18n()
 
 // 响应式断点：md 以下（<768px）视为移动端
 // 首帧默认按桌面渲染（defaultScreens），订阅后立即按真实宽度更新
@@ -41,17 +43,17 @@ const isAdminArea = computed(() => route.path.startsWith('/admin'))
 const menuItems = computed(() => {
   if (isAdminArea.value) {
     return [
-      { key: '/admin/users', label: '用户管理', icon: TeamOutlined },
-      { key: '/admin/recycle', label: '回收站', icon: DeleteOutlined },
+      { key: '/admin/users', label: t('nav.adminUsers'), icon: TeamOutlined },
+      { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: DeleteOutlined },
     ]
   }
   const items = [
-    { key: '/', label: '首页', icon: HomeOutlined },
-    { key: '/components', label: '组件预览', icon: AppstoreOutlined },
-    { key: '/about', label: '关于', icon: InfoCircleOutlined },
+    { key: '/', label: t('nav.home'), icon: HomeOutlined },
+    { key: '/components', label: t('nav.components'), icon: AppstoreOutlined },
+    { key: '/about', label: t('nav.about'), icon: InfoCircleOutlined },
   ]
   if (userStore.isAdmin) {
-    items.push({ key: '/admin/users', label: '管理后台', icon: SettingOutlined })
+    items.push({ key: '/admin/users', label: t('common.adminPanel'), icon: SettingOutlined })
   }
   return items
 })
@@ -163,7 +165,7 @@ onMounted(async () => {
               <span v-if="!isMobile" class="lang-text">{{ currentLocaleLabel }}</span>
             </a-button>
           </a-dropdown>
-          <a-tooltip :title="appStore.isDark ? '切换浅色' : '切换暗色'">
+          <a-tooltip :title="appStore.isDark ? t('common.toLight') : t('common.toDark')">
             <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
               <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
             </a-button>
@@ -175,17 +177,17 @@ onMounted(async () => {
             type="primary"
             @click="router.push('/login')"
           >
-            登录
+            {{ t('common.login') }}
           </a-button>
           <a-dropdown
             v-else
             :trigger="['click']"
-            :menu="{ items: [{ key: 'logout', label: '退出登录', icon: LogoutOutlined }] }"
+            :menu="{ items: [{ key: 'logout', label: t('common.logout'), icon: LogoutOutlined }] }"
             @menu-click="handleLogout"
           >
             <span class="user-info">
               <UserOutlined />
-              <span v-if="!isMobile" class="user-name">{{ userStore.displayName || '未登录' }}</span>
+              <span v-if="!isMobile" class="user-name">{{ userStore.displayName || t('common.notLoggedIn') }}</span>
             </span>
           </a-dropdown>
         </div>
@@ -303,6 +305,15 @@ onMounted(async () => {
 
   .header-right {
     gap: 8px;
+  }
+
+  /* 隐藏语言文字后图标按钮统一为等大方块，保证间距一致 */
+  .lang-btn {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
   }
 
   .content {

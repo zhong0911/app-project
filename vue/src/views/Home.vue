@@ -1,6 +1,7 @@
 <script setup>
 // 首页内容：header / footer 与页面宽度由 LandingLayout 提供
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import {
   CodeOutlined,
   ThunderboltOutlined,
@@ -21,114 +22,75 @@ import { useUserStore } from '@/stores/modules/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+const { t } = useI18n()
 
-// 首屏关键指标
+// 首屏关键指标：value 为数字/短语，label 走 i18n
 const stats = [
-  { value: '4', label: '后端实现' },
-  { value: 'SSO', label: '单点登录' },
-  { value: '2', label: '布局模式' },
-  { value: '100%', label: '按需加载' },
+  { value: '5', labelKey: 'home.stats.backends' },
+  { value: 'SSO', labelKey: 'home.stats.sso' },
+  { value: '2', labelKey: 'home.stats.layouts' },
+  { value: '100%', labelKey: 'home.stats.lazy' },
 ]
 
 // 项目能力介绍
 const features = [
   {
     icon: DeploymentUnitOutlined,
-    title: '四端同构',
-    desc: 'Spring Boot / FastAPI / Node.js / PHP 共用同一套 SSO 流程、users 表与接口约定。',
+    titleKey: 'home.feature.multiBackendTitle',
+    descKey: 'home.feature.multiBackendDesc',
   },
   {
     icon: SafetyCertificateOutlined,
-    title: 'SSO 会话',
-    desc: '授权码登录，access_token 留在服务端，前端只通过会话 Cookie 维持登录态。',
+    titleKey: 'home.feature.ssoTitle',
+    descKey: 'home.feature.ssoDesc',
   },
   {
     icon: TeamOutlined,
-    title: '管理后台',
-    desc: '用户列表、启停、软删除与回收站恢复，管理员路由守卫开箱可用。',
+    titleKey: 'home.feature.adminTitle',
+    descKey: 'home.feature.adminDesc',
   },
   {
     icon: BgColorsOutlined,
-    title: '主题与国际化',
-    desc: '亮/暗主题、语言切换与 AntdvNext 主题 token 已统一接入，移动端断点也已适配。',
+    titleKey: 'home.feature.themeTitle',
+    descKey: 'home.feature.themeDesc',
   },
 ]
 
 const introPoints = [
-  '前端零配置对接 SSO，不再本地保存 token',
-  '内置用户管理与回收站，管理员权限由后端下发',
-  '四套后端保持一致的认证与用户接口',
-  '主题、语言、响应式布局均已处理',
+  'home.intro.point1',
+  'home.intro.point2',
+  'home.intro.point3',
+  'home.intro.point4',
 ]
 
 // 技术栈介绍
 const techStack = [
-  {
-    name: 'Vue 3',
-    tag: '视图层',
-    icon: CodeOutlined,
-    desc: '组合式 API + <script setup>，所有页面与组件均为单文件组件。',
-  },
-  {
-    name: 'Vite',
-    tag: '构建工具',
-    icon: ThunderboltOutlined,
-    desc: '开发期按需编译、秒级热更新；生产构建输出到 dist/。',
-  },
-  {
-    name: 'Pinia',
-    tag: '状态管理',
-    icon: AppstoreOutlined,
-    desc: 'stores/modules 下按模块拆分，组合式 store 写法，支持 computed getter。',
-  },
-  {
-    name: 'Vue Router',
-    tag: '路由',
-    icon: DeploymentUnitOutlined,
-    desc: 'history 模式 + 懒加载路由；全局 beforeEach 处理标题与管理员守卫。',
-  },
-  {
-    name: 'Axios',
-    tag: '网络请求',
-    icon: ApiOutlined,
-    desc: 'api/request.js 统一封装 baseURL、鉴权头与五字段响应解包。',
-  },
-  {
-    name: 'AntdvNext',
-    tag: 'UI 组件库',
-    icon: SettingOutlined,
-    desc: '主题 token 驱动亮暗色，全局 ConfigProvider 统一语言与弹层样式。',
-  },
-  {
-    name: 'Tailwind CSS',
-    tag: '样式',
-    icon: BgColorsOutlined,
-    desc: '工具类快速布局，复杂页面配合 scoped CSS 与全局设计令牌。',
-  },
-  {
-    name: 'SSO / OAuth2',
-    tag: '认证',
-    icon: SafetyCertificateOutlined,
-    desc: '后端授权码登录，前端只负责跳转 /sso/authorize，token 全程留在服务端。',
-  },
+  { name: 'Vue 3', tagKey: 'home.tech.vueTag', icon: CodeOutlined, descKey: 'home.tech.vueDesc' },
+  { name: 'Vite', tagKey: 'home.tech.viteTag', icon: ThunderboltOutlined, descKey: 'home.tech.viteDesc' },
+  { name: 'Pinia', tagKey: 'home.tech.piniaTag', icon: AppstoreOutlined, descKey: 'home.tech.piniaDesc' },
+  { name: 'Vue Router', tagKey: 'home.tech.routerTag', icon: DeploymentUnitOutlined, descKey: 'home.tech.routerDesc' },
+  { name: 'Axios', tagKey: 'home.tech.axiosTag', icon: ApiOutlined, descKey: 'home.tech.axiosDesc' },
+  { name: 'AntdvNext', tagKey: 'home.tech.antdTag', icon: SettingOutlined, descKey: 'home.tech.antdDesc' },
+  { name: 'vue-i18n', tagKey: 'home.tech.i18nTag', icon: BgColorsOutlined, descKey: 'home.tech.i18nDesc' },
+  { name: 'SSO / OAuth2', tagKey: 'home.tech.ssoTag', icon: SafetyCertificateOutlined, descKey: 'home.tech.ssoDesc' },
 ]
 
 // 使用步骤
 const steps = [
-  { title: '安装依赖', desc: 'Node.js 18+，在 vue 目录执行安装。' },
-  { title: '配置环境变量', desc: '按需覆盖 VITE_API_BASE_URL，默认走 vite 代理 /api。' },
-  { title: '本地开发', desc: '启动 Vite 开发服务器，默认 http://localhost:5173。' },
-  { title: '构建部署', desc: '产出静态文件，交给 Nginx 或后端静态资源目录。' },
+  { titleKey: 'home.usage.step1Title', descKey: 'home.usage.step1Desc' },
+  { titleKey: 'home.usage.step2Title', descKey: 'home.usage.step2Desc' },
+  { titleKey: 'home.usage.step3Title', descKey: 'home.usage.step3Desc' },
+  { titleKey: 'home.usage.step4Title', descKey: 'home.usage.step4Desc' },
 ]
 
 // 目录说明
 const directories = [
-  { path: 'src/api', desc: '接口封装与统一 axios 实例' },
-  { path: 'src/layouts', desc: 'ConsoleLayout 侧边菜单布局与 LandingLayout 落地页布局' },
-  { path: 'src/views', desc: '页面组件（含 admin 用户管理）' },
-  { path: 'src/router', desc: '路由表与全局守卫' },
-  { path: 'src/stores', desc: 'Pinia 模块（app / user）' },
-  { path: 'src/config', desc: '语言、主题等全局配置' },
+  { path: 'src/api', descKey: 'home.dir.api' },
+  { path: 'src/layouts', descKey: 'home.dir.layouts' },
+  { path: 'src/views', descKey: 'home.dir.views' },
+  { path: 'src/router', descKey: 'home.dir.router' },
+  { path: 'src/stores', descKey: 'home.dir.stores' },
+  { path: 'src/config', descKey: 'home.dir.config' },
 ]
 
 function goLogin() {
@@ -141,36 +103,33 @@ function goLogin() {
       <!-- Hero -->
       <section class="hero">
         <div class="hero-logo"><AppIcon :size="64" /></div>
-        <a-tag color="blue" class="hero-badge">Vue 3 + Vite 前端模板</a-tag>
+        <a-tag color="blue" class="hero-badge">{{ t('home.badge') }}</a-tag>
         <h1 class="hero-title">
-          开箱即用的
-          <span class="gradient-text">现代前端工程</span>
+          {{ t('home.titlePrefix') }}
+          <span class="gradient-text">{{ t('home.titleHighlight') }}</span>
         </h1>
-        <p class="hero-desc">
-          基于 Vue 3 与 AntdvNext 构建，内置路由、状态管理、请求封装、亮暗主题、
-          国际化与 SSO 登录流程。clone 下来即可专注业务开发。
-        </p>
+        <p class="hero-desc">{{ t('home.desc') }}</p>
         <div class="hero-actions">
           <a-button type="primary" size="large" @click="$router.push('/components')">
-            浏览组件
+            {{ t('home.browse') }}
             <ArrowRightOutlined />
           </a-button>
           <a-button size="large" @click="$router.push('/admin/users')" v-if="userStore.isAdmin">
             <SettingOutlined />
-            管理后台
+            {{ t('home.adminPanel') }}
           </a-button>
           <a-button v-else size="large" @click="goLogin">
             <LoginOutlined />
-            SSO 登录
+            {{ t('home.ssoLogin') }}
           </a-button>
         </div>
         <div class="hero-tags">
           <span v-for="item in techStack.slice(0, 5)" :key="item.name">{{ item.name }}</span>
         </div>
         <div class="hero-stats">
-          <div v-for="item in stats" :key="item.label" class="hero-stat">
+          <div v-for="item in stats" :key="item.labelKey" class="hero-stat">
             <strong>{{ item.value }}</strong>
-            <span>{{ item.label }}</span>
+            <span>{{ t(item.labelKey) }}</span>
           </div>
         </div>
       </section>
@@ -179,27 +138,22 @@ function goLogin() {
       <section id="intro" class="section intro-section">
         <div class="intro-grid">
           <div class="intro-copy">
-            <a-tag color="blue">项目介绍</a-tag>
-            <h2>不是空壳脚手架，<br />而是一套可落地的工程基线</h2>
-            <p>
-              前端已经把路由、状态管理、请求封装、两套布局、主题、国际化、
-              SSO 登录和用户管理串成完整链路；后端四套实现遵循同一套接口约定。
-            </p>
-            <p>
-              不需要的部分可以直接删掉，保留基础设施，把时间花在业务逻辑上。
-            </p>
+            <a-tag color="blue">{{ t('home.intro.tag') }}</a-tag>
+            <h2>{{ t('home.intro.titleLine1') }}<br />{{ t('home.intro.titleLine2') }}</h2>
+            <p>{{ t('home.intro.p1') }}</p>
+            <p>{{ t('home.intro.p2') }}</p>
             <ul class="intro-points">
               <li v-for="point in introPoints" :key="point">
                 <CheckCircleOutlined />
-                <span>{{ point }}</span>
+                <span>{{ t(point) }}</span>
               </li>
             </ul>
           </div>
           <div class="feature-grid">
-            <div v-for="item in features" :key="item.title" class="feature-card">
+            <div v-for="item in features" :key="item.titleKey" class="feature-card">
               <span class="feature-icon"><component :is="item.icon" /></span>
-              <h3>{{ item.title }}</h3>
-              <p>{{ item.desc }}</p>
+              <h3>{{ t(item.titleKey) }}</h3>
+              <p>{{ t(item.descKey) }}</p>
             </div>
           </div>
         </div>
@@ -208,8 +162,8 @@ function goLogin() {
       <!-- 技术栈 -->
       <section id="stack" class="section">
         <div class="section-head">
-          <h2>技术栈</h2>
-          <p>每一层都保持简单可替换，按业务需要删减。</p>
+          <h2>{{ t('home.tech.title') }}</h2>
+          <p>{{ t('home.tech.subtitle') }}</p>
         </div>
         <div class="stack-grid">
           <div v-for="item in techStack" :key="item.name" class="stack-card">
@@ -217,9 +171,9 @@ function goLogin() {
             <div class="stack-body">
               <div class="stack-title">
                 <strong>{{ item.name }}</strong>
-                <a-tag>{{ item.tag }}</a-tag>
+                <a-tag>{{ t(item.tagKey) }}</a-tag>
               </div>
-              <p>{{ item.desc }}</p>
+              <p>{{ t(item.descKey) }}</p>
             </div>
           </div>
         </div>
@@ -228,20 +182,20 @@ function goLogin() {
       <!-- 使用指南 -->
       <section id="usage" class="section">
         <div class="section-head">
-          <h2>使用指南</h2>
-          <p>进入 vue 目录，四步即可跑起来。</p>
+          <h2>{{ t('home.usage.title') }}</h2>
+          <p>{{ t('home.usage.subtitle') }}</p>
         </div>
         <div class="usage-grid">
-          <div v-for="(step, index) in steps" :key="step.title" class="step-card">
+          <div v-for="(step, index) in steps" :key="step.titleKey" class="step-card">
             <span class="step-index">{{ String(index + 1).padStart(2, '0') }}</span>
-            <strong>{{ step.title }}</strong>
-            <p>{{ step.desc }}</p>
+            <strong>{{ t(step.titleKey) }}</strong>
+            <p>{{ t(step.descKey) }}</p>
           </div>
         </div>
 
         <div class="code-panel">
           <div class="code-head">
-            <span>终端</span>
+            <span>{{ t('home.usage.terminal') }}</span>
             <span class="code-dots"><i /><i /><i /></span>
           </div>
           <pre><code># 安装依赖
@@ -258,15 +212,15 @@ npm run build</code></pre>
           <div class="tip-card">
             <CheckCircleOutlined class="tip-icon" />
             <div>
-              <strong>环境变量</strong>
-              <p>在 <code>vue/.env.local</code> 覆盖 <code>VITE_API_BASE_URL</code>，默认 <code>/api</code> 走 Vite 代理。</p>
+              <strong>{{ t('home.usage.envTitle') }}</strong>
+              <p>{{ t('home.usage.envDesc') }}</p>
             </div>
           </div>
           <div class="tip-card">
             <SafetyCertificateOutlined class="tip-icon" />
             <div>
-              <strong>SSO 登录</strong>
-              <p>浏览器跳转后端 <code>/sso/authorize</code>，回调 <code>/sso/callback</code>；前端不接触 access_token。</p>
+              <strong>{{ t('home.usage.ssoTitle') }}</strong>
+              <p>{{ t('home.usage.ssoDesc') }}</p>
             </div>
           </div>
         </div>
@@ -275,15 +229,15 @@ npm run build</code></pre>
       <!-- 目录结构 -->
       <section id="structure" class="section">
         <div class="section-head">
-          <h2>目录结构</h2>
-          <p>按职责分层，新增业务时不需要重新造轮子。</p>
+          <h2>{{ t('home.dir.title') }}</h2>
+          <p>{{ t('home.dir.subtitle') }}</p>
         </div>
         <div class="dir-grid">
           <div v-for="item in directories" :key="item.path" class="dir-item">
             <FolderOutlined class="dir-icon" />
             <div>
               <code>{{ item.path }}</code>
-              <p>{{ item.desc }}</p>
+              <p>{{ t(item.descKey) }}</p>
             </div>
           </div>
         </div>
@@ -293,14 +247,11 @@ npm run build</code></pre>
       <section class="section">
         <div class="admin-callout">
           <div>
-            <h3>管理后台</h3>
-            <p>
-              管理员登录后可在 <code>/admin/users</code> 管理用户、启停账号、软删除与回收站恢复；
-              普通用户无法访问。
-            </p>
+            <h3>{{ t('home.adminCallout.title') }}</h3>
+            <p>{{ t('home.adminCallout.desc') }}</p>
           </div>
           <a-button type="primary" @click="$router.push(userStore.isAdmin ? '/admin/users' : '/login')">
-            {{ userStore.isAdmin ? '进入用户管理' : '登录管理员账号' }}
+            {{ userStore.isAdmin ? t('home.adminCallout.enter') : t('home.adminCallout.login') }}
             <ArrowRightOutlined />
           </a-button>
         </div>

@@ -5,7 +5,7 @@
 ## 特性
 
 - 🎨 **全局亮/暗主题**：antdv-next `ConfigProvider` token 驱动，暗色布局透明露出渐变背景，切换持久化并同步 `<html>` 的 `dark` 类
-- 🌍 **多语言**：全局 locale 配置中心（简体中文 / 繁體 / English / 日本語 / Français / Русский），组件文案实时跟随
+- 🌍 **国际化（i18n）**：`vue-i18n` 管理业务文案，默认支持简体中文 / 繁體中文 / English，AntdvNext 语言包与 dayjs 跟随同一 locale；可按文档说明整体移除
 - 🧩 **页面级按需构建**：`unplugin-vue-components` + 官方 resolver 自动导入，首屏 gzip ≈ 253 kB（全量引入约 593 kB）
 - 📱 **移动端适配**：`Grid.useBreakpoint()` 断点切换，侧边栏自动变为抽屉菜单
 - ⏳ **路由懒加载 + 加载指示**：`router-view v-slot` + `a-spin`，切换页面显示居中 loading
@@ -25,6 +25,7 @@
 | 网络请求  | Axios                                       | ^1.7   |
 | UI 组件库 | antdv-next                                  | ^1.5.6 |
 | 图标库    | @antdv-next/icons                           | ^1.1.2 |
+| 国际化    | vue-i18n                                    | ^11.1  |
 | 样式      | Tailwind CSS                                | ^3.4   |
 | 日期      | dayjs（跟随全局 locale）                   | ^1.11  |
 
@@ -52,6 +53,7 @@ vue3-antdv-template/
     ├── config/
     │   ├── locale.js           # 全局 locale 配置中心（语言列表、antdv 语言包、切换）
     │   └── theme.js            # 全局主题配置（亮/暗 token、组件级覆盖）
+    ├── locales/                # i18n 文案（zh-CN / zh-TW / en-US）与 vue-i18n 实例
     ├── layouts/
     │   ├── ConsoleLayout.vue   # 控制台布局（桌面固定侧边栏 / 移动端抽屉菜单 + 顶栏，供 /admin 与示例页）
     │   ├── LandingLayout.vue   # 落地页布局（品牌 header + 语言/主题/登录 + footer，供首页使用）
@@ -184,18 +186,63 @@ modal.confirm({ title: '确认', onOk: () => {} })
   **布局透明**（露出 `html::before` 全局渐变背景：亮 `#e8edf7→#f0f4fc`、暗 `#12141b→#1a1c28`）、卡片容器 `#1a1c26`、弹层 `#161822`、侧边栏 `#12141b`、顶栏 `#22242f`，抽屉背景与侧边栏一致。整体为直角、无阴影风格，全局背景为渐变。
 - **暗色切换**：`appStore.isDark` 控制 `theme.darkAlgorithm` / `theme.defaultAlgorithm`，顶栏右上角有切换按钮；状态持久化到
   localStorage + Cookie（key: `theme-mode`，365 天），并同步 `<html>` 的 `dark` 类（供自定义 CSS 与背景过渡使用）。
-- **多语言（全局 locale 配置中心）**：顶栏语言下拉支持 简体中文 / 繁體中文 / English / 日本語 / Français / Русский。
+- **多语言（全局 locale 配置中心）**：顶栏语言下拉支持 简体中文 / 繁體中文 / English。
   语言状态、antdv 语言包、切换逻辑统一由 `src/config/locale.js` 管理：`<a-config-provider :locale>` 使
-  组件文案（分页、日期、弹窗按钮等）实时跟随；选择持久化到 localStorage + Cookie（key: `app-locale`），并同步 dayjs。
-  业务页面文案固定中文书写，不做翻译。
+  组件文案（分页、日期、弹窗按钮等）实时跟随，`vue-i18n` 使业务文案同步切换；选择持久化到
+  localStorage + Cookie（key: `app-locale`），并同步 dayjs 与 `<html lang>`。
 - **a-app**：为组件内 `App.useApp()` 提供 context；全局静态弹层由 `ConfigProvider.config()` 提供 context。
 
 ### 5.1 全局 locale 配置中心（`src/config/locale.js`）
 
-- `LOCALES`：支持的语言列表（key / label / dayjs 名 / antdv 语言包）。
+- `LOCALES`：支持的语言列表（key / label / dayjs 名 / antdv 语言包），默认仅 `zh-CN`、`zh-TW`、`en-US`。
 - `antdLocale`：当前 antdv-next 语言包（computed，传给 `<a-config-provider :locale>`）。
 - `localeKey` / `currentLocale`：当前语言 key 与配置项（响应式）。
-- `setLocale(key)`：切换语言 + 持久化 + 同步 dayjs。
+- `setLocale(key)`：切换语言 + 持久化 + 同步 vue-i18n、dayjs、`<html lang>`。
+
+### 5.2 国际化（i18n）
+
+业务文案放在 `src/locales/`，按命名空间组织（`common` / `nav` / `landing` / `login` / `home` / `adminUsers` / `adminRecycle` / `components` …）：
+
+```
+src/locales/
+├── index.js     # createI18n({ legacy: false, globalInjection: true }) + setI18nLocale
+├── zh-CN.js     # 简体中文（默认 / fallback）
+├── zh-TW.js     # 繁體中文
+└── en-US.js     # English
+```
+
+组件中使用：
+
+```vue
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
+
+<template>
+  <a-button>{{ t('common.login') }}</a-button>
+  <span>{{ t('common.total', { total: 12 }) }}</span>
+</template>
+```
+
+- 语言下拉由 `src/config/locale.js` 的 `LOCALES` 驱动，`setLocale()` 会同时更新 vue-i18n 与 AntdvNext 语言包。
+- 新增语言：在 `src/locales/` 新增语言文件 → 在 `src/locales/index.js` 的 `messages` 注册 → 在
+  `src/config/locale.js` 的 `LOCALES` 增加一项（引入对应 `antdv-next/locale/*` 与 dayjs locale）。
+- 文案 key 建议按页面/模块划分命名空间，避免跨模块重名。
+
+#### 移除 i18n（项目不需要多语言时）
+
+i18n 是可选能力，按以下步骤可整体移除：
+
+1. 卸载依赖：`npm uninstall vue-i18n`。
+2. 删除目录 `src/locales/`。
+3. 删除 `src/main.js` 中的 `import { i18n } from './locales'` 与 `app.use(i18n)`。
+4. 在 `src/config/locale.js` 中：去掉 `setI18nLocale` 的引入与调用，保留单一语言（或仅保留
+   AntdvNext 语言包写死，例如 `const antdLocale = zhCN`），其余组件通过 `LOCALES` 切换语言的逻辑一并删除。
+5. 各页面组件中删除 `import { useI18n } from 'vue-i18n'`、`const { t } = useI18n()`，把 `t('xxx')`
+   替换为固定文案（可直接从 `src/locales/zh-CN.js` 复制对应中文）。
+6. 顶栏语言下拉（`LandingLayout.vue` / `ConsoleLayout.vue`）与 `GlobalOutlined` 一并移除，`<a-config-provider :locale="antdLocale">` 保留固定语言包即可。
 
 ### 6. 移动端适配（响应式）
 
