@@ -170,6 +170,11 @@ modal.confirm({ title: '确认', onOk: () => {} })
 
 这些调用会自动继承全局语言与明暗主题。
 
+- **弹层顶部偏移**：`applyGlobalConfig()` 里同时调用 `message.config({ top: 72 })` 与
+  `notification.config({ top: 72 })`。两套布局的顶栏都是 64px（落地页还是 `position: sticky`），
+  组件库默认 `top: 8px` 会让 toast 正好压在顶栏上，看起来像「弹层只能在 header 那里显示」；
+  如果你的项目顶栏高度不同，只需要改 `src/utils/app.js` 里的 `POPUP_TOP` 一个常量。
+
 ### 5. 主题全局配置（`src/App.vue` + `src/config/theme.js`）
 
 ```vue
@@ -230,6 +235,9 @@ const { t } = useI18n()
 - 新增语言：在 `src/locales/` 新增语言文件 → 在 `src/locales/index.js` 的 `messages` 注册 → 在
   `src/config/locale.js` 的 `LOCALES` 增加一项（引入对应 `antdv-next/locale/*` 与 dayjs locale）。
 - 文案 key 建议按页面/模块划分命名空间，避免跨模块重名。
+- **文案里的特殊字符**：vue-i18n 会把 `@` 解析成 linked message、把 `<...>` 当 HTML 提示，因此
+  `@antdv-next/icons` 这类值要写成字面量插值 `{'@'}antdv-next/icons`（否则「关于」页会整页白屏），
+  含尖括号的说明文字建议改成纯文本（如 `script setup`）。
 
 #### 移除 i18n（项目不需要多语言时）
 

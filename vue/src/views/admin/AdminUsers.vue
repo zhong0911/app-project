@@ -139,7 +139,7 @@ onMounted(load)
 </script>
 
 <template>
-  <a-card :bordered="false" class="admin-card">
+  <a-card variant="borderless" class="admin-card">
     <template #title>{{ t('adminUsers.title') }}</template>
     <template #extra>
       <a-space>

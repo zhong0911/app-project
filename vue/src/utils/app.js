@@ -18,6 +18,13 @@ import { useAppStore } from '@/stores/modules/app'
  * 3. 任意 JS 模块 import { message } from '@/utils/app' 即可使用。
  */
 
+/**
+ * 静态弹层距顶部间距：两套布局的顶栏都是 64px（落地页还是吸顶 sticky），
+ * 而组件库默认 top: 8px —— toast / notification 会正好压在顶栏上，看起来像"只能在 header 里显示"。
+ * 统一下移到顶栏之下 8px。
+ */
+const POPUP_TOP = 72
+
 /** 初始化全局 holder：把静态弹层渲染进 ConfigProvider(语言/主题) + a-app */
 function applyGlobalConfig() {
   ConfigProvider.config({
@@ -28,6 +35,9 @@ function applyGlobalConfig() {
         { default: () => h(App, null, () => children) },
       ),
   })
+  // 弹层位置：落在顶栏之下，避免被吸顶 header 挡住
+  antdMessage.config({ top: POPUP_TOP })
+  antdNotification.config({ top: POPUP_TOP })
 }
 
 /** 应用启动时初始化（main.js 调用） */
