@@ -267,6 +267,9 @@ public Result<String> anyLoginUser() { ... }
 curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 ```
 
+> 生产 profile 通过 `app.security.basic-enabled=false` 自动关闭 httpBasic 与内存用户，仅保留 SSO 会话 / Bearer。
+> 跨域来源由 `CORS_ALLOWED_ORIGINS` 控制（逗号分隔，必须写具体域名，不能使用 `*`，因为会话 Cookie 需要 `allowCredentials`）。
+
 > 权限规则见 `config/security/SecurityConfig.java`（放行公开接口、调整角色、`@PreAuthorize` 用法）。
 
 ## 管理后台用户管理（MySQL users）
@@ -302,7 +305,7 @@ curl -u admin:admin123 "http://localhost:8080/api/users?pageNum=1&pageSize=10"
 | POST | `/api/mail/send` | 发送纯文本邮件 |
 | POST | `/api/mail/send/html` | 发送 HTML 邮件 |
 
-> 除 `/oauth2/**`、`/error`、`/favicon.ico` 外均需认证（Bearer token 或本地 httpBasic）；邮件接口生产还需叠加限流，防止被滥用。
+> 除 `/sso/**`、`/error`、`/favicon.ico` 外均需认证（Bearer token 或本地 httpBasic）；邮件接口生产还需叠加限流，防止被滥用。
 
 ### BFF（Backend For Frontend，前端后端模式）
 

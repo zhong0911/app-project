@@ -2,22 +2,13 @@ import axios from 'axios'
 import { message } from '@/utils/app'
 
 // 创建 axios 实例
+// withCredentials：SSO 登录态是后端会话 Cookie（JSESSIONID / SESSION），
+// 浏览器自动携带、前端不保存任何 token；跨域部署时后端需允许 credentials。
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 10000,
+  withCredentials: true,
 })
-
-// 请求拦截器：统一携带 token
-service.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error),
-)
 
 // 响应拦截器：统一解包与错误处理
 service.interceptors.response.use(
@@ -28,11 +19,7 @@ service.interceptors.response.use(
       if (res.code === 0 || res.code === 200) {
         return res
       }
-      // 登录过期：清除凭证（不跳转，由业务层自行处理）
-      if (res.code === 401) {
-        localStorage.removeItem('token')
-      }
-      // 调用方标记 skipErrorToast（如退出登录接口）：不弹提示，由页面自行处理
+      // 401：会话已过期，由业务层决定是否跳转登录
       if (!response.config?.skipErrorToast) {
         message.error(res.message || '请求失败')
       }
@@ -43,8 +30,6 @@ service.interceptors.response.use(
   (error) => {
     const status = error.response?.status
     if (status === 401) {
-      // 登录过期：清除凭证（不跳转，由业务层自行处理）
-      localStorage.removeItem('token')
       if (!error.config?.skipErrorToast) {
         message.error('登录已过期，请重新登录')
       }

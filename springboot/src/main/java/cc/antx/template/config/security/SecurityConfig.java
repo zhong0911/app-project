@@ -2,6 +2,7 @@ package cc.antx.template.config.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -29,7 +30,7 @@ import org.springframework.security.web.SecurityFilterChain;
  *   <li><b>角色本地化（方案B：子应用自治）</b>：token 取 sub(=uid) → 查本地 users 表 role →
  *       注入 ROLE_*（如 ROLE_VPN_ADMIN），子应用接口用 @PreAuthorize("hasRole('VPN_ADMIN')") 判定，
  *       SSO 只管认证，业务角色由子应用本地表管理</li>
- *   <li>httpBasic + 内存用户：仅本地联调用，生产子应用请删除（见删除方法）</li>
+ *   <li>httpBasic + 内存用户：仅本地联调用，生产通过 app.security.basic-enabled=false 关闭</li>
  *   <li>未认证 → 401 JSON，无权限 → 403 JSON（统一 Result 格式）</li>
  * </ul>
  */
@@ -47,6 +48,10 @@ public class SecurityConfig {
     @Value("${sso.login-success-url:/api/auth/me}")
     private String loginSuccessUrl;
 
+    /** 本地联调 httpBasic 开关；生产环境设为 false（见 application-prod.yml） */
+    @Value("${app.security.basic-enabled:true}")
+    private boolean basicEnabled;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -60,8 +65,6 @@ public class SecurityConfig {
                                 "/favicon.ico"
                         ).permitAll()
                         .anyRequest().authenticated())
-                // 本地联调：内存用户 httpBasic（生产子应用应删除此段）
-                .httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint))
                 // API 场景不跳表单登录页
                 .formLogin(form -> form.disable())
                 // OAuth2 Client：回调路径规范为 /sso/callback（与 authorize 入口同级，全后端统一）；
@@ -77,6 +80,10 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler));
+        // 本地联调：内存用户 httpBasic；生产关闭后仅保留 SSO 会话 / Bearer
+        if (basicEnabled) {
+            http.httpBasic(basic -> basic.authenticationEntryPoint(authenticationEntryPoint));
+        }
         return http.build();
     }
 
@@ -110,9 +117,11 @@ public class SecurityConfig {
     }
 
     /**
-     * 内存用户（仅本地联调用，生产子应用请删除）。配置项见 application.yml 的 spring.security.user.*。
+     * 内存用户（仅本地联调用）。配置项见 application.yml 的 spring.security.user.*；
+     * 生产通过 app.security.basic-enabled=false 关闭，不再创建该用户。
      */
     @Bean
+    @ConditionalOnProperty(prefix = "app.security", name = "basic-enabled", havingValue = "true", matchIfMissing = true)
     public UserDetailsService userDetailsService(PasswordEncoder encoder,
                                                  @Value("${spring.security.user.name:admin}") String username,
                                                  @Value("${spring.security.user.password:admin123}") String password,

@@ -2,9 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
 import LandingLayout from '@/layouts/LandingLayout.vue'
+import { APP_TITLE } from '@/config/app'
 import { useUserStore } from '@/stores/modules/user'
-
-const APP_TITLE = import.meta.env.VITE_APP_TITLE || ''
 
 const routes = [
   // 首页：营销落地页（LandingLayout 自带 header / footer，无侧边菜单）

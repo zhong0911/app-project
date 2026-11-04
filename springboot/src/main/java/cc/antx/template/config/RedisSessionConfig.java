@@ -1,7 +1,11 @@
 package cc.antx.template.config;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.session.web.http.CookieSerializer;
+import org.springframework.session.web.http.DefaultCookieSerializer;
 
 /**
  * Spring Session —— Redis 会话存储（手动启用）。
@@ -15,6 +19,9 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  *
  * <p>启用后：多实例共享会话、应用重启不掉线、token 落 Redis。
  * {@code spring.session.timeout}（30 分钟）与 namespace 由注解参数控制。</p>
+ *
+ * <p>会话 Cookie 的 HttpOnly / SameSite / Secure 由 {@link #cookieSerializer} 显式设置：
+ * Spring Session 使用自己的 Cookie 序列化器，不读取 {@code server.servlet.session.cookie.*}。</p>
  */
 @Configuration
 @EnableRedisHttpSession(
@@ -22,4 +29,18 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
         redisNamespace = "spring:session"
 )
 public class RedisSessionConfig {
+
+    /** 与 application.yml 的 server.servlet.session.cookie.* 保持一致；prod 通过该配置开启 Secure */
+    @Bean
+    public CookieSerializer cookieSerializer(
+            @Value("${server.servlet.session.cookie.name:SESSION}") String name,
+            @Value("${server.servlet.session.cookie.secure:false}") boolean secure,
+            @Value("${server.servlet.session.cookie.same-site:lax}") String sameSite) {
+        DefaultCookieSerializer serializer = new DefaultCookieSerializer();
+        serializer.setCookieName(name);
+        serializer.setUseHttpOnlyCookie(true);
+        serializer.setSameSite(sameSite);
+        serializer.setUseSecureCookie(secure);
+        return serializer;
+    }
 }

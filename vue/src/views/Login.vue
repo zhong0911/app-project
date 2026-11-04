@@ -1,14 +1,26 @@
 <script setup>
-// 登录页（独立于 ConsoleLayout）：标题/介绍为占位文案，按业务替换
+// 登录页（独立布局）：标题取 VITE_APP_TITLE，可替换为业务文案
 // 暗色适配：页面底色用全局渐变（html::before），文字色用全局 CSS 变量，
 // 卡片/按钮等 antd 组件由 ConfigProvider 主题算法自动切换，无需页面级处理
 // 支持 ?redirect_uri=/xxx：SSO 登录成功后回跳该地址（见 stores/modules/user.js#loginWithSso）
-import { AppstoreOutlined, LoginOutlined } from '@antdv-next/icons'
-import { useRoute } from 'vue-router'
+import { onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { LoginOutlined } from '@antdv-next/icons'
+import AppIcon from '@/components/AppIcon.vue'
+import { APP_TITLE } from '@/config/app'
 import { useUserStore } from '@/stores/modules/user'
 
 const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
+
+// 已登录用户访问登录页时直接回跳，避免重复走 SSO 授权
+onMounted(async () => {
+  await userStore.fetchLoginUser()
+  if (userStore.isLoggedIn) {
+    router.replace(route.query.redirect_uri || '/')
+  }
+})
 
 function handleSsoLogin() {
   userStore.loginWithSso(route.query.redirect_uri || '')
@@ -18,15 +30,13 @@ function handleSsoLogin() {
 <template>
   <div class="login-page">
     <a-card class="login-card" variant="borderless">
-      <!-- 应用图标占位 -->
-      <div class="login-icon"><AppstoreOutlined /></div>
+      <!-- 应用图标：统一使用 AppIcon（与 favicon、布局 logo 一致） -->
+      <AppIcon :size="56" class="login-icon" />
 
-      <!-- 应用标题占位 -->
-      <a-typography-title :level="3" class="login-title">应用标题占位</a-typography-title>
+      <a-typography-title :level="3" class="login-title">{{ APP_TITLE }}</a-typography-title>
 
-      <!-- 应用介绍占位 -->
       <a-typography-paragraph class="login-subtitle">
-        应用介绍占位文案
+        使用统一身份认证（SSO）安全登录
       </a-typography-paragraph>
 
       <!-- SSO 登录（整页跳转后端 /sso/authorize；带 redirect_uri 时登录后回跳） -->
@@ -57,18 +67,9 @@ function handleSsoLogin() {
   border-radius: 12px;
 }
 
-/* 圆形应用图标（主色 #4c8bf5，与全局主题 token 一致） */
+/* 应用图标（圆形样式由 AppIcon 统一提供，这里只负责居中与间距） */
 .login-icon {
-  width: 56px;
-  height: 56px;
   margin: 8px auto 16px;
-  border-radius: 50%;
-  background: #4c8bf5;
-  color: #fff;
-  font-size: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .login-title {

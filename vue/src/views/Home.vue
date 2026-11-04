@@ -14,11 +14,52 @@ import {
   ArrowRightOutlined,
   CheckCircleOutlined,
   FolderOutlined,
+  TeamOutlined,
 } from '@antdv-next/icons'
+import AppIcon from '@/components/AppIcon.vue'
 import { useUserStore } from '@/stores/modules/user'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// 首屏关键指标
+const stats = [
+  { value: '4', label: '后端实现' },
+  { value: 'SSO', label: '单点登录' },
+  { value: '2', label: '布局模式' },
+  { value: '100%', label: '按需加载' },
+]
+
+// 项目能力介绍
+const features = [
+  {
+    icon: DeploymentUnitOutlined,
+    title: '四端同构',
+    desc: 'Spring Boot / FastAPI / Node.js / PHP 共用同一套 SSO 流程、users 表与接口约定。',
+  },
+  {
+    icon: SafetyCertificateOutlined,
+    title: 'SSO 会话',
+    desc: '授权码登录，access_token 留在服务端，前端只通过会话 Cookie 维持登录态。',
+  },
+  {
+    icon: TeamOutlined,
+    title: '管理后台',
+    desc: '用户列表、启停、软删除与回收站恢复，管理员路由守卫开箱可用。',
+  },
+  {
+    icon: BgColorsOutlined,
+    title: '主题与国际化',
+    desc: '亮/暗主题、语言切换与 AntdvNext 主题 token 已统一接入，移动端断点也已适配。',
+  },
+]
+
+const introPoints = [
+  '前端零配置对接 SSO，不再本地保存 token',
+  '内置用户管理与回收站，管理员权限由后端下发',
+  '四套后端保持一致的认证与用户接口',
+  '主题、语言、响应式布局均已处理',
+]
 
 // 技术栈介绍
 const techStack = [
@@ -99,6 +140,7 @@ function goLogin() {
   <div class="home-content">
       <!-- Hero -->
       <section class="hero">
+        <div class="hero-logo"><AppIcon :size="64" /></div>
         <a-tag color="blue" class="hero-badge">Vue 3 + Vite 前端模板</a-tag>
         <h1 class="hero-title">
           开箱即用的
@@ -124,6 +166,42 @@ function goLogin() {
         </div>
         <div class="hero-tags">
           <span v-for="item in techStack.slice(0, 5)" :key="item.name">{{ item.name }}</span>
+        </div>
+        <div class="hero-stats">
+          <div v-for="item in stats" :key="item.label" class="hero-stat">
+            <strong>{{ item.value }}</strong>
+            <span>{{ item.label }}</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 项目介绍 -->
+      <section id="intro" class="section intro-section">
+        <div class="intro-grid">
+          <div class="intro-copy">
+            <a-tag color="blue">项目介绍</a-tag>
+            <h2>不是空壳脚手架，<br />而是一套可落地的工程基线</h2>
+            <p>
+              前端已经把路由、状态管理、请求封装、两套布局、主题、国际化、
+              SSO 登录和用户管理串成完整链路；后端四套实现遵循同一套接口约定。
+            </p>
+            <p>
+              不需要的部分可以直接删掉，保留基础设施，把时间花在业务逻辑上。
+            </p>
+            <ul class="intro-points">
+              <li v-for="point in introPoints" :key="point">
+                <CheckCircleOutlined />
+                <span>{{ point }}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="feature-grid">
+            <div v-for="item in features" :key="item.title" class="feature-card">
+              <span class="feature-icon"><component :is="item.icon" /></span>
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.desc }}</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -233,8 +311,17 @@ npm run build</code></pre>
 <style scoped>
 /* ---------- hero ---------- */
 .hero {
-  padding: 88px 0 56px;
+  position: relative;
+  padding: 72px 0 56px;
   text-align: center;
+  border-radius: 24px;
+  background: radial-gradient(60% 75% at 50% 0%, rgba(76, 139, 245, 0.16), transparent 72%);
+}
+
+.hero-logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 
 .hero-badge {
@@ -285,6 +372,129 @@ npm run build</code></pre>
   font-size: 12px;
   color: var(--text-secondary);
   background: rgba(76, 139, 245, 0.1);
+}
+
+.hero-stats {
+  max-width: 720px;
+  margin: 28px auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hero-stat {
+  padding: 14px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+html.dark .hero-stat {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.hero-stat strong {
+  display: block;
+  font-size: 22px;
+  line-height: 1.2;
+  color: #4c8bf5;
+}
+
+.hero-stat span {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* ---------- intro ---------- */
+.intro-section {
+  padding-top: 24px;
+}
+
+.intro-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+}
+
+.intro-copy h2 {
+  margin: 14px 0 16px;
+  font-size: clamp(24px, 3vw, 32px);
+  line-height: 1.35;
+}
+
+.intro-copy p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text-secondary);
+}
+
+.intro-points {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.intro-points li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.intro-points svg {
+  flex: none;
+  margin-top: 2px;
+  color: #4c8bf5;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.feature-card {
+  padding: 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+html.dark .feature-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.feature-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  color: #4c8bf5;
+  font-size: 18px;
+  background: rgba(76, 139, 245, 0.12);
+}
+
+.feature-card h3 {
+  margin: 12px 0 6px;
+  font-size: 15px;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-secondary);
 }
 
 /* ---------- sections ---------- */
@@ -536,11 +746,24 @@ html.dark .dir-item {
   .dir-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .intro-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 }
 
 @media (max-width: 767px) {
   .hero {
-    padding: 56px 0 32px;
+    padding: 48px 0 32px;
+  }
+
+  .hero-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
   }
 
   .stack-grid,

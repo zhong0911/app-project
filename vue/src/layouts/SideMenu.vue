@@ -1,5 +1,8 @@
 <script setup>
 // 侧边菜单内容（logo + 菜单）：桌面 Sider 与移动端 Drawer 复用
+import AppIcon from '@/components/AppIcon.vue'
+import { APP_TITLE } from '@/config/app'
+
 defineProps({
   theme: { type: String, default: 'light' },
   menus: { type: Array, default: () => [] },
@@ -8,18 +11,13 @@ defineProps({
 })
 
 defineEmits(['menu-click'])
-
-// 应用标题首字符（模板中不能直接写 import.meta.env，需先定义到变量）
-const appTitleInitial = import.meta.env.VITE_APP_TITLE?.slice(0, 1) || 'A'
 </script>
 
 <template>
   <div class="side-menu">
     <div class="logo">
-      <a-avatar style="background-color: #4c8bf5">
-        {{ appTitleInitial }}
-      </a-avatar>
-      <span v-if="!collapsed" class="logo-text">AntdvNext</span>
+      <AppIcon :size="34" />
+      <span v-if="!collapsed" class="logo-text">{{ APP_TITLE }}</span>
     </div>
     <!-- 菜单 theme 跟随全局主题，背景色由 Layout token（siderBg/lightSiderBg）控制 -->
     <a-menu
@@ -38,14 +36,17 @@ const appTitleInitial = import.meta.env.VITE_APP_TITLE?.slice(0, 1) || 'A'
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   height: 64px;
-  font-size: 16px;
+  padding: 0 12px;
+  font-size: 15px;
   font-weight: 600;
+  overflow: hidden;
 }
 
 .logo-text {
   white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

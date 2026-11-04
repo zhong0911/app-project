@@ -92,17 +92,17 @@ npm run preview
 ### 1. 网络请求封装（`src/api/request.js`）
 
 - 统一 `baseURL`：开发环境走 Vite 代理（`/api`），生产环境读取 `VITE_API_BASE_URL`。
-- 请求拦截器：自动携带 `Authorization: Bearer <token>`。
-- 响应拦截器：自动解包 `{ code, data, message }` 结构；`401` 时清除凭证（不跳转，由业务层处理）。
+- `withCredentials: true`：登录态由后端 SSO 会话 Cookie 维护，前端不保存 token。
+- 响应拦截器：自动解包 `{ code, data, message }` 结构；`401` 提示会话过期（不跳转，由业务层处理）。
 
 ```js
 import request from '@/api/request'
 
 // GET
-const {data} = await request.get('/user/info')
+const {data} = await request.get('/bff/me')
 
 // POST（JSON）
-const {data} = await request.post('/auth/login', {username, password})
+const {data} = await request.post('/auth/logout')
 ```
 
 ### 2. 状态管理（Pinia）
@@ -113,8 +113,8 @@ const {data} = await request.post('/auth/login', {username, password})
 import {useUserStore} from '@/stores/modules/user'
 
 const userStore = useUserStore()
-await userStore.login({username: 'admin', password: '123456'})
-await userStore.fetchUserInfo()
+await userStore.fetchLoginUser()   // 拉取 /api/bff/me 登录态
+userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 ```
 
 ### 2.1 SSO 登录（OAuth2 客户端，全后端统一规范路径）

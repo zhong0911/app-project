@@ -42,6 +42,10 @@ async function load() {
     })
     records.value = data.records || []
     total.value = data.total || 0
+  } catch {
+    // 错误提示由 axios 拦截器统一处理，这里只保证失败时不残留旧数据
+    records.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }

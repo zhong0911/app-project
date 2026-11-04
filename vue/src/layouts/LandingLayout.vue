@@ -4,7 +4,6 @@
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  CodeOutlined,
   GlobalOutlined,
   SunOutlined,
   MoonOutlined,
@@ -13,6 +12,7 @@ import {
   UserOutlined,
   SettingOutlined,
 } from '@antdv-next/icons'
+import AppIcon from '@/components/AppIcon.vue'
 import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
@@ -66,7 +66,7 @@ onMounted(async () => {
     <header class="site-header">
       <div class="header-inner">
         <router-link to="/" class="brand">
-          <span class="brand-icon"><CodeOutlined /></span>
+          <AppIcon :size="36" />
           <span class="brand-text">
             <strong>AntX Frontend</strong>
             <small>Vue 3 通用前端模板</small>
@@ -74,6 +74,7 @@ onMounted(async () => {
         </router-link>
 
         <nav class="site-nav">
+          <a href="#intro">项目介绍</a>
           <a href="#stack">技术栈</a>
           <a href="#usage">使用指南</a>
           <a href="#structure">目录结构</a>
@@ -124,9 +125,9 @@ onMounted(async () => {
       </div>
     </header>
 
-    <!-- 页面内容 -->
+    <!-- 页面内容：作为路由布局使用，子路由渲染在 router-view -->
     <main class="page-main">
-      <slot />
+      <router-view />
     </main>
 
     <footer class="site-footer">
@@ -173,18 +174,6 @@ html.dark .site-header {
   color: inherit;
   text-decoration: none;
   flex-shrink: 0;
-}
-
-.brand-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: 18px;
-  background: linear-gradient(135deg, #4c8bf5, #7b5bf5);
 }
 
 .brand-text {
