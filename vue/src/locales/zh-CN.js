@@ -40,7 +40,7 @@ export default {
     footer: 'Vue 3 · Vite · Pinia · AntdvNext',
   },
   login: {
-    subtitle: '使用统一身份认证（SSO）安全登录',
+    subtitle: '使用统一身份认证安全登录',
     ssoButton: 'SSO 登录',
     hint: '将跳转 passport.antx.cc 完成认证后自动返回',
   },

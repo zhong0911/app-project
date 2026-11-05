@@ -40,7 +40,7 @@ export default {
     footer: 'Vue 3 · Vite · Pinia · AntdvNext',
   },
   login: {
-    subtitle: 'Sign in securely with single sign-on (SSO)',
+    subtitle: 'Sign in securely with single sign-on',
     ssoButton: 'Sign in with SSO',
     hint: 'You will be redirected to passport.antx.cc and returned automatically',
   },
