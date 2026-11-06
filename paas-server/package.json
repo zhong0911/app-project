@@ -1,0 +1,20 @@
+{
+  "name": "antx-paas-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AntX PaaS 应用托管平台服务端",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "dockerode": "^4.0.2",
+    "express": "^4.21.2",
+    "tar-stream": "^3.1.7"
+  }
+}

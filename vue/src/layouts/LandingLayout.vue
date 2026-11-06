@@ -70,17 +70,15 @@ onMounted(async () => {
         <router-link to="/" class="brand">
           <AppIcon :size="36" />
           <span class="brand-text">
-            <strong>AntX Frontend</strong>
+            <strong>AntX PaaS</strong>
             <small>{{ t('landing.brandSubtitle') }}</small>
           </span>
         </router-link>
 
         <nav class="site-nav">
-          <a href="#intro">{{ t('nav.intro') }}</a>
-          <a href="#stack">{{ t('nav.stack') }}</a>
-          <a href="#usage">{{ t('nav.usage') }}</a>
-          <a href="#structure">{{ t('nav.structure') }}</a>
-          <router-link to="/components">{{ t('nav.components') }}</router-link>
+          <router-link to="/overview">{{ t('nav.overview') }}</router-link>
+          <router-link to="/apps">{{ t('nav.apps') }}</router-link>
+          <router-link to="/about">{{ t('nav.about') }}</router-link>
         </nav>
 
         <div class="header-actions">
@@ -133,7 +131,7 @@ onMounted(async () => {
     </main>
 
     <footer class="site-footer">
-      <span>AntX Frontend Template</span>
+      <span>AntX PaaS</span>
       <span>{{ t('landing.footer') }}</span>
     </footer>
   </div>

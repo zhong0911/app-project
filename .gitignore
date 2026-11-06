@@ -13,6 +13,12 @@ springboot/.env
 php/vendor/
 composer.lock
 
+# ---- PaaS 运行时 ----
+paas-server/node_modules/
+paas-server/data/
+vue/dist/
+vue/node_modules/
+
 # ---- 系统 / IDE ----
 .DS_Store
 .idea/

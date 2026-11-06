@@ -22,6 +22,8 @@ import {
   SettingOutlined,
   TeamOutlined,
   DeleteOutlined,
+  DashboardOutlined,
+  CloudServerOutlined,
 } from '@antdv-next/icons'
 
 const route = useRoute()
@@ -38,14 +40,27 @@ const isMobile = computed(() => !screens.value?.md)
 // 移动端菜单抽屉
 const drawerOpen = ref(false)
 
-// 菜单数据：管理后台（/admin）显示后台 tabs；示例页面显示演示菜单
+// 菜单数据：管理后台（/admin）显示后台 tabs；PaaS 控制台显示平台菜单；其余为示例菜单
 const isAdminArea = computed(() => route.path.startsWith('/admin'))
+const isPaasArea = computed(
+  () => route.path.startsWith('/overview') || route.path === '/apps' || route.path.startsWith('/apps/'),
+)
 const menuItems = computed(() => {
   if (isAdminArea.value) {
     return [
       { key: '/admin/users', label: t('nav.adminUsers'), icon: TeamOutlined },
       { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: DeleteOutlined },
     ]
+  }
+  if (isPaasArea.value) {
+    const items = [
+      { key: '/overview', label: t('nav.overview'), icon: DashboardOutlined },
+      { key: '/apps', label: t('nav.apps'), icon: CloudServerOutlined },
+    ]
+    if (userStore.isAdmin) {
+      items.push({ key: '/admin/users', label: t('nav.adminUsers'), icon: SettingOutlined })
+    }
+    return items
   }
   const items = [
     { key: '/', label: t('nav.home'), icon: HomeOutlined },
@@ -65,10 +80,18 @@ function handleLocaleChange({ key }) {
   setLocale(key)
 }
 
-const selectedKeys = computed(() => [route.path])
+// 应用详情等子页面归属到 /apps 菜单
+const selectedKeys = computed(() => (route.path.startsWith('/apps/') ? ['/apps'] : [route.path]))
 
 // 当前页面对应的菜单标题（显示在顶栏左侧）
-const currentMenuTitle = computed(() => menuItems.value.find((m) => m.key === route.path)?.label || '')
+const currentMenuTitle = computed(() => {
+  const exact = menuItems.value.find((m) => m.key === route.path)
+  if (exact) return exact.label
+  const prefix = menuItems.value
+    .filter((m) => route.path.startsWith(`${m.key}/`))
+    .sort((a, b) => b.key.length - a.key.length)[0]
+  return prefix?.label || ''
+})
 
 function handleMenuClick({ key }) {
   router.push(key)

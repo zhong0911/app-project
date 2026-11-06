@@ -1,0 +1,26 @@
+services:
+  paas:
+    build:
+      context: ./paas-server
+    container_name: antx-paas
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      PAAS_EXECUTOR: docker
+      DOCKER_MODE: socket
+      DOCKER_SOCKET: /var/run/docker.sock
+      # 首次启动的管理员账号，部署前请修改
+      PAAS_ADMIN_USER: admin
+      PAAS_ADMIN_PASSWORD: admin123456
+      # 对外访问域名，如 https://apps.example.com
+      PAAS_PUBLIC_HOST: ""
+      PAAS_WEB_DIST: /app/web-dist
+    volumes:
+      # 平台需要在宿主机上创建兄弟容器
+      - /var/run/docker.sock:/var/run/docker.sock
+      # 构建工作目录 + SQLite 持久化
+      - ./paas-server/data:/app/data
+      # 前端构建产物（先在 vue 目录执行 npm run build）
+      - ./vue/dist:/app/web-dist:ro

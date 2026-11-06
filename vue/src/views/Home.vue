@@ -1,21 +1,19 @@
 <script setup>
-// 首页内容：header / footer 与页面宽度由 LandingLayout 提供
+// 首页：PaaS 产品落地页，布局（header/footer/宽度）由 LandingLayout 提供
+import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import {
-  CodeOutlined,
-  ThunderboltOutlined,
-  AppstoreOutlined,
-  DeploymentUnitOutlined,
-  ApiOutlined,
-  SettingOutlined,
-  BgColorsOutlined,
-  SafetyCertificateOutlined,
-  LoginOutlined,
   ArrowRightOutlined,
-  CheckCircleOutlined,
-  FolderOutlined,
-  TeamOutlined,
+  CloudServerOutlined,
+  CodeOutlined,
+  DeploymentUnitOutlined,
+  HistoryOutlined,
+  LineChartOutlined,
+  RocketOutlined,
+  SafetyCertificateOutlined,
+  SettingOutlined,
+  ThunderboltOutlined,
 } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
 import { useUserStore } from '@/stores/modules/user'
@@ -24,709 +22,369 @@ const router = useRouter()
 const userStore = useUserStore()
 const { t } = useI18n()
 
-// 首屏关键指标：value 为数字/短语，label 走 i18n
-const stats = [
-  { value: '5', labelKey: 'home.stats.backends' },
-  { value: 'SSO', labelKey: 'home.stats.sso' },
-  { value: '2', labelKey: 'home.stats.layouts' },
-  { value: '100%', labelKey: 'home.stats.lazy' },
+const highlights = [
+  { icon: CodeOutlined, key: 'git' },
+  { icon: CloudServerOutlined, key: 'docker' },
+  { icon: ThunderboltOutlined, key: 'live' },
+  { icon: HistoryOutlined, key: 'rollback' },
 ]
 
-// 项目能力介绍
 const features = [
-  {
-    icon: DeploymentUnitOutlined,
-    titleKey: 'home.feature.multiBackendTitle',
-    descKey: 'home.feature.multiBackendDesc',
-  },
-  {
-    icon: SafetyCertificateOutlined,
-    titleKey: 'home.feature.ssoTitle',
-    descKey: 'home.feature.ssoDesc',
-  },
-  {
-    icon: TeamOutlined,
-    titleKey: 'home.feature.adminTitle',
-    descKey: 'home.feature.adminDesc',
-  },
-  {
-    icon: BgColorsOutlined,
-    titleKey: 'home.feature.themeTitle',
-    descKey: 'home.feature.themeDesc',
-  },
+  { icon: CodeOutlined, key: 'source' },
+  { icon: DeploymentUnitOutlined, key: 'build' },
+  { icon: CloudServerOutlined, key: 'runtime' },
+  { icon: LineChartOutlined, key: 'metrics' },
+  { icon: SettingOutlined, key: 'env' },
+  { icon: SafetyCertificateOutlined, key: 'secure' },
 ]
 
-const introPoints = [
-  'home.intro.point1',
-  'home.intro.point2',
-  'home.intro.point3',
-  'home.intro.point4',
-]
-
-// 技术栈介绍
-const techStack = [
-  { name: 'Vue 3', tagKey: 'home.tech.vueTag', icon: CodeOutlined, descKey: 'home.tech.vueDesc' },
-  { name: 'Vite', tagKey: 'home.tech.viteTag', icon: ThunderboltOutlined, descKey: 'home.tech.viteDesc' },
-  { name: 'Pinia', tagKey: 'home.tech.piniaTag', icon: AppstoreOutlined, descKey: 'home.tech.piniaDesc' },
-  { name: 'Vue Router', tagKey: 'home.tech.routerTag', icon: DeploymentUnitOutlined, descKey: 'home.tech.routerDesc' },
-  { name: 'Axios', tagKey: 'home.tech.axiosTag', icon: ApiOutlined, descKey: 'home.tech.axiosDesc' },
-  { name: 'AntdvNext', tagKey: 'home.tech.antdTag', icon: SettingOutlined, descKey: 'home.tech.antdDesc' },
-  { name: 'vue-i18n', tagKey: 'home.tech.i18nTag', icon: BgColorsOutlined, descKey: 'home.tech.i18nDesc' },
-  { name: 'SSO / OAuth2', tagKey: 'home.tech.ssoTag', icon: SafetyCertificateOutlined, descKey: 'home.tech.ssoDesc' },
-]
-
-// 使用步骤
 const steps = [
-  { titleKey: 'home.usage.step1Title', descKey: 'home.usage.step1Desc' },
-  { titleKey: 'home.usage.step2Title', descKey: 'home.usage.step2Desc' },
-  { titleKey: 'home.usage.step3Title', descKey: 'home.usage.step3Desc' },
-  { titleKey: 'home.usage.step4Title', descKey: 'home.usage.step4Desc' },
+  { key: 'connect', index: '01' },
+  { key: 'build', index: '02' },
+  { key: 'release', index: '03' },
 ]
 
-// 目录说明
-const directories = [
-  { path: 'src/api', descKey: 'home.dir.api' },
-  { path: 'src/layouts', descKey: 'home.dir.layouts' },
-  { path: 'src/views', descKey: 'home.dir.views' },
-  { path: 'src/router', descKey: 'home.dir.router' },
-  { path: 'src/stores', descKey: 'home.dir.stores' },
-  { path: 'src/config', descKey: 'home.dir.config' },
-]
-
-function goLogin() {
-  router.push({ path: '/login', query: { redirect_uri: '/' } })
+function enterConsole() {
+  if (userStore.isLoggedIn) {
+    router.push('/overview')
+  } else {
+    router.push({ path: '/login', query: { redirect_uri: '/overview' } })
+  }
 }
+
+onMounted(async () => {
+  await userStore.fetchLoginUser()
+})
 </script>
 
 <template>
-  <div class="home-content">
-      <!-- Hero -->
-      <section class="hero">
-        <div class="hero-logo"><AppIcon :size="64" /></div>
-        <a-tag color="blue" class="hero-badge">{{ t('home.badge') }}</a-tag>
+  <div class="landing-page">
+    <section class="hero">
+      <div class="hero-content">
+        <a-tag class="hero-badge" color="blue">AntX PaaS · {{ t('paasLanding.badge') }}</a-tag>
         <h1 class="hero-title">
-          {{ t('home.titlePrefix') }}
-          <span class="gradient-text">{{ t('home.titleHighlight') }}</span>
+          {{ t('paasLanding.title') }}
+          <span class="hero-highlight">{{ t('paasLanding.titleHighlight') }}</span>
         </h1>
-        <p class="hero-desc">{{ t('home.desc') }}</p>
+        <p class="hero-desc">{{ t('paasLanding.desc') }}</p>
         <div class="hero-actions">
-          <a-button type="primary" size="large" @click="$router.push('/components')">
-            {{ t('home.browse') }}
+          <a-button type="primary" size="large" @click="enterConsole">
+            <RocketOutlined />
+            {{ userStore.isLoggedIn ? t('paasLanding.ctaConsole') : t('common.login') }}
             <ArrowRightOutlined />
           </a-button>
-          <a-button size="large" @click="$router.push('/admin/users')" v-if="userStore.isAdmin">
-            <SettingOutlined />
-            {{ t('home.adminPanel') }}
-          </a-button>
-          <a-button v-else size="large" @click="goLogin">
-            <LoginOutlined />
-            {{ t('home.ssoLogin') }}
-          </a-button>
+          <a-button size="large" @click="router.push('/about')">{{ t('paasLanding.ctaAbout') }}</a-button>
         </div>
-        <div class="hero-tags">
-          <span v-for="item in techStack.slice(0, 5)" :key="item.name">{{ item.name }}</span>
-        </div>
-        <div class="hero-stats">
-          <div v-for="item in stats" :key="item.labelKey" class="hero-stat">
-            <strong>{{ item.value }}</strong>
-            <span>{{ t(item.labelKey) }}</span>
+        <div class="hero-highlights">
+          <div v-for="item in highlights" :key="item.key" class="highlight">
+            <component :is="item.icon" class="highlight-icon" />
+            <span>{{ t(`paasLanding.highlights.${item.key}`) }}</span>
           </div>
         </div>
-      </section>
+      </div>
+      <div class="hero-visual">
+        <div class="terminal-card">
+          <div class="terminal-bar">
+            <span class="dot red" /><span class="dot yellow" /><span class="dot green" />
+            <span class="terminal-title">deploy.yml</span>
+          </div>
+          <pre class="terminal-body"><span class="c"># 连接仓库，平台自动构建镜像</span>
+<span class="k">app</span>: marketing-site
+<span class="k">repo</span>: gitee.com/antx/site
+<span class="k">branch</span>: main
+<span class="k">port</span>: 80
 
-      <!-- 项目介绍 -->
-      <section id="intro" class="section intro-section">
-        <div class="intro-grid">
-          <div class="intro-copy">
-            <a-tag color="blue">{{ t('home.intro.tag') }}</a-tag>
-            <h2>{{ t('home.intro.titleLine1') }}<br />{{ t('home.intro.titleLine2') }}</h2>
-            <p>{{ t('home.intro.p1') }}</p>
-            <p>{{ t('home.intro.p2') }}</p>
-            <ul class="intro-points">
-              <li v-for="point in introPoints" :key="point">
-                <CheckCircleOutlined />
-                <span>{{ t(point) }}</span>
-              </li>
-            </ul>
-          </div>
-          <div class="feature-grid">
-            <div v-for="item in features" :key="item.titleKey" class="feature-card">
-              <span class="feature-icon"><component :is="item.icon" /></span>
-              <h3>{{ t(item.titleKey) }}</h3>
-              <p>{{ t(item.descKey) }}</p>
-            </div>
-          </div>
+<span class="c"># 一条命令发布到容器运行时</span>
+<span class="ok">✓</span> build image antx-paas/site:12
+<span class="ok">✓</span> container running → :20000
+<span class="ok">✓</span> health check passed</pre>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- 技术栈 -->
-      <section id="stack" class="section">
-        <div class="section-head">
-          <h2>{{ t('home.tech.title') }}</h2>
-          <p>{{ t('home.tech.subtitle') }}</p>
-        </div>
-        <div class="stack-grid">
-          <div v-for="item in techStack" :key="item.name" class="stack-card">
-            <div class="stack-icon"><component :is="item.icon" /></div>
-            <div class="stack-body">
-              <div class="stack-title">
-                <strong>{{ item.name }}</strong>
-                <a-tag>{{ t(item.tagKey) }}</a-tag>
-              </div>
-              <p>{{ t(item.descKey) }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+    <section class="section">
+      <div class="section-head">
+        <h2>{{ t('paasLanding.featuresTitle') }}</h2>
+        <p>{{ t('paasLanding.featuresSubtitle') }}</p>
+      </div>
+      <div class="feature-grid">
+        <a-card v-for="item in features" :key="item.key" variant="borderless" class="feature-card">
+          <div class="feature-icon"><component :is="item.icon" /></div>
+          <h3>{{ t(`paasLanding.features.${item.key}.title`) }}</h3>
+          <p>{{ t(`paasLanding.features.${item.key}.desc`) }}</p>
+        </a-card>
+      </div>
+    </section>
 
-      <!-- 使用指南 -->
-      <section id="usage" class="section">
-        <div class="section-head">
-          <h2>{{ t('home.usage.title') }}</h2>
-          <p>{{ t('home.usage.subtitle') }}</p>
+    <section class="section">
+      <div class="section-head">
+        <h2>{{ t('paasLanding.flowTitle') }}</h2>
+        <p>{{ t('paasLanding.flowSubtitle') }}</p>
+      </div>
+      <div class="step-grid">
+        <div v-for="step in steps" :key="step.key" class="step-card">
+          <span class="step-index">{{ step.index }}</span>
+          <h3>{{ t(`paasLanding.steps.${step.key}.title`) }}</h3>
+          <p>{{ t(`paasLanding.steps.${step.key}.desc`) }}</p>
         </div>
-        <div class="usage-grid">
-          <div v-for="(step, index) in steps" :key="step.titleKey" class="step-card">
-            <span class="step-index">{{ String(index + 1).padStart(2, '0') }}</span>
-            <strong>{{ t(step.titleKey) }}</strong>
-            <p>{{ t(step.descKey) }}</p>
-          </div>
-        </div>
+      </div>
+    </section>
 
-        <div class="code-panel">
-          <div class="code-head">
-            <span>{{ t('home.usage.terminal') }}</span>
-            <span class="code-dots"><i /><i /><i /></span>
-          </div>
-          <pre><code># 安装依赖
-npm install
-
-# 本地开发
-npm run dev
-
-# 生产构建
-npm run build</code></pre>
-        </div>
-
-        <div class="tips-grid">
-          <div class="tip-card">
-            <CheckCircleOutlined class="tip-icon" />
-            <div>
-              <strong>{{ t('home.usage.envTitle') }}</strong>
-              <p>{{ t('home.usage.envDesc') }}</p>
-            </div>
-          </div>
-          <div class="tip-card">
-            <SafetyCertificateOutlined class="tip-icon" />
-            <div>
-              <strong>{{ t('home.usage.ssoTitle') }}</strong>
-              <p>{{ t('home.usage.ssoDesc') }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 目录结构 -->
-      <section id="structure" class="section">
-        <div class="section-head">
-          <h2>{{ t('home.dir.title') }}</h2>
-          <p>{{ t('home.dir.subtitle') }}</p>
-        </div>
-        <div class="dir-grid">
-          <div v-for="item in directories" :key="item.path" class="dir-item">
-            <FolderOutlined class="dir-icon" />
-            <div>
-              <code>{{ item.path }}</code>
-              <p>{{ t(item.descKey) }}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 管理后台入口 -->
-      <section class="section">
-        <div class="admin-callout">
-          <div>
-            <h3>{{ t('home.adminCallout.title') }}</h3>
-            <p>{{ t('home.adminCallout.desc') }}</p>
-          </div>
-          <a-button type="primary" @click="$router.push(userStore.isAdmin ? '/admin/users' : '/login')">
-            {{ userStore.isAdmin ? t('home.adminCallout.enter') : t('home.adminCallout.login') }}
-            <ArrowRightOutlined />
-          </a-button>
-        </div>
-      </section>
+    <section class="cta">
+      <AppIcon :size="44" />
+      <h2>{{ t('paasLanding.ctaTitle') }}</h2>
+      <p>{{ t('paasLanding.ctaDesc') }}</p>
+      <a-button type="primary" size="large" @click="enterConsole">
+        <RocketOutlined />{{ t('paasLanding.ctaButton') }}
+      </a-button>
+    </section>
   </div>
 </template>
 
 <style scoped>
-/* ---------- hero ---------- */
-.hero {
-  position: relative;
-  padding: 72px 0 56px;
-  text-align: center;
-  border-radius: 24px;
-  background: radial-gradient(60% 75% at 50% 0%, rgba(76, 139, 245, 0.16), transparent 72%);
+.landing-page {
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  padding: 24px 0 48px;
 }
 
-.hero-logo {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 20px;
+.hero {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  padding: 40px 0 8px;
 }
 
 .hero-badge {
-  margin-bottom: 18px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  padding: 2px 12px;
 }
 
 .hero-title {
-  margin: 0;
-  font-size: clamp(34px, 5vw, 56px);
+  font-size: 46px;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  margin: 0 0 16px;
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, #4c8bf5, #7b5bf5 55%, #38bdf8);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.hero-desc {
-  max-width: 640px;
-  margin: 20px auto 0;
-  color: var(--text-secondary);
-  font-size: 16px;
-  line-height: 1.8;
-}
-
-.hero-actions {
-  margin-top: 28px;
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.hero-tags {
-  margin-top: 32px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-}
-
-.hero-tags span {
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  background: rgba(76, 139, 245, 0.1);
-}
-
-.hero-stats {
-  max-width: 720px;
-  margin: 28px auto 0;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.hero-stat {
-  padding: 14px 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.66);
-}
-
-html.dark .hero-stat {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.hero-stat strong {
-  display: block;
-  font-size: 22px;
-  line-height: 1.2;
+.hero-highlight {
   color: #4c8bf5;
 }
 
-.hero-stat span {
-  display: block;
-  margin-top: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-/* ---------- intro ---------- */
-.intro-section {
-  padding-top: 24px;
-}
-
-.intro-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-  gap: 32px;
-  align-items: center;
-}
-
-.intro-copy h2 {
-  margin: 14px 0 16px;
-  font-size: clamp(24px, 3vw, 32px);
-  line-height: 1.35;
-}
-
-.intro-copy p {
-  margin: 0 0 12px;
-  font-size: 14px;
+.hero-desc {
+  font-size: 16px;
   line-height: 1.8;
   color: var(--text-secondary);
+  max-width: 520px;
+  margin-bottom: 28px;
 }
 
-.intro-points {
-  list-style: none;
-  margin: 18px 0 0;
-  padding: 0;
-  display: grid;
-  gap: 10px;
-}
-
-.intro-points li {
+.hero-actions {
   display: flex;
-  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hero-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 32px;
+  max-width: 520px;
+}
+
+.highlight {
+  display: flex;
+  align-items: center;
   gap: 8px;
   font-size: 13px;
   color: var(--text-secondary);
 }
 
-.intro-points svg {
-  flex: none;
-  margin-top: 2px;
+.highlight-icon {
   color: #4c8bf5;
+  font-size: 16px;
+}
+
+.terminal-card {
+  background: #0f1117;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 18px 48px rgba(15, 17, 23, 0.24);
+}
+
+.terminal-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  background: #171a23;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #febc2e; }
+.dot.green { background: #28c840; }
+
+.terminal-title {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #8b93a7;
+}
+
+.terminal-body {
+  margin: 0;
+  padding: 18px 20px 24px;
+  color: #d6deeb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.85;
+  overflow-x: auto;
+}
+
+.terminal-body .c { color: #6b7280; }
+.terminal-body .k { color: #7f9cf5; }
+.terminal-body .ok { color: #34d399; }
+
+.section-head {
+  margin-bottom: 24px;
+}
+
+.section-head h2 {
+  font-size: 28px;
+  margin: 0 0 8px;
+}
+
+.section-head p {
+  color: var(--text-secondary);
+  margin: 0;
 }
 
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
-.feature-card {
-  padding: 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.66);
-}
-
-html.dark .feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
+.feature-card :deep(.ant-card-body) {
+  padding: 22px;
 }
 
 .feature-icon {
-  width: 38px;
-  height: 38px;
-  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
+  background: rgba(76, 139, 245, 0.1);
   color: #4c8bf5;
   font-size: 18px;
-  background: rgba(76, 139, 245, 0.12);
+  margin-bottom: 14px;
 }
 
 .feature-card h3 {
-  margin: 12px 0 6px;
-  font-size: 15px;
+  font-size: 16px;
+  margin: 0 0 8px;
 }
 
 .feature-card p {
   margin: 0;
+  color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.7;
-  color: var(--text-secondary);
 }
 
-/* ---------- sections ---------- */
-.section {
-  padding: 32px 0;
-  scroll-margin-top: 88px;
-}
-
-.section-head {
-  margin-bottom: 20px;
-}
-
-.section-head h2 {
-  margin: 0 0 6px;
-  font-size: 24px;
-}
-
-.section-head p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 14px;
-}
-
-/* ---------- tech stack ---------- */
-.stack-grid {
+.step-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.stack-card {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.66);
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-html.dark .stack-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.stack-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(76, 139, 245, 0.12);
-}
-
-.stack-icon {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  border-radius: 9px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #4c8bf5;
-  font-size: 18px;
-  background: rgba(76, 139, 245, 0.12);
-}
-
-.stack-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.stack-body p {
-  margin: 8px 0 0;
-  font-size: 13px;
-  line-height: 1.7;
-  color: var(--text-secondary);
-}
-
-/* ---------- usage ---------- */
-.usage-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
 }
 
 .step-card {
-  padding: 16px;
+  position: relative;
+  padding: 24px;
   border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.66);
-}
-
-html.dark .step-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(128, 128, 128, 0.16);
 }
 
 .step-index {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 700;
-  color: #4c8bf5;
+  color: rgba(76, 139, 245, 0.28);
+  line-height: 1;
+}
+
+.step-card h3 {
+  margin: 10px 0 8px;
+  font-size: 17px;
 }
 
 .step-card p {
-  margin: 6px 0 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.code-panel {
-  margin-top: 18px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  background: #0f172a;
-  color: #e2e8f0;
-}
-
-.code-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  font-size: 12px;
-  color: #94a3b8;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.code-dots {
-  display: inline-flex;
-  gap: 6px;
-}
-
-.code-dots i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #475569;
-}
-
-.code-panel pre {
   margin: 0;
-  padding: 16px 18px 20px;
-  overflow-x: auto;
-  font-size: 13px;
-  line-height: 1.8;
-}
-
-.tips-grid {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.tip-card {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  border-radius: 12px;
-  background: rgba(76, 139, 245, 0.08);
-}
-
-.tip-icon {
-  color: #4c8bf5;
-  font-size: 18px;
-  margin-top: 2px;
-}
-
-.tip-card p {
-  margin: 6px 0 0;
+  color: var(--text-secondary);
   font-size: 13px;
   line-height: 1.7;
-  color: var(--text-secondary);
 }
 
-code {
-  padding: 1px 5px;
-  border-radius: 4px;
-  font-size: 12px;
-  background: rgba(76, 139, 245, 0.12);
-}
-
-/* ---------- directory ---------- */
-.dir-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-
-.dir-item {
-  display: flex;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 0, 0, 0.06);
-  background: rgba(255, 255, 255, 0.66);
-}
-
-html.dark .dir-item {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-}
-
-.dir-icon {
-  color: #4c8bf5;
-  font-size: 18px;
-  margin-top: 2px;
-}
-
-.dir-item p {
-  margin: 4px 0 0;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-/* ---------- admin callout ---------- */
-.admin-callout {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 24px 28px;
+.cta {
+  text-align: center;
+  padding: 48px 24px;
   border-radius: 16px;
-  border: 1px solid rgba(76, 139, 245, 0.2);
-  background: linear-gradient(135deg, rgba(76, 139, 245, 0.12), rgba(123, 91, 245, 0.1));
+  background: rgba(76, 139, 245, 0.07);
+  border: 1px solid rgba(76, 139, 245, 0.16);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
-.admin-callout h3 {
-  margin: 0 0 6px;
-  font-size: 18px;
+.cta h2 {
+  margin: 4px 0 0;
+  font-size: 26px;
 }
 
-.admin-callout p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.7;
+.cta p {
+  margin: 0 0 8px;
   color: var(--text-secondary);
 }
 
-/* ---------- responsive ---------- */
 @media (max-width: 1023px) {
-  .stack-grid,
-  .usage-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .dir-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .intro-grid {
+  .hero {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 32px;
+  }
+  .feature-grid,
+  .step-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 767px) {
-  .hero {
-    padding: 48px 0 32px;
+  .landing-page {
+    gap: 40px;
   }
-
-  .hero-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .hero-title {
+    font-size: 32px;
   }
-
-  .feature-grid {
+  .hero-desc {
+    font-size: 14px;
+  }
+  .hero-highlights,
+  .feature-grid,
+  .step-grid {
     grid-template-columns: 1fr;
   }
-
-  .stack-grid,
-  .usage-grid,
-  .tips-grid,
-  .dir-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .admin-callout {
-    flex-direction: column;
-    align-items: flex-start;
+  .cta h2 {
+    font-size: 20px;
   }
 }
 </style>

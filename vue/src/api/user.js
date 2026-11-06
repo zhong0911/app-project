@@ -17,3 +17,8 @@ export function getBffMeApi() {
   // 首页/后台挂载时都会探测登录态，未登录的 401 属于正常情况，不弹 toast
   return request.get('/bff/me', { skipErrorToast: true })
 }
+
+/** 本地账号登录（PaaS 控制台自带认证，登录态仍由后端会话 Cookie 维护） */
+export function loginApi(payload) {
+  return request.post('/auth/login', payload, { skipErrorToast: true })
+}
