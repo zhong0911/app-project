@@ -1,6 +1,6 @@
 # AntX 全栈模板文档索引
 
-一个仓库放齐 **1 套契约（Spring Boot）+ 6 套等价后端 + 1 套前端 + 1 套 PaaS**，所有后端接口面、响应结构、用户模型、SSO 接入方式完全一致，换语言不改前端。
+一个仓库放齐 **1 套契约（Spring Boot）+ 6 套等价后端 + 1 套前端模板**，所有后端接口面、响应结构、用户模型、SSO 接入方式完全一致，换语言不改前端。
 
 ## 文档
 
@@ -21,7 +21,6 @@
 | `laravel/` | PHP：Laravel 11（Request/Resource 分层） | [README](../laravel/README.md) |
 | `thinkphp/` | PHP：ThinkPHP 8（Validate/Model/Service） | [README](../thinkphp/README.md) |
 | `vue/` | 前端模板：Vue 3 + Vite + antdv-next + Pinia + i18n（含 SSO 登录与管理后台） | [README](../vue/README.md) |
-| `paas-server/` | AntX PaaS 服务端（Node + Docker 执行层；控制台前端页面在历史提交 `3698cfd`） | [README](../paas-server/README.md) |
 
 ## 统一约定（7 套后端一致）
 
