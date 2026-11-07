@@ -1,10 +1,9 @@
 <script setup>
-// 用户管理页（表格样式）：UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
-// 表格用 a-listy（antdv-next 的高性能虚拟列表）+ 表头 + 等宽栅格实现列对齐，
-// 不使用 a-table（与项目既有偏好一致：列表类页面统一用 a-listy / a-list）。
-// 行高由组件按 token 计算，因此每一行保持单行布局；加载中显示骨架屏，空数据显示 a-empty，分页靠右
+// 用户管理页：a-table 表格，列为 UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
+// 表格本身不带分页（pagination=false），分页组件单独靠右放置；列宽固定 + 横向滚动，保证窄屏也不挤坏
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useBreakpoint } from 'antdv-next'
 import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { useUserStore } from '@/stores/modules/user'
@@ -18,6 +17,7 @@ import {
 } from '@/api/admin'
 
 const userStore = useUserStore()
+const screens = useBreakpoint(true, { md: true, lg: true, xl: true })
 const { t } = useI18n()
 
 const loading = ref(false)
@@ -33,8 +33,8 @@ const roleOptions = computed(() =>
   roles.value.length
     ? roles.value.map((role) => ({ value: role.code, label: `${role.name}（${role.code}）` }))
     : [
-        { value: 'ADMIN', label: `ADMIN` },
-        { value: 'USER', label: `USER` },
+        { value: 'ADMIN', label: 'ADMIN' },
+        { value: 'USER', label: 'USER' },
       ],
 )
 const roleName = (code) => roles.value.find((role) => role.code === code)?.name || code
@@ -48,20 +48,25 @@ const editOpen = ref(false)
 const editing = ref(null)
 const editForm = reactive({ role: '' })
 
-/** 首屏骨架屏：没有数据可展示时出现，翻页时用居中的 a-spin 覆盖，避免闪烁 */
-const showSkeleton = ref(false)
+/** 表格列定义：列宽按内容给固定值，宽屏自动铺满，窄屏靠 scroll.x 横向滚动 */
+const columns = computed(() => [
+  { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', width: 84, ellipsis: true },
+  { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role', width: 88 },
+  { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status', width: 72 },
+  { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 134 },
+  { title: t('adminUsers.columns.action'), key: 'action', width: 152, align: 'right' },
+])
 
-/** 虚拟列表行 key 与滚动容器高度（a-listy 的行高由组件内部计算，这里只给容器高度） */
-const rowKey = (item) => item.id
-const listHeight = 440
+const rowKey = (record) => record.id
+
+/** 宽屏不需要横向滚动，窄屏（md 以下）给一个最小宽度让表格横向滚动 */
+const scrollCfg = computed(() => (screens.value?.md ? {} : { x: 530 }))
 
 /** 当前登录管理员自身：禁止禁用/删除自己，避免把自己锁在后台外 */
 const isSelf = (record) => record.uid === userStore.userInfo?.uid
 
 const load = async () => {
-  const isEmpty = records.value.length === 0
   loading.value = true
-  showSkeleton.value = isEmpty
   try {
     const { data } = await getAdminUsersApi({
       pageNum: pageNum.value,
@@ -78,7 +83,6 @@ const load = async () => {
     total.value = 0
   } finally {
     loading.value = false
-    showSkeleton.value = false
   }
 }
 
@@ -224,76 +228,66 @@ onMounted(async () => {
       </a-space>
     </template>
 
-    <!-- 加载中：首屏骨架屏 -->
-    <a-skeleton v-if="showSkeleton" active :title="false" :paragraph="{ rows: 8 }" />
+    <a-table
+      :columns="columns"
+      :data-source="records"
+      :loading="loading"
+      :pagination="false"
+      :row-key="rowKey"
+      :scroll="scrollCfg"
+      size="middle"
+      class="user-table"
+    >
+      <template #emptyText>
+        <a-empty :description="t('adminUsers.empty')" />
+      </template>
 
-    <!-- 空数据 -->
-    <div v-else-if="!records.length" class="list-empty">
-      <a-empty :description="t('adminUsers.empty')" />
-    </div>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'uid'">
+          <span class="cell-uid">
+            <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
+            <a-tag v-if="isSelf(record)" color="blue" class="row-tag">{{ t('adminUsers.me') }}</a-tag>
+          </span>
+        </template>
 
-    <!-- 表格：表头 + a-listy 虚拟列表（同一套栅格列，保证列对齐） -->
-    <a-spin v-else :spinning="loading" :tip="t('common.loading')">
-      <div class="user-table">
-        <div class="table-head user-grid">
-          <span class="head-cell">{{ t('adminUsers.columns.uid') }}</span>
-          <span class="head-cell">{{ t('adminUsers.columns.role') }}</span>
-          <span class="head-cell">{{ t('adminUsers.columns.status') }}</span>
-          <span class="head-cell">{{ t('adminUsers.lastLoginAt') }}</span>
-          <span class="head-cell head-action">{{ t('adminUsers.columns.action') }}</span>
-        </div>
+        <template v-else-if="column.key === 'role'">
+          <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">
+            {{ roleName(record.role) }}
+          </a-tag>
+        </template>
 
-        <a-listy
-          :items="records"
-          :row-key="rowKey"
-          :height="listHeight"
-          virtual
-          class="user-listy"
-        >
-          <template #itemRender="record">
-            <div class="user-grid user-row">
-              <span class="cell-uid">
-                <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
-                <a-tag v-if="isSelf(record)" color="blue" class="row-tag">{{ t('adminUsers.me') }}</a-tag>
-              </span>
+        <template v-else-if="column.key === 'status'">
+          <a-tag :color="record.status === 1 ? 'success' : 'default'" class="row-tag">
+            {{ record.status === 1 ? t('common.enabled') : t('common.disabled') }}
+          </a-tag>
+        </template>
 
-              <span class="cell-role">
-                <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">
-                  {{ roleName(record.role) }}
-                </a-tag>
-              </span>
+        <template v-else-if="column.key === 'lastLoginAt'">
+          <span class="meta-text mono">
+            {{ record.lastLoginAt || t('adminUsers.neverLoggedIn') }}
+          </span>
+        </template>
 
-              <span class="cell-status">
-                <a-tag :color="record.status === 1 ? 'success' : 'default'" class="row-tag">
-                  {{ record.status === 1 ? t('common.enabled') : t('common.disabled') }}
-                </a-tag>
-              </span>
-
-              <span class="cell-last-login meta-text mono">
-                {{ record.lastLoginAt || t('adminUsers.neverLoggedIn') }}
-              </span>
-
-              <span class="cell-action">
-                <a-button type="link" size="small" :disabled="isSelf(record)" @click="openEdit(record)">
-                  {{ t('common.edit') }}
-                </a-button>
-                <a-button
-                  type="link"
-                  size="small"
-                  :disabled="isSelf(record)"
-                  @click="handleStatus(record, record.status !== 1)"
-                >
-                  {{ record.status === 1 ? t('common.disable') : t('common.enable') }}
-                </a-button>
-                <a-button type="link" size="small" danger :disabled="isSelf(record)" @click="handleDelete(record)">
-                  {{ t('common.delete') }}
-                </a-button>
-              </span>
-            </div>
-          </template>
-        </a-listy>
-      </div>
-    </a-spin>
+        <template v-else-if="column.key === 'action'">
+          <span class="cell-action">
+            <a-button type="link" size="small" :disabled="isSelf(record)" @click="openEdit(record)">
+              {{ t('common.edit') }}
+            </a-button>
+            <a-button
+              type="link"
+              size="small"
+              :disabled="isSelf(record)"
+              @click="handleStatus(record, record.status !== 1)"
+            >
+              {{ record.status === 1 ? t('common.disable') : t('common.enable') }}
+            </a-button>
+            <a-button type="link" size="small" danger :disabled="isSelf(record)" @click="handleDelete(record)">
+              {{ t('common.delete') }}
+            </a-button>
+          </span>
+        </template>
+      </template>
+    </a-table>
 
     <!-- 分页靠右 -->
     <div class="pager">
@@ -348,85 +342,24 @@ onMounted(async () => {
   border-radius: 12px;
 }
 
-/* 空状态占位：与列表高度接近，避免切页时高度跳动 */
-.list-empty {
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* 表格容器：表头 + 虚拟列表整体描边 */
-.user-table {
-  border: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* 表头：与数据行共用一套栅格列，保证列对齐 */
-.table-head {
-  height: 40px;
-  padding: 0 12px;
-  display: grid;
-  align-items: center;
-  background: var(--ant-color-fill-alter, rgba(0, 0, 0, 0.02));
-  border-bottom: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
-}
-
-.head-cell {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary, rgba(0, 0, 0, 0.65));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.head-action {
-  text-align: right;
-}
-
-/* 列宽统一：UID 自适应，其余固定宽度（窄屏用紧凑宽度，宽屏放开，保证任意宽度下 5 列都在） */
-.user-grid {
-  display: grid;
-  grid-template-columns: minmax(70px, 1fr) 88px 78px 148px 150px;
-  gap: 6px;
-}
-
-@media (min-width: 1200px) {
-  .user-grid {
-    grid-template-columns: minmax(0, 1fr) 130px 100px 180px 210px;
-    gap: 8px;
-  }
-}
-
-/* 数据行：单行布局（虚拟列表行高固定，内容不换行） */
-.user-row {
-  height: 100%;
-  align-items: center;
-  padding: 0 12px;
-  overflow: hidden;
-}
-
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.cell-uid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .uid-text {
   font-weight: 600;
   font-size: 13px;
-  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cell-uid {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  overflow: hidden;
 }
 
 .row-tag {
@@ -437,16 +370,10 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--text-secondary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cell-last-login {
-  display: block;
 }
 
 .cell-action {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: flex-end;
   gap: 2px;
@@ -460,13 +387,8 @@ onMounted(async () => {
   padding-top: 16px;
 }
 
-/* 窄屏：列宽收紧（5 列都保留），操作列按钮间距收紧，分页居中 */
+/* 窄屏：操作列按钮收紧、分页居中 */
 @media (max-width: 767px) {
-  .user-row,
-  .table-head {
-    padding: 0 8px;
-  }
-
   .cell-action {
     gap: 0;
   }

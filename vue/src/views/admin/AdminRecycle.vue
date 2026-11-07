@@ -1,15 +1,16 @@
 <script setup>
 // 回收站：按资源类型分 tab 展示软删除数据，当前只实现「用户」回收站
 // （角色 / 部门等其他类型的 tab 预留，等有对应数据再补 tab 项，避免空壳）
-// 列表用 a-listy（antdv-next 的高性能虚拟列表）：每行单行布局；
-// 加载中显示骨架屏，空数据显示 a-empty，分页靠右
-import { onMounted, reactive, ref } from 'vue'
+// 表格用 a-table；表格自带分页关闭（pagination=false），分页组件单独靠右
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useBreakpoint } from 'antdv-next'
 import { ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
 
 const { t } = useI18n()
+const screens = useBreakpoint(true, { md: true, lg: true, xl: true })
 
 /** 当前 tab：默认用户回收站；后续新增类型时在此切换对应的数据源 */
 const activeTab = ref('users')
@@ -21,17 +22,22 @@ const pageNum = ref(1)
 const pageSize = ref(10)
 const filters = reactive({ uid: '' })
 
-/** 首屏骨架屏：没有数据可展示时出现，翻页时用居中的 a-spin 覆盖 */
-const showSkeleton = ref(false)
+/** 表格列定义：列宽固定，窄屏靠 scroll.x 横向滚动 */
+const columns = computed(() => [
+  { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid', width: 100, ellipsis: true },
+  { title: t('adminRecycle.columns.role'), dataIndex: 'role', key: 'role', width: 84 },
+  { title: t('adminRecycle.columns.id'), dataIndex: 'id', key: 'id', width: 62 },
+  { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 140 },
+  { title: t('adminRecycle.columns.action'), key: 'action', width: 120, align: 'right' },
+])
 
-/** 虚拟列表行 key 与滚动容器高度 */
-const rowKey = (item) => item.id
-const listHeight = 440
+const rowKey = (record) => record.id
+
+/** 宽屏表格铺满，窄屏（md 以下）给最小宽度让表格内部横向滚动，避免页面整体横向溢出 */
+const scrollCfg = computed(() => (screens.value?.md ? {} : { x: 510 }))
 
 const load = async () => {
-  const isEmpty = records.value.length === 0
   loading.value = true
-  showSkeleton.value = isEmpty
   try {
     const { data } = await getAdminRecycleApi({
       pageNum: pageNum.value,
@@ -46,7 +52,6 @@ const load = async () => {
     total.value = 0
   } finally {
     loading.value = false
-    showSkeleton.value = false
   }
 }
 
@@ -118,40 +123,51 @@ onMounted(load)
       <a-tab-pane key="users" :tab="t('adminRecycle.tabUsers')">
         <a-alert type="info" show-icon :message="t('adminRecycle.hint')" class="recycle-hint" />
 
-        <!-- 加载中：首屏骨架屏 -->
-        <a-skeleton v-if="showSkeleton" active :title="false" :paragraph="{ rows: 8 }" />
+        <a-table
+          :columns="columns"
+          :data-source="records"
+          :loading="loading"
+          :pagination="false"
+          :row-key="rowKey"
+          :scroll="scrollCfg"
+          size="middle"
+          class="recycle-table"
+        >
+          <template #emptyText>
+            <a-empty :description="t('adminRecycle.empty')" />
+          </template>
 
-        <!-- 空数据 -->
-        <div v-else-if="!records.length" class="list-empty">
-          <a-empty :description="t('adminRecycle.empty')" />
-        </div>
+          <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'uid'">
+              <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
+            </template>
 
-        <!-- 列表：a-listy 虚拟列表（每行单行布局） -->
-        <a-spin v-else :spinning="loading" :tip="t('common.loading')">
-          <a-listy
-            :items="records"
-            :row-key="rowKey"
-            :height="listHeight"
-            virtual
-            class="recycle-listy"
-          >
-            <template #itemRender="record">
-              <div class="recycle-row">
-                <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
-                <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">{{ record.role }}</a-tag>
-                <span class="meta-text">#{{ record.id }}</span>
-                <span class="meta-text time-text">{{ record.updateTime }}</span>
-                <span class="row-space"></span>
+            <template v-else-if="column.key === 'role'">
+              <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">
+                {{ record.role }}
+              </a-tag>
+            </template>
+
+            <template v-else-if="column.key === 'id'">
+              <span class="meta-text mono">#{{ record.id }}</span>
+            </template>
+
+            <template v-else-if="column.key === 'updateTime'">
+              <span class="meta-text mono">{{ record.updateTime }}</span>
+            </template>
+
+            <template v-else-if="column.key === 'action'">
+              <span class="cell-action">
                 <a-button type="link" size="small" @click="handleRestore(record)">
                   {{ t('adminRecycle.restore') }}
                 </a-button>
                 <a-button type="link" size="small" danger @click="handlePurge(record)">
                   {{ t('adminRecycle.purge') }}
                 </a-button>
-              </div>
+              </span>
             </template>
-          </a-listy>
-        </a-spin>
+          </template>
+        </a-table>
 
         <!-- 分页靠右 -->
         <div class="pager">
@@ -184,29 +200,6 @@ onMounted(load)
   margin-bottom: 16px;
 }
 
-/* 空状态占位：与列表高度接近，避免切页时高度跳动 */
-.list-empty {
-  min-height: 240px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.recycle-listy {
-  border: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-/* 行内单行布局：虚拟列表行高固定，内容不换行 */
-.recycle-row {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-}
-
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
@@ -214,9 +207,6 @@ onMounted(load)
 .uid-text {
   font-weight: 600;
   font-size: 13px;
-  max-width: 180px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -230,12 +220,12 @@ onMounted(load)
   white-space: nowrap;
 }
 
-.time-text {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-}
-
-.row-space {
-  flex: 1;
+.cell-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
+  white-space: nowrap;
 }
 
 /* 分页靠右对齐 */
@@ -245,14 +235,14 @@ onMounted(load)
   padding-top: 16px;
 }
 
-/* 移动端：隐藏时间列、行内更紧凑、分页居中 */
-@media (max-width: 575px) {
-  .time-text {
-    display: none;
+/* 移动端：操作列按钮收紧、分页居中 */
+@media (max-width: 767px) {
+  .cell-action {
+    gap: 0;
   }
 
-  .recycle-row {
-    gap: 6px;
+  .cell-action :deep(.ant-btn-link) {
+    padding-inline: 4px;
   }
 
   .pager {
