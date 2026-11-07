@@ -25,3 +25,16 @@ vue/node_modules/
 .idea/
 *.iml
 .vscode/
+
+# ---- 各语言模板构建产物 / 本地依赖 ----
+nestjs/node_modules/
+nestjs/dist/
+fastapi/**/__pycache__/
+laravel/vendor/
+thinkphp/vendor/
+thinkphp/runtime/
+php/vendor/
+**/.env
+!**/.env.example
+composer.lock
+gin/server

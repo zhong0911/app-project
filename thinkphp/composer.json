@@ -1,0 +1,23 @@
+{
+  "name": "antx/thinkphp-template",
+  "description": "AntX ThinkPHP 8 后端模板：统一响应 + 用户管理 + SSO 接入",
+  "type": "project",
+  "require": {
+    "php": ">=8.0.0",
+    "topthink/framework": "^8.0",
+    "topthink/think-orm": "^3.0",
+    "firebase/php-jwt": "^6.10"
+  },
+  "autoload": {
+    "psr-4": {
+      "app\\": "app"
+    },
+    "files": []
+  },
+  "config": {
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

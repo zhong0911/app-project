@@ -1,0 +1,29 @@
+{
+  "name": "antx/laravel-template",
+  "type": "project",
+  "description": "AntX Laravel 后端模板：统一响应 + 用户管理 + SSO 接入",
+  "require": {
+    "php": "^8.2",
+    "laravel/framework": "^11.0",
+    "firebase/php-jwt": "^6.10"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Database\\Factories\\": "database/factories/",
+      "Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "@php artisan package:discover --ansi"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
