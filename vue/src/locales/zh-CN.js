@@ -20,8 +20,6 @@ export default {
     createdAt: '创建时间',
     deletedAt: '删除时间',
     total: '共 {total} 条',
-    toLight: '切换浅色',
-    toDark: '切换暗色',
     loggedIn: '已登录',
     notLoggedIn: '未登录',
     loading: '加载中',

@@ -16,7 +16,7 @@ import {
 } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
 import SideMenu from './SideMenu.vue'
-import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
+import { LOCALES, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { toggleTheme } from '@/utils/app'
@@ -28,8 +28,6 @@ const router = useRouter()
 const appStore = useAppStore()
 const userStore = useUserStore()
 const { t } = useI18n()
-
-const currentLocaleLabel = computed(() => currentLocale.value.label)
 
 // 响应式断点：md 以下（<768px）视为移动端，导航折叠进左侧抽屉
 // 首帧默认按桌面渲染（defaultScreens），订阅后立即按真实宽度更新
@@ -147,6 +145,11 @@ function handleUserMenu({ key }) {
 }
 
 function goLogin() {
+  // 已经在首页时不需要回跳参数，避免登录页出现 ?redirect_uri=/ 这种无意义参数
+  if (route.path === '/' && !route.hash) {
+    router.push('/login')
+    return
+  }
   router.push({ path: '/login', query: { redirect_uri: route.fullPath } })
 }
 
@@ -204,19 +207,15 @@ onMounted(async () => {
             }"
             @menu-click="handleLocaleChange"
           >
-            <a-tooltip :title="currentLocaleLabel">
-              <a-button type="text" shape="circle" class="icon-btn">
-                <GlobalOutlined />
-              </a-button>
-            </a-tooltip>
+            <a-button type="text" shape="circle" class="icon-btn">
+              <GlobalOutlined />
+            </a-button>
           </a-dropdown>
 
           <!-- 主题切换 -->
-          <a-tooltip :title="appStore.isDark ? t('common.toLight') : t('common.toDark')">
-            <a-button type="text" shape="circle" class="icon-btn" @click="toggleTheme">
-              <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
-            </a-button>
-          </a-tooltip>
+          <a-button type="text" shape="circle" class="icon-btn" @click="toggleTheme">
+            <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
+          </a-button>
 
           <!-- 登录 / 用户菜单 -->
           <a-button v-if="!userStore.isLoggedIn" type="primary" @click="goLogin">

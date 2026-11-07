@@ -3,7 +3,7 @@ import { computed, nextTick, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
-import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
+import { LOCALES, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
@@ -66,9 +66,6 @@ const menuItems = computed(() => {
   }
   return items
 })
-
-// 当前语言显示名（响应式）
-const currentLocaleLabel = computed(() => currentLocale.value.label)
 
 function handleLocaleChange({ key }) {
   setLocale(key)
@@ -172,17 +169,13 @@ onMounted(async () => {
             }"
             @menu-click="handleLocaleChange"
           >
-            <a-tooltip :title="currentLocaleLabel">
-              <a-button size="small" type="text" shape="circle" class="lang-btn">
-                <GlobalOutlined />
-              </a-button>
-            </a-tooltip>
-          </a-dropdown>
-          <a-tooltip :title="appStore.isDark ? t('common.toLight') : t('common.toDark')">
-            <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
-              <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
+            <a-button size="small" type="text" shape="circle" class="lang-btn">
+              <GlobalOutlined />
             </a-button>
-          </a-tooltip>
+          </a-dropdown>
+          <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
+            <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
+          </a-button>
           <!-- 用户菜单：未登录显示登录入口（跳转 /login 页） -->
           <a-button
             v-if="!userStore.isLoggedIn"

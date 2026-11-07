@@ -20,8 +20,6 @@ export default {
     createdAt: '建立時間',
     deletedAt: '刪除時間',
     total: '共 {total} 筆',
-    toLight: '切換淺色',
-    toDark: '切換深色',
     loggedIn: '已登入',
     notLoggedIn: '未登入',
     loading: '載入中',

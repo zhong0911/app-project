@@ -37,8 +37,10 @@ function handleSsoLogin() {
 <template>
   <div class="login-page">
     <a-card class="login-card" variant="borderless">
-      <!-- 应用图标：统一使用 AppIcon（与 favicon、布局 logo 一致） -->
-      <AppIcon :size="56" class="login-icon" />
+      <!-- 应用图标：统一使用 AppIcon（与 favicon、布局 logo 一致）；点击返回首页 -->
+      <router-link to="/" class="login-home" :aria-label="t('nav.home')">
+        <AppIcon :size="56" class="login-icon" />
+      </router-link>
 
       <a-typography-title :level="3" class="login-title">{{ APP_TITLE }}</a-typography-title>
 
@@ -74,7 +76,14 @@ function handleSsoLogin() {
   border-radius: 12px;
 }
 
-/* 应用图标（圆形样式由 AppIcon 统一提供，这里只负责居中与间距） */
+/* 应用图标（圆形样式由 AppIcon 统一提供，这里只负责居中与间距）；
+   外层 router-link 撑满宽度让图标居中，点击可回首页 */
+.login-home {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
 .login-icon {
   margin: 8px auto 16px;
 }

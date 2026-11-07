@@ -20,8 +20,6 @@ export default {
     createdAt: 'Created at',
     deletedAt: 'Deleted at',
     total: 'Total {total}',
-    toLight: 'Switch to light',
-    toDark: 'Switch to dark',
     loggedIn: 'Signed in',
     notLoggedIn: 'Not signed in',
     loading: 'Loading',
