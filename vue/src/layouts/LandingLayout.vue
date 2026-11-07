@@ -298,19 +298,35 @@ html.dark .site-header {
   gap: 24px;
 }
 
+/* 品牌区：标题可能很长（读 APP_TITLE），允许收缩 + 省略号，不把右侧按钮挤出屏幕 */
 .brand {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
   color: inherit;
   text-decoration: none;
-  flex-shrink: 0;
+}
+
+.brand > :first-child {
+  flex: none;
 }
 
 .brand-text {
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
   line-height: 1.2;
+}
+
+.brand-text strong,
+.brand-text small {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .brand-text strong {
@@ -343,6 +359,7 @@ html.dark .site-header {
 .header-actions {
   margin-left: auto;
   display: flex;
+  flex: none;
   align-items: center;
   gap: 8px;
 }
