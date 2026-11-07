@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
 import LandingLayout from '@/layouts/LandingLayout.vue'
 import { APP_TITLE } from '@/config/app'
+import { AUTH_UNAUTHORIZED_EVENT } from '@/api/request'
 import { useUserStore } from '@/stores/modules/user'
 
 const routes = [
@@ -112,6 +113,22 @@ router.beforeEach(async (to) => {
       : { path: '/login', query: { redirect_uri: to.fullPath } }
   }
   return true
+})
+
+/**
+ * 接口层 401 统一处理：清空登录态 → 跳登录页并带上当前地址作为回跳参数。
+ * 登录页/退出页自身不再跳转，避免循环。
+ * （探测型接口如 /bff/me 已置 skipAuthRedirect，不会触发这里）
+ */
+window.addEventListener(AUTH_UNAUTHORIZED_EVENT, () => {
+  const userStore = useUserStore()
+  userStore.markLoggedOut()
+
+  const current = router.currentRoute.value
+  if (current.name === 'Login' || current.name === 'Logout') {
+    return
+  }
+  router.replace({ path: '/login', query: { redirect_uri: current.fullPath } })
 })
 
 export default router

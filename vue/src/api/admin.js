@@ -5,8 +5,9 @@ import request from '@/api/request'
  *
  * 用户唯一标识为 SSO uid（access_token 的 sub）；删除均为软删除（进入回收站）。
  */
+// key：同 key 的新请求会取消上一个（翻页/筛选连续点击时不出现旧响应覆盖新数据）
 export function getAdminUsersApi(params) {
-  return request.get('/admin/users', { params })
+  return request.get('/admin/users', { params, key: 'admin-users' })
 }
 
 export function createAdminUserApi(data) {
@@ -23,7 +24,7 @@ export function deleteAdminUserApi(id) {
 }
 
 export function getAdminRecycleApi(params) {
-  return request.get('/admin/users/recycle', { params })
+  return request.get('/admin/users/recycle', { params, key: 'admin-users-recycle' })
 }
 
 export function restoreAdminUserApi(id) {

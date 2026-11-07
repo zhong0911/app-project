@@ -132,6 +132,9 @@ userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 
 - 登录入口：`userStore.loginWithSso()`（`LandingLayout.vue` / `ConsoleLayout.vue` 顶栏，未登录时显示）。
 - 登录态拉取：`userStore.fetchLoginUser()`（BFF 聚合接口 `GET /api/bff/me`，未登录 401 静默忽略）。
+- 回跳地址：存 `localStorage`（`utils/auth.js`，30 分钟过期，一个地址只消费一次），跨标签页/跨页面都能带上；旧版写在 `sessionStorage` 的值会自动迁移。
+- 多标签页同步：登录/退出通过 `localStorage` 广播（key `antx_auth_event`），其他标签页收到 `storage` 事件后自动拉取或清空登录态。
+- 401 统一处理：接口层派发 `auth:unauthorized`，`router` 集中清状态并跳 `/login?redirect_uri=当前地址`；探测型接口（`/bff/me`、`/auth/logout`）置 `skipAuthRedirect` 不跳转，避免循环。
 - dev 代理：`vite.config.js` 已把 `/sso` 与 `/api` 一并代理到后端。
 - 生产部署：前端与后端同域（或反向代理 `/sso`、`/api` 到后端），并把后端的
   `SSO_LOGIN_SUCCESS_URL` 指向前端首页地址。
@@ -143,6 +146,15 @@ userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 - `/admin/recycle`：回收站（恢复 / 彻底删除）
 - 管理员由后端按 `SSO_ADMIN_UID` 判定（默认 uid=1），通过 `/api/bff/me` 的 `isAdmin` 下发；路由守卫会自动拦截非管理员。
 - 接口封装见 `src/api/admin.js`，页面见 `src/views/admin/`。
+
+### 2.3 接口层约定（`src/api/request.js`）
+
+| 能力 | 说明 |
+| --- | --- |
+| 统一解包 | 后端 `{code, success, message, data, timestamp}`，成功码 `200/0`，返回整个 `res` 供页面取 `data` |
+| 错误分级 | 400 参数 / 403 权限 / 404 不存在 / 429 频率 / 5xx 服务 / 超时 / 网络断开各有文案，后端 `message` 优先 |
+| 请求取消 | 传 `key` 即启用：同 key 新请求取消上一个（`cancelRequest(key)` / `cancelAllRequests()`） |
+| 静默开关 | `skipErrorToast`（不弹提示）、`skipAuthRedirect`（401 不跳登录页） |
 
 ### 3. 路由（Vue Router）
 

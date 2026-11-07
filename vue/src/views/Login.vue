@@ -20,7 +20,11 @@ const { t } = useI18n()
 onMounted(async () => {
   await userStore.fetchLoginUser()
   if (userStore.isLoggedIn) {
-    router.replace(route.query.redirect_uri || '/')
+    // 优先用页面参数，其次用登录前暂存的回跳地址（消费后清除）
+    const target = route.query.redirect_uri || userStore.readRedirectUri() || '/'
+    userStore.clearRedirectUri()
+    userStore.markLoggedIn()
+    router.replace(target)
   }
 })
 

@@ -53,10 +53,11 @@ function goLogin() {
 
 onMounted(async () => {
   await userStore.fetchLoginUser()
-  // 从 /login?redirect_uri=/ 登录回来后恢复跳转
-  const redirect = sessionStorage.getItem('sso_redirect_uri')
+  // 从 SSO 授权页回来后恢复跳转（回跳地址存 localStorage，带 30 分钟过期）
+  const redirect = userStore.readRedirectUri()
   if (redirect && userStore.isLoggedIn) {
-    sessionStorage.removeItem('sso_redirect_uri')
+    userStore.clearRedirectUri()
+    userStore.markLoggedIn()
     router.replace(redirect)
   }
 })
