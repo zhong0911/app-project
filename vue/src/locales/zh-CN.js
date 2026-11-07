@@ -24,6 +24,7 @@ export default {
     loggedIn: '已登录',
     notLoggedIn: '未登录',
     loading: '加载中',
+    menu: '菜单',
   },
   nav: {
     home: '首页',

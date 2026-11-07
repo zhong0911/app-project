@@ -24,6 +24,7 @@ export default {
     loggedIn: '已登入',
     notLoggedIn: '未登入',
     loading: '載入中',
+    menu: '選單',
   },
   nav: {
     home: '首頁',

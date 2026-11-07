@@ -24,6 +24,7 @@ export default {
     loggedIn: 'Signed in',
     notLoggedIn: 'Not signed in',
     loading: 'Loading',
+    menu: 'Menu',
   },
   nav: {
     home: 'Home',

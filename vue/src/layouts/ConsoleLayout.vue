@@ -187,10 +187,10 @@ onMounted(async () => {
             :menu="{ items: [{ key: 'logout', label: t('common.logout'), icon: LogoutOutlined }] }"
             @menu-click="handleLogout"
           >
-            <span class="user-info">
+            <a-button size="small" type="text" class="user-btn">
               <UserOutlined />
               <span v-if="!isMobile" class="user-name">{{ userStore.displayName || t('common.notLoggedIn') }}</span>
-            </span>
+            </a-button>
           </a-dropdown>
         </div>
       </a-layout-header>
@@ -278,11 +278,20 @@ onMounted(async () => {
   font-size: 16px;
 }
 
-.user-info {
-  cursor: pointer;
+/* 用户菜单按钮：与语言 / 主题按钮同为 text 类型图标按钮 */
+.user-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  padding: 0 7px;
+  height: 32px;
+}
+
+.user-name {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 内容区：透明背景露出 layout 底色（colorBgLayout），
@@ -311,6 +320,14 @@ onMounted(async () => {
 
   /* 隐藏语言文字后图标按钮统一为等大方块，保证间距一致 */
   .lang-btn {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .user-btn {
     flex: none;
     width: 32px;
     height: 32px;

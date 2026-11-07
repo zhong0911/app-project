@@ -1,15 +1,17 @@
 <script setup>
 // 落地页布局（LandingLayout）：顶部 header + 内容插槽 + 页脚，无侧边菜单
 // 用于首页等对外展示页面；后台/示例页面使用 ConsoleLayout
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useBreakpoint } from 'antdv-next'
 import {
   GlobalOutlined,
   SunOutlined,
   MoonOutlined,
   LoginOutlined,
   LogoutOutlined,
+  MenuOutlined,
   UserOutlined,
   SettingOutlined,
 } from '@antdv-next/icons'
@@ -26,6 +28,29 @@ const userStore = useUserStore()
 const { t } = useI18n()
 
 const currentLocaleLabel = computed(() => currentLocale.value.label)
+
+// 响应式断点：md 以下（<768px）视为移动端，导航折叠进左侧抽屉
+// 首帧默认按桌面渲染（defaultScreens），订阅后立即按真实宽度更新
+const screens = useBreakpoint(true, { md: true })
+const isMobile = computed(() => !screens.value?.md)
+
+// 移动端导航抽屉
+const drawerOpen = ref(false)
+
+// 抽屉里的导航项：锚点回首页对应区块，组件预览走路由
+const drawerItems = computed(() => [
+  { key: '/#intro', label: t('nav.intro') },
+  { key: '/#stack', label: t('nav.stack') },
+  { key: '/#usage', label: t('nav.usage') },
+  { key: '/#structure', label: t('nav.structure') },
+  { key: '/components', label: t('nav.components') },
+])
+
+function handleDrawerMenu({ key }) {
+  drawerOpen.value = false
+  router.push(key)
+}
+
 const userMenuItems = computed(() => {
   const items = []
   if (userStore.isAdmin) {
@@ -68,6 +93,17 @@ onMounted(async () => {
     <!-- 顶部 header：品牌 + 导航 + 语言 / 主题 / 登录 -->
     <header class="site-header">
       <div class="header-inner">
+        <!-- 移动端：导航折叠进左侧抽屉，汉堡按钮打开 -->
+        <a-button
+          v-if="isMobile"
+          type="text"
+          class="icon-btn nav-toggle"
+          :aria-label="t('common.menu')"
+          @click="drawerOpen = true"
+        >
+          <MenuOutlined />
+        </a-button>
+
         <router-link to="/" class="brand">
           <AppIcon :size="36" />
           <span class="brand-text">
@@ -119,7 +155,7 @@ onMounted(async () => {
             :menu="{ items: userMenuItems }"
             @menu-click="handleUserMenu"
           >
-            <a-button class="user-btn">
+            <a-button type="text" class="icon-btn user-btn">
               <UserOutlined />
               <span class="user-name">{{ userStore.displayName || t('common.loggedIn') }}</span>
             </a-button>
@@ -127,6 +163,23 @@ onMounted(async () => {
         </div>
       </div>
     </header>
+
+    <!-- 移动端导航抽屉（与 ConsoleLayout 一致：左侧滑出，背景跟随主题 token） -->
+    <a-drawer
+      v-if="isMobile"
+      v-model:open="drawerOpen"
+      placement="left"
+      :size="220"
+      :closable="false"
+      :styles="{ body: { padding: 0 } }"
+    >
+      <a-menu
+        :theme="appStore.isDark ? 'dark' : 'light'"
+        mode="inline"
+        :items="drawerItems"
+        @click="handleDrawerMenu"
+      />
+    </a-drawer>
 
     <!-- 页面内容：作为路由布局使用，子路由渲染在 router-view -->
     <main class="page-main">
@@ -223,6 +276,15 @@ html.dark .site-header {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 移动端汉堡按钮：图标按钮统一等大方块（桌面端不渲染，v-if） */
+.nav-toggle {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
 }
 
 .lang-label {
