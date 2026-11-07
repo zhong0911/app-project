@@ -1,16 +1,14 @@
 <script setup>
 // 回收站：按资源类型分 tab 展示软删除数据，当前只实现「用户」回收站
 // （角色 / 部门等其他类型的 tab 预留，等有对应数据再补 tab 项，避免空壳）
-// 表格用 a-table；表格自带分页关闭（pagination=false），分页组件单独靠右
+// 表格只用 a-table 本身的能力（分页用表格自带的）
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useBreakpoint } from 'antdv-next'
 import { ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
 
 const { t } = useI18n()
-const screens = useBreakpoint(true, { md: true, lg: true, xl: true })
 
 /** 当前 tab：默认用户回收站；后续新增类型时在此切换对应的数据源 */
 const activeTab = ref('users')
@@ -22,19 +20,22 @@ const pageNum = ref(1)
 const pageSize = ref(10)
 const filters = reactive({ uid: '' })
 
-/** 表格列定义：列宽固定，窄屏靠 scroll.x 横向滚动 */
 const columns = computed(() => [
-  { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid', width: 100, ellipsis: true },
-  { title: t('adminRecycle.columns.role'), dataIndex: 'role', key: 'role', width: 84 },
-  { title: t('adminRecycle.columns.id'), dataIndex: 'id', key: 'id', width: 62 },
-  { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 140 },
-  { title: t('adminRecycle.columns.action'), key: 'action', width: 120, align: 'right' },
+  { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
+  { title: t('adminRecycle.columns.role'), dataIndex: 'role', key: 'role' },
+  { title: t('adminRecycle.columns.id'), dataIndex: 'id', key: 'id' },
+  { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 160 },
+  { title: t('adminRecycle.columns.action'), key: 'action', width: 150, align: 'right' },
 ])
 
-const rowKey = (record) => record.id
-
-/** 宽屏表格铺满，窄屏（md 以下）给最小宽度让表格内部横向滚动，避免页面整体横向溢出 */
-const scrollCfg = computed(() => (screens.value?.md ? {} : { x: 510 }))
+/** 表格自带分页（默认靠右） */
+const pagination = computed(() => ({
+  current: pageNum.value,
+  pageSize: pageSize.value,
+  total: total.value,
+  showSizeChanger: true,
+  showTotal: (count) => t('common.total', { total: count }),
+}))
 
 const load = async () => {
   loading.value = true
@@ -60,10 +61,10 @@ const handleSearch = () => {
   load()
 }
 
-/** 分页变化（页码 / 每页条数） */
-const handlePageChange = (page, size) => {
-  pageNum.value = page
-  pageSize.value = size
+/** 表格分页变化 */
+const handleTableChange = (pag) => {
+  pageNum.value = pag.current
+  pageSize.value = pag.pageSize
   load()
 }
 
@@ -127,11 +128,9 @@ onMounted(load)
           :columns="columns"
           :data-source="records"
           :loading="loading"
-          :pagination="false"
-          :row-key="rowKey"
-          :scroll="scrollCfg"
-          size="middle"
-          class="recycle-table"
+          :pagination="pagination"
+          row-key="id"
+          @change="handleTableChange"
         >
           <template #emptyText>
             <a-empty :description="t('adminRecycle.empty')" />
@@ -168,19 +167,6 @@ onMounted(load)
             </template>
           </template>
         </a-table>
-
-        <!-- 分页靠右 -->
-        <div class="pager">
-          <a-pagination
-            :current="pageNum"
-            :page-size="pageSize"
-            :total="total"
-            show-size-changer
-            :show-total="(count) => t('common.total', { total: count })"
-            @change="handlePageChange"
-            @show-size-change="handlePageChange"
-          />
-        </div>
       </a-tab-pane>
     </a-tabs>
   </a-card>
@@ -228,14 +214,7 @@ onMounted(load)
   white-space: nowrap;
 }
 
-/* 分页靠右对齐 */
-.pager {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 16px;
-}
-
-/* 移动端：操作列按钮收紧、分页居中 */
+/* 窄屏：操作列文字按钮收紧，避免换行 */
 @media (max-width: 767px) {
   .cell-action {
     gap: 0;
@@ -243,10 +222,6 @@ onMounted(load)
 
   .cell-action :deep(.ant-btn-link) {
     padding-inline: 4px;
-  }
-
-  .pager {
-    justify-content: center;
   }
 }
 </style>

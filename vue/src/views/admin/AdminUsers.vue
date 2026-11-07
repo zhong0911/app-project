@@ -1,9 +1,8 @@
 <script setup>
-// 用户管理页：a-table 表格，列为 UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
-// 表格本身不带分页（pagination=false），分页组件单独靠右放置；列宽固定 + 横向滚动，保证窄屏也不挤坏
+// 用户管理页：只用 a-table 本身的能力（不额外传 scroll / size / 外置分页），
+// 列为 UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useBreakpoint } from 'antdv-next'
 import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { useUserStore } from '@/stores/modules/user'
@@ -17,7 +16,6 @@ import {
 } from '@/api/admin'
 
 const userStore = useUserStore()
-const screens = useBreakpoint(true, { md: true, lg: true, xl: true })
 const { t } = useI18n()
 
 const loading = ref(false)
@@ -48,19 +46,22 @@ const editOpen = ref(false)
 const editing = ref(null)
 const editForm = reactive({ role: '' })
 
-/** 表格列定义：列宽按内容给固定值，宽屏自动铺满，窄屏靠 scroll.x 横向滚动 */
 const columns = computed(() => [
-  { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', width: 84, ellipsis: true },
-  { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role', width: 88 },
-  { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status', width: 72 },
-  { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 134 },
-  { title: t('adminUsers.columns.action'), key: 'action', width: 152, align: 'right' },
+  { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
+  { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role' },
+  { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status' },
+  { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 160 },
+  { title: t('adminUsers.columns.action'), key: 'action', width: 170, align: 'right' },
 ])
 
-const rowKey = (record) => record.id
-
-/** 宽屏不需要横向滚动，窄屏（md 以下）给一个最小宽度让表格横向滚动 */
-const scrollCfg = computed(() => (screens.value?.md ? {} : { x: 530 }))
+/** 表格自带分页（默认靠右） */
+const pagination = computed(() => ({
+  current: pageNum.value,
+  pageSize: pageSize.value,
+  total: total.value,
+  showSizeChanger: true,
+  showTotal: (count) => t('common.total', { total: count }),
+}))
 
 /** 当前登录管理员自身：禁止禁用/删除自己，避免把自己锁在后台外 */
 const isSelf = (record) => record.uid === userStore.userInfo?.uid
@@ -101,10 +102,10 @@ const handleSearch = () => {
   load()
 }
 
-/** 分页变化（页码 / 每页条数） */
-const handlePageChange = (page, size) => {
-  pageNum.value = page
-  pageSize.value = size
+/** 表格分页变化 */
+const handleTableChange = (pag) => {
+  pageNum.value = pag.current
+  pageSize.value = pag.pageSize
   load()
 }
 
@@ -232,11 +233,9 @@ onMounted(async () => {
       :columns="columns"
       :data-source="records"
       :loading="loading"
-      :pagination="false"
-      :row-key="rowKey"
-      :scroll="scrollCfg"
-      size="middle"
-      class="user-table"
+      :pagination="pagination"
+      row-key="id"
+      @change="handleTableChange"
     >
       <template #emptyText>
         <a-empty :description="t('adminUsers.empty')" />
@@ -288,19 +287,6 @@ onMounted(async () => {
         </template>
       </template>
     </a-table>
-
-    <!-- 分页靠右 -->
-    <div class="pager">
-      <a-pagination
-        :current="pageNum"
-        :page-size="pageSize"
-        :total="total"
-        show-size-changer
-        :show-total="(count) => t('common.total', { total: count })"
-        @change="handlePageChange"
-        @show-size-change="handlePageChange"
-      />
-    </div>
   </a-card>
 
   <a-modal
@@ -350,15 +336,12 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  max-width: 100%;
   min-width: 0;
 }
 
 .uid-text {
   font-weight: 600;
   font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -380,14 +363,7 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
-/* 分页靠右对齐 */
-.pager {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: 16px;
-}
-
-/* 窄屏：操作列按钮收紧、分页居中 */
+/* 窄屏：操作列三个文字按钮收紧，避免换行 */
 @media (max-width: 767px) {
   .cell-action {
     gap: 0;
@@ -395,10 +371,6 @@ onMounted(async () => {
 
   .cell-action :deep(.ant-btn-link) {
     padding-inline: 4px;
-  }
-
-  .pager {
-    justify-content: center;
   }
 }
 </style>
