@@ -12,10 +12,14 @@ const appStore = useAppStore()
 const themeConfig = computed(() => getThemeConfig(appStore.isDark))
 
 // 主题变化时：同步 <html> 的 dark 类 + 刷新全局静态弹层配置
+// index.html 里的预置脚本会先打一次 dark 类与底色（防止暗色模式白闪），这里切换时一并更新底色与 color-scheme
 watch(
   () => appStore.isDark,
   (val) => {
-    document.documentElement.classList.toggle('dark', val)
+    const root = document.documentElement
+    root.classList.toggle('dark', val)
+    root.style.colorScheme = val ? 'dark' : 'light'
+    root.style.backgroundColor = val ? '#12141b' : '#f0f4fc'
     refreshAppContext()
   },
   { immediate: true },
