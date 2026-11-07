@@ -24,8 +24,8 @@ const columns = computed(() => [
   { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
   { title: t('adminRecycle.columns.role'), dataIndex: 'role', key: 'role' },
   { title: t('adminRecycle.columns.id'), dataIndex: 'id', key: 'id' },
-  { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 160 },
-  { title: t('adminRecycle.columns.action'), key: 'action', width: 150, align: 'right' },
+  { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 170 },
+  { title: t('adminRecycle.columns.action'), key: 'action', width: 150 },
 ])
 
 /** 表格自带分页（默认靠右） */
@@ -209,7 +209,6 @@ onMounted(load)
 .cell-action {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 2px;
   white-space: nowrap;
 }

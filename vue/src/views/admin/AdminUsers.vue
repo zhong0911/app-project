@@ -50,8 +50,8 @@ const columns = computed(() => [
   { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
   { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role' },
   { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status' },
-  { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 160 },
-  { title: t('adminUsers.columns.action'), key: 'action', width: 170, align: 'right' },
+  { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 170 },
+  { title: t('adminUsers.columns.action'), key: 'action', width: 170 },
 ])
 
 /** 表格自带分页（默认靠右） */
@@ -358,7 +358,6 @@ onMounted(async () => {
 .cell-action {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 2px;
   white-space: nowrap;
 }
