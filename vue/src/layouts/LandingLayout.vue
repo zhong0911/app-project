@@ -11,7 +11,6 @@ import {
   MoonOutlined,
   LoginOutlined,
   LogoutOutlined,
-  MenuOutlined,
   UserOutlined,
   SettingOutlined,
 } from '@antdv-next/icons'
@@ -49,6 +48,15 @@ const drawerItems = computed(() => [
 function handleDrawerMenu({ key }) {
   drawerOpen.value = false
   router.push(key)
+}
+
+// 移动端：点品牌图标/标题打开导航抽屉（阻止默认的「回首页」跳转）
+function handleBrandClick(event) {
+  if (!isMobile.value) {
+    return
+  }
+  event.preventDefault()
+  drawerOpen.value = true
 }
 
 const userMenuItems = computed(() => {
@@ -93,18 +101,14 @@ onMounted(async () => {
     <!-- 顶部 header：品牌 + 导航 + 语言 / 主题 / 登录 -->
     <header class="site-header">
       <div class="header-inner">
-        <!-- 移动端：导航折叠进左侧抽屉，汉堡按钮打开 -->
-        <a-button
-          v-if="isMobile"
-          type="text"
-          class="icon-btn nav-toggle"
-          :aria-label="t('common.menu')"
-          @click="drawerOpen = true"
+        <!-- 品牌区：桌面端点击回首页；移动端导航折叠进左侧抽屉，点图标/标题即打开抽屉 -->
+        <router-link
+          to="/"
+          class="brand"
+          :class="{ 'brand-trigger': isMobile }"
+          :aria-label="isMobile ? t('common.menu') : undefined"
+          @click="handleBrandClick"
         >
-          <MenuOutlined />
-        </a-button>
-
-        <router-link to="/" class="brand">
           <AppIcon :size="36" />
           <span class="brand-text">
             <strong>AntX Frontend</strong>
@@ -278,13 +282,9 @@ html.dark .site-header {
   gap: 4px;
 }
 
-/* 移动端汉堡按钮：图标按钮统一等大方块（桌面端不渲染，v-if） */
-.nav-toggle {
-  flex: none;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  justify-content: center;
+/* 移动端品牌区即菜单入口：整块可点（图标 + 标题） */
+.brand-trigger {
+  cursor: pointer;
 }
 
 .lang-label {
