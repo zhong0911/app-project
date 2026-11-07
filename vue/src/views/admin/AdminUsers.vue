@@ -1,6 +1,7 @@
 <script setup>
 // 用户管理页：列表 / 添加（指定 SSO uid）/ 启停 / 软删除（移入回收站）
-// 列表用 a-list（不使用 a-table）：加载中显示骨架屏，空数据显示 a-empty，分页靠右
+// 列表用 a-listy（antdv-next 的高性能虚拟列表，无 a-list/a-table）：
+// 行高由组件按 token 计算，因此每一行保持单行布局；加载中显示骨架屏，空数据显示 a-empty，分页靠右
 import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
@@ -27,8 +28,12 @@ const addOpen = ref(false)
 const submitting = ref(false)
 const addForm = reactive({ uid: '' })
 
-/** 首屏骨架屏：只在没有数据可展示时出现，翻页时用居中的 a-spin 覆盖，避免闪烁 */
+/** 首屏骨架屏：没有数据可展示时出现，翻页时用居中的 a-spin 覆盖，避免闪烁 */
 const showSkeleton = ref(false)
+
+/** 虚拟列表行 key 与高度（a-listy 的行高由组件内部计算，这里只给滚动容器高度） */
+const rowKey = (item) => item.id
+const listHeight = 440
 
 /** 当前登录管理员自身：禁止禁用/删除自己，避免把自己锁在后台外 */
 const isSelf = (record) => record.uid === userStore.userInfo?.uid
@@ -164,57 +169,45 @@ onMounted(load)
     </template>
 
     <!-- 加载中：首屏骨架屏 -->
-    <div v-if="showSkeleton" class="list-body">
-      <a-skeleton active :title="false" :paragraph="{ rows: 8 }" />
-    </div>
+    <a-skeleton v-if="showSkeleton" active :title="false" :paragraph="{ rows: 8 }" />
 
     <!-- 空数据 -->
-    <a-empty v-else-if="!records.length" class="list-body" :description="t('adminUsers.empty')" />
+    <div v-else-if="!records.length" class="list-empty">
+      <a-empty :description="t('adminUsers.empty')" />
+    </div>
 
-    <!-- 列表（a-spin 居中覆盖翻页加载） -->
+    <!-- 列表：a-listy 虚拟列表（每行单行布局，行高由组件计算） -->
     <a-spin v-else :spinning="loading" :tip="t('common.loading')">
-      <a-list :data-source="records" :split="true" item-layout="horizontal" class="user-list">
-        <template #renderItem="{ item }">
-          <a-list-item>
-            <a-list-item-meta>
-              <template #title>
-                <a-space wrap :size="8">
-                  <span class="mono uid-text">{{ item.uid }}</span>
-                  <a-tag v-if="isSelf(item)" color="blue">{{ t('adminUsers.me') }}</a-tag>
-                  <a-tag :color="item.role === 'ADMIN' ? 'gold' : 'default'">{{ item.role }}</a-tag>
-                </a-space>
-              </template>
-              <template #description>
-                <a-space wrap :size="[16, 4]" class="meta-row">
-                  <span class="meta-item">
-                    {{ t('adminUsers.columns.id') }}：<span class="mono">{{ item.id }}</span>
-                  </span>
-                  <a-space :size="6">
-                    <span class="meta-item">{{ t('adminUsers.columns.status') }}：</span>
-                    <a-switch
-                      size="small"
-                      :checked="item.status === 1"
-                      :disabled="isSelf(item)"
-                      @change="(checked) => handleStatus(item, checked)"
-                    />
-                    <span :class="item.status === 1 ? 'status-on' : 'status-off'">
-                      {{ item.status === 1 ? t('common.enabled') : t('common.disabled') }}
-                    </span>
-                  </a-space>
-                  <span class="meta-item">
-                    {{ t('adminUsers.columns.createTime') }}：<span class="mono">{{ item.createTime }}</span>
-                  </span>
-                </a-space>
-              </template>
-            </a-list-item-meta>
-            <template #actions>
-              <a-button type="link" size="small" danger :disabled="isSelf(item)" @click="handleDelete(item)">
-                {{ t('common.delete') }}
-              </a-button>
-            </template>
-          </a-list-item>
+      <a-listy
+        :items="records"
+        :row-key="rowKey"
+        :height="listHeight"
+        virtual
+        class="user-listy"
+      >
+        <template #itemRender="record">
+          <div class="user-row">
+            <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
+            <a-tag v-if="isSelf(record)" color="blue" class="row-tag">{{ t('adminUsers.me') }}</a-tag>
+            <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">{{ record.role }}</a-tag>
+            <span class="meta-text">#{{ record.id }}</span>
+            <span class="meta-text time-text">{{ record.createTime }}</span>
+            <span class="row-space"></span>
+            <a-switch
+              size="small"
+              :checked="record.status === 1"
+              :disabled="isSelf(record)"
+              @change="(checked) => handleStatus(record, checked)"
+            />
+            <span :class="['status-text', record.status === 1 ? 'status-on' : 'status-off']">
+              {{ record.status === 1 ? t('common.enabled') : t('common.disabled') }}
+            </span>
+            <a-button type="link" size="small" danger :disabled="isSelf(record)" @click="handleDelete(record)">
+              {{ t('common.delete') }}
+            </a-button>
+          </div>
         </template>
-      </a-list>
+      </a-listy>
     </a-spin>
 
     <!-- 分页靠右 -->
@@ -252,21 +245,27 @@ onMounted(load)
   border-radius: 12px;
 }
 
-/* 列表主体：骨架屏 / 空状态 / 列表 共用，保证切换时高度不塌 */
-.list-body {
+/* 空状态占位：与列表高度接近，避免切页时高度跳动 */
+.list-empty {
   min-height: 240px;
-  padding: 8px 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.list-body:has(.a-skeleton) {
-  display: block;
+.user-listy {
+  border: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.user-list {
-  padding: 4px 0;
+/* 行内单行布局：虚拟列表行高固定，内容不换行，超出省略 */
+.user-row {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .mono {
@@ -275,13 +274,33 @@ onMounted(load)
 
 .uid-text {
   font-weight: 600;
+  font-size: 13px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.meta-row {
+.row-tag {
+  margin-inline-end: 0;
+}
+
+.meta-text {
+  font-size: 12px;
   color: var(--text-secondary);
+  white-space: nowrap;
 }
 
-.meta-item {
+.time-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.row-space {
+  flex: 1;
+}
+
+.status-text {
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -300,16 +319,14 @@ onMounted(load)
   padding-top: 16px;
 }
 
-/* 移动端：列表操作换行、分页居中 */
+/* 移动端：隐藏时间列、行内更紧凑、分页居中 */
 @media (max-width: 575px) {
-  .user-list :deep(.ant-list-item) {
-    flex-direction: column;
-    align-items: flex-start;
+  .time-text {
+    display: none;
   }
 
-  .user-list :deep(.ant-list-item-action) {
-    margin-inline-start: 0;
-    margin-top: 8px;
+  .user-row {
+    gap: 6px;
   }
 
   .pager {

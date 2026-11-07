@@ -1,6 +1,7 @@
 <script setup>
 // 回收站：展示软删除用户，支持恢复与彻底删除
-// 列表用 a-list（不使用 a-table）：加载中显示骨架屏，空数据显示 a-empty，分页靠右
+// 列表用 a-listy（antdv-next 的高性能虚拟列表）：每行单行布局；
+// 加载中显示骨架屏，空数据显示 a-empty，分页靠右
 import { onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ReloadOutlined } from '@antdv-next/icons'
@@ -18,6 +19,10 @@ const filters = reactive({ uid: '' })
 
 /** 首屏骨架屏：没有数据可展示时出现，翻页时用居中的 a-spin 覆盖 */
 const showSkeleton = ref(false)
+
+/** 虚拟列表行 key 与滚动容器高度 */
+const rowKey = (item) => item.id
+const listHeight = 440
 
 const load = async () => {
   const isEmpty = records.value.length === 0
@@ -107,49 +112,38 @@ onMounted(load)
     <a-alert type="info" show-icon :message="t('adminRecycle.hint')" class="recycle-hint" />
 
     <!-- 加载中：首屏骨架屏 -->
-    <div v-if="showSkeleton" class="list-body">
-      <a-skeleton active :title="false" :paragraph="{ rows: 8 }" />
-    </div>
+    <a-skeleton v-if="showSkeleton" active :title="false" :paragraph="{ rows: 8 }" />
 
     <!-- 空数据 -->
-    <a-empty v-else-if="!records.length" class="list-body" :description="t('adminRecycle.empty')" />
+    <div v-else-if="!records.length" class="list-empty">
+      <a-empty :description="t('adminRecycle.empty')" />
+    </div>
 
-    <!-- 列表（a-spin 居中覆盖翻页加载） -->
+    <!-- 列表：a-listy 虚拟列表（每行单行布局） -->
     <a-spin v-else :spinning="loading" :tip="t('common.loading')">
-      <a-list :data-source="records" :split="true" item-layout="horizontal" class="recycle-list">
-        <template #renderItem="{ item }">
-          <a-list-item>
-            <a-list-item-meta>
-              <template #title>
-                <a-space wrap :size="8">
-                  <span class="mono uid-text">{{ item.uid }}</span>
-                  <a-tag :color="item.role === 'ADMIN' ? 'gold' : 'default'">{{ item.role }}</a-tag>
-                </a-space>
-              </template>
-              <template #description>
-                <a-space wrap :size="[16, 4]" class="meta-row">
-                  <span class="meta-item">
-                    {{ t('adminRecycle.columns.id') }}：<span class="mono">{{ item.id }}</span>
-                  </span>
-                  <span class="meta-item">
-                    {{ t('adminRecycle.columns.deletedAt') }}：<span class="mono">{{ item.updateTime }}</span>
-                  </span>
-                </a-space>
-              </template>
-            </a-list-item-meta>
-            <template #actions>
-              <a-space :size="4">
-                <a-button type="link" size="small" @click="handleRestore(item)">
-                  {{ t('adminRecycle.restore') }}
-                </a-button>
-                <a-button type="link" size="small" danger @click="handlePurge(item)">
-                  {{ t('adminRecycle.purge') }}
-                </a-button>
-              </a-space>
-            </template>
-          </a-list-item>
+      <a-listy
+        :items="records"
+        :row-key="rowKey"
+        :height="listHeight"
+        virtual
+        class="recycle-listy"
+      >
+        <template #itemRender="record">
+          <div class="recycle-row">
+            <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
+            <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">{{ record.role }}</a-tag>
+            <span class="meta-text">#{{ record.id }}</span>
+            <span class="meta-text time-text">{{ record.updateTime }}</span>
+            <span class="row-space"></span>
+            <a-button type="link" size="small" @click="handleRestore(record)">
+              {{ t('adminRecycle.restore') }}
+            </a-button>
+            <a-button type="link" size="small" danger @click="handlePurge(record)">
+              {{ t('adminRecycle.purge') }}
+            </a-button>
+          </div>
         </template>
-      </a-list>
+      </a-listy>
     </a-spin>
 
     <!-- 分页靠右 -->
@@ -176,21 +170,27 @@ onMounted(load)
   margin-bottom: 16px;
 }
 
-/* 列表主体：骨架屏 / 空状态 / 列表 共用，保证切换时高度不塌 */
-.list-body {
+/* 空状态占位：与列表高度接近，避免切页时高度跳动 */
+.list-empty {
   min-height: 240px;
-  padding: 8px 0;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.list-body:has(.a-skeleton) {
-  display: block;
+.recycle-listy {
+  border: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
+  border-radius: 8px;
+  overflow: hidden;
 }
 
-.recycle-list {
-  padding: 4px 0;
+/* 行内单行布局：虚拟列表行高固定，内容不换行 */
+.recycle-row {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
 }
 
 .mono {
@@ -199,14 +199,29 @@ onMounted(load)
 
 .uid-text {
   font-weight: 600;
-}
-
-.meta-row {
-  color: var(--text-secondary);
-}
-
-.meta-item {
+  font-size: 13px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.row-tag {
+  margin-inline-end: 0;
+}
+
+.meta-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.time-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.row-space {
+  flex: 1;
 }
 
 /* 分页靠右对齐 */
@@ -216,16 +231,14 @@ onMounted(load)
   padding-top: 16px;
 }
 
-/* 移动端：列表操作换行、分页居中 */
+/* 移动端：隐藏时间列、行内更紧凑、分页居中 */
 @media (max-width: 575px) {
-  .recycle-list :deep(.ant-list-item) {
-    flex-direction: column;
-    align-items: flex-start;
+  .time-text {
+    display: none;
   }
 
-  .recycle-list :deep(.ant-list-item-action) {
-    margin-inline-start: 0;
-    margin-top: 8px;
+  .recycle-row {
+    gap: 6px;
   }
 
   .pager {

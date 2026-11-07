@@ -142,8 +142,8 @@ userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 
 ### 2.2 管理后台（`/admin`，仅管理员）
 
-- `/admin/users`：用户管理（列表 / 按 SSO uid 添加 / 启停 / 软删除）——`a-list` 列表，加载态骨架屏、空态 `a-empty`、分页靠右
-- `/admin/recycle`：回收站（恢复 / 彻底删除）——同样的 `a-list` + 骨架屏 + `a-empty` 规范
+- `/admin/users`：用户管理（列表 / 按 SSO uid 添加 / 启停 / 软删除）——`a-listy` 虚拟列表（每行单行布局），加载态骨架屏、空态 `a-empty`、分页靠右
+- `/admin/recycle`：回收站（恢复 / 彻底删除）——同样的 `a-listy` + 骨架屏 + `a-empty` 规范
 - 管理员由后端按 `SSO_ADMIN_UID` 判定（默认 uid=1），通过 `/api/bff/me` 的 `isAdmin` 下发；路由守卫会自动拦截非管理员。
 - 接口封装见 `src/api/admin.js`，页面见 `src/views/admin/`。
 
