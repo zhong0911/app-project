@@ -23,6 +23,7 @@ export default {
     toDark: '切换暗色',
     loggedIn: '已登录',
     notLoggedIn: '未登录',
+    loading: '加载中',
   },
   nav: {
     home: '首页',
@@ -251,6 +252,7 @@ export default {
   },
   adminUsers: {
     title: '用户管理',
+    empty: '暂无用户',
     searchUid: '按 SSO uid 搜索',
     uid: 'SSO UID',
     me: '我',
@@ -280,6 +282,7 @@ export default {
   },
   adminRecycle: {
     title: '回收站',
+    empty: '回收站是空的',
     searchUid: '按 SSO uid 搜索',
     hint: '回收站中的用户为软删除状态，可恢复到用户列表，或彻底删除（不可恢复）。',
     columns: {

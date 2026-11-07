@@ -23,6 +23,7 @@ export default {
     toDark: 'Switch to dark',
     loggedIn: 'Signed in',
     notLoggedIn: 'Not signed in',
+    loading: 'Loading',
   },
   nav: {
     home: 'Home',
@@ -251,6 +252,7 @@ export default {
   },
   adminUsers: {
     title: 'User management',
+    empty: 'No users yet',
     searchUid: 'Search by SSO uid',
     uid: 'SSO UID',
     me: 'Me',
@@ -280,6 +282,7 @@ export default {
   },
   adminRecycle: {
     title: 'Recycle bin',
+    empty: 'Recycle bin is empty',
     searchUid: 'Search by SSO uid',
     hint: 'Users here are soft-deleted. You can restore them to the user list or delete them permanently.',
     columns: {

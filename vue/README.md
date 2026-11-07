@@ -142,8 +142,8 @@ userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 
 ### 2.2 管理后台（`/admin`，仅管理员）
 
-- `/admin/users`：用户管理（列表 / 按 SSO uid 添加 / 启停 / 软删除）
-- `/admin/recycle`：回收站（恢复 / 彻底删除）
+- `/admin/users`：用户管理（列表 / 按 SSO uid 添加 / 启停 / 软删除）——`a-list` 列表，加载态骨架屏、空态 `a-empty`、分页靠右
+- `/admin/recycle`：回收站（恢复 / 彻底删除）——同样的 `a-list` + 骨架屏 + `a-empty` 规范
 - 管理员由后端按 `SSO_ADMIN_UID` 判定（默认 uid=1），通过 `/api/bff/me` 的 `isAdmin` 下发；路由守卫会自动拦截非管理员。
 - 接口封装见 `src/api/admin.js`，页面见 `src/views/admin/`。
 
@@ -315,7 +315,8 @@ plugins: [
 
 ### 9. 环境变量
 
-项目根目录提供 `.env.development` / `.env.production`，按需修改后重启 dev / 重新 build 生效：
+项目根目录提供 `.env.example`（模板说明文件）、`.env.development` / `.env.production`（按环境配置）。
+本地私有配置写 `.env`（已被 gitignore 忽略，勿提交），修改后重启 dev / 重新 build 生效：
 
 ```bash
 # .env.development
@@ -328,7 +329,8 @@ VITE_API_BASE_URL=http://localhost:8080
 | `VITE_APP_TITLE`    | 应用标题（用于浏览器标题与 Logo） |
 | `VITE_API_BASE_URL` | 后端接口基础地址                  |
 
-开发环境代理在 `vite.config.js` 的 `server.proxy` 中配置，可按需调整 `target` 与 `rewrite`。
+开发环境代理在 `vite.config.js` 的 `server.proxy` 中配置，`/api` 与 `/sso` 都指向 `VITE_PROXY_TARGET`（默认 `http://localhost:8080`）。
+> 注意 `VITE_API_BASE_URL` 要带后端统一前缀 `/api`（生产填 `https://api.example.com/api`），否则会请求到缺失前缀的路径。
 
 ## 环境要求
 

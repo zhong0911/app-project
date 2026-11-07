@@ -23,6 +23,7 @@ export default {
     toDark: '切換深色',
     loggedIn: '已登入',
     notLoggedIn: '未登入',
+    loading: '載入中',
   },
   nav: {
     home: '首頁',
@@ -250,6 +251,7 @@ export default {
     },
   },
   adminUsers: {
+    empty: '暫無使用者',
     title: '使用者管理',
     searchUid: '按 SSO uid 搜尋',
     uid: 'SSO UID',
@@ -279,6 +281,7 @@ export default {
     deleteSuccess: '已移入回收站',
   },
   adminRecycle: {
+    empty: '回收站是空的',
     title: '回收站',
     searchUid: '按 SSO uid 搜尋',
     hint: '回收站中的使用者為軟刪除狀態，可還原到使用者列表，或徹底刪除（不可還原）。',
