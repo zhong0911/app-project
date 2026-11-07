@@ -264,6 +264,8 @@ onMounted(async () => {
   font-size: 18px;
   cursor: pointer;
   transition: color 0.3s;
+  /* 与顶栏左边缘留出一点呼吸感，避免贴边 */
+  margin-left: 8px;
 }
 
 .header-left {
