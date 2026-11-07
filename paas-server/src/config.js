@@ -49,6 +49,20 @@ export const config = {
   sessionHours: Number(process.env.PAAS_SESSION_HOURS || 72),
   adminUser: process.env.PAAS_ADMIN_USER || 'admin',
   adminPassword: process.env.PAAS_ADMIN_PASSWORD || 'admin123456',
+  // SSO（OAuth2 授权码）：client_id / client_secret 在 AntX Passport 控制台登记
+  sso: {
+    issuer: (process.env.SSO_ISSUER || 'https://passport.antx.cc').replace(/\/$/, ''),
+    clientId: process.env.SSO_CLIENT_ID || '',
+    clientSecret: process.env.SSO_CLIENT_SECRET || '',
+    scope: process.env.SSO_SCOPE || 'openid',
+    redirectUri: process.env.SSO_REDIRECT_URI || '',
+    authorizationUri: process.env.SSO_AUTHORIZATION_URI || '',
+    tokenUri: process.env.SSO_TOKEN_URI || '',
+    userinfoUri: process.env.SSO_USERINFO_URI || '',
+    revokeUri: process.env.SSO_REVOKE_URI || '',
+    logoutUri: process.env.SSO_LOGOUT_URI || '',
+    adminUid: process.env.SSO_ADMIN_UID || '1',
+  },
   // 生产模式下直接托管前端构建产物
   webDist: process.env.PAAS_WEB_DIST || path.resolve(baseDir, '../vue/dist'),
 }

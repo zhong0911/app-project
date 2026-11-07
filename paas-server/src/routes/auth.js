@@ -1,8 +1,17 @@
 import express from 'express'
-import { authenticate, clearSessionCookie, createSession, destroySession, getUserFromRequest, requireAuth, setSessionCookie } from '../auth.js'
-import { db, now } from '../db.js'
+import {
+  authenticate,
+  clearSessionCookie,
+  createSession,
+  destroySession,
+  getUserFromRequest,
+  requireAuth,
+  setSessionCookie,
+} from '../auth.js'
+import { db, logEvent, now } from '../db.js'
 import { BusinessError, asyncHandler, ok } from '../http.js'
 import { config } from '../config.js'
+import { buildLogoutUrl, publicBaseUrl, ssoEnabled } from '../sso.js'
 
 const router = express.Router()
 
@@ -19,12 +28,22 @@ router.post(
   }),
 )
 
-router.post('/auth/logout', (req, res) => {
-  const user = getUserFromRequest(req)
-  destroySession(user?.token)
-  clearSessionCookie(res)
-  return ok(res, { ssoLogoutUrl: '' })
-})
+router.post(
+  '/auth/logout',
+  asyncHandler(async (req, res) => {
+    const user = getUserFromRequest(req)
+    destroySession(user?.token)
+    clearSessionCookie(res)
+    let ssoLogoutUrl = ''
+    if (ssoEnabled()) {
+      ssoLogoutUrl = await buildLogoutUrl({
+        idTokenHint: user?.idToken || '',
+        postLogoutRedirectUri: `${publicBaseUrl(req)}/login`,
+      })
+    }
+    return ok(res, { ssoLogoutUrl })
+  }),
+)
 
 /** BFF 聚合登录态：与 vue 模板约定一致 */
 router.get('/bff/me', (req, res) => {
@@ -34,17 +53,13 @@ router.get('/bff/me', (req, res) => {
     uid: user.id,
     id: user.id,
     username: user.username,
-    name: user.username,
+    name: user.name || user.username,
+    email: user.email,
+    avatar: user.avatar,
     role: user.role,
     isAdmin: user.role === 'admin',
+    sso: !!user.ssoSub,
   })
-})
-
-/** 兼容模板的 SSO 入口：未配置外部 IdP 时引导到本地登录页 */
-router.get('/sso/authorize', (req, res) => {
-  const redirect = typeof req.query.redirect_uri === 'string' ? req.query.redirect_uri : ''
-  const query = redirect ? `?redirect_uri=${encodeURIComponent(redirect)}` : ''
-  res.redirect(`/login${query}`)
 })
 
 /** 用户管理（管理员）：平台账号 */

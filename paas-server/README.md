@@ -86,6 +86,29 @@ Compose 已挂载 `/var/run/docker.sock`——平台创建的容器会运行在�
 5. **发布**：每次部署生成不可变版本记录，支持一键回滚到历史运行版本（复用旧镜像，不重新构建）。
 6. **配置**：按应用维护环境变量，部署时注入容器。
 
+## SSO 接入（AntX Passport）
+
+控制台默认保留本地账号登录，同时支持 OAuth2 授权码接入 AntX Passport：
+
+1. 在 SSO 控制台登记应用，回调地址填 `https://<你的域名>/sso/callback`；
+2. 在 `paas-server/.env` 填入：
+
+```bash
+SSO_ISSUER=https://passport.antx.cc
+SSO_CLIENT_ID=<控制台分配的 client_id>
+SSO_CLIENT_SECRET=<控制台分配的 client_secret>
+SSO_SCOPE=openid
+SSO_REDIRECT_URI=            # 留空按请求 Host 自动生成；反代场景建议显式指定
+SSO_ADMIN_UID=1              # 该 sub 对应的用户自动成为管理员
+```
+
+登录链路：前端 `登录页 → /sso/authorize → passport.antx.cc/oauth2/authorize → /sso/callback`
+（校验 state、换 token、读 `/userinfo`、按 `sub` 幂等建用户、写会话 Cookie）→ 回跳 `/apps`。
+退出登录会清除本地会话，并在配置了 `end_session_endpoint` 时跳转 Passport 全局退出。
+
+未配置 `SSO_CLIENT_ID`/`SSO_CLIENT_SECRET` 时，`/sso/authorize` 会回退到本地登录页并提示，
+不会出现“点了没反应”的情况。
+
 ## API 概览
 
 统一返回体 `{ code, data, message }`，登录态使用 HttpOnly 会话 Cookie。

@@ -58,6 +58,10 @@ export default {
     failed: '用户名或密码错误',
     subtitle: '登录 AntX PaaS 控制台，管理你的应用与容器',
     ssoButton: 'SSO 登录',
+    ssoDisabled: 'SSO 尚未配置（缺少 SSO_CLIENT_ID/SSO_CLIENT_SECRET），请使用本地账号登录',
+    ssoDenied: 'SSO 授权被拒绝或已取消',
+    ssoState: 'SSO 登录状态校验失败，请重新登录',
+    ssoError: 'SSO 登录失败，请稍后重试或使用本地账号登录',
     hint: '将跳转 passport.antx.cc 完成认证后自动返回',
   },
   about: {

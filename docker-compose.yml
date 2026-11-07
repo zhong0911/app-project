@@ -6,6 +6,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    env_file:
+      - ./paas-server/.env
     environment:
       NODE_ENV: production
       PAAS_EXECUTOR: docker
@@ -17,6 +19,8 @@ services:
       # 对外访问域名，如 https://apps.example.com
       PAAS_PUBLIC_HOST: ""
       PAAS_WEB_DIST: /app/web-dist
+      # SSO 回调地址（生产必须与 SSO 控制台登记的一致）
+      SSO_REDIRECT_URI: ${SSO_REDIRECT_URI:-}
     volumes:
       # 平台需要在宿主机上创建兄弟容器
       - /var/run/docker.sock:/var/run/docker.sock

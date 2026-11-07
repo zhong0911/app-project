@@ -7,6 +7,7 @@ import { initExecutor, getExecutorInfo } from './executor/index.js'
 import appsRouter from './routes/apps.js'
 import authRouter from './routes/auth.js'
 import overviewRouter from './routes/overview.js'
+import ssoRouter from './routes/sso.js'
 
 const app = express()
 app.disable('x-powered-by')
@@ -19,6 +20,8 @@ app.get('/healthz', (req, res) => {
 app.use('/api', authRouter)
 app.use('/api', appsRouter)
 app.use('/api', overviewRouter)
+// OAuth2 客户端规范路径（与前端 /sso/authorize、/sso/callback 对齐）
+app.use('/sso', ssoRouter)
 
 app.use('/api', (req, res) => {
   res.status(404).json({ code: 404, data: null, message: `接口不存在：${req.method} ${req.originalUrl}` })

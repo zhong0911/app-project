@@ -76,6 +76,21 @@ CREATE INDEX IF NOT EXISTS idx_deployments_app ON deployments(app_id, id DESC);
 CREATE INDEX IF NOT EXISTS idx_events_app ON events(app_id, id DESC);
 `)
 
+/** 兼容旧库：按需补充 SSO 相关列 */
+function ensureColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all()
+  if (columns.some((item) => item.name === column)) return
+  db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`)
+}
+
+ensureColumn('users', 'sso_sub', 'TEXT')
+ensureColumn('users', 'name', 'TEXT')
+ensureColumn('users', 'email', 'TEXT')
+ensureColumn('users', 'avatar', 'TEXT')
+ensureColumn('users', 'last_login_at', 'TEXT')
+ensureColumn('sessions', 'id_token', 'TEXT')
+db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_users_sso_sub ON users(sso_sub) WHERE sso_sub IS NOT NULL')
+
 export function now() {
   return new Date().toISOString()
 }

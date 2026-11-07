@@ -58,6 +58,10 @@ export default {
     failed: 'Invalid username or password',
     subtitle: 'Sign in to the AntX PaaS console to manage your apps',
     ssoButton: 'Sign in with SSO',
+    ssoDisabled: 'SSO is not configured (missing SSO_CLIENT_ID/SSO_CLIENT_SECRET); use a local account',
+    ssoDenied: 'SSO authorization was denied or cancelled',
+    ssoState: 'SSO state validation failed, please sign in again',
+    ssoError: 'SSO sign-in failed, please retry or use a local account',
     hint: 'You will be redirected to passport.antx.cc and returned automatically',
   },
   about: {

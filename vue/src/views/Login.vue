@@ -20,7 +20,18 @@ const { t } = useI18n()
 const form = reactive({ username: '', password: '' })
 const loading = ref(false)
 
+const SSO_ERROR_KEYS = {
+  disabled: 'login.ssoDisabled',
+  denied: 'login.ssoDenied',
+  state: 'login.ssoState',
+  error: 'login.ssoError',
+}
+
 onMounted(async () => {
+  const ssoFlag = route.query.sso
+  if (typeof ssoFlag === 'string' && SSO_ERROR_KEYS[ssoFlag]) {
+    message.warning(t(SSO_ERROR_KEYS[ssoFlag]))
+  }
   await userStore.fetchLoginUser()
   if (userStore.isLoggedIn) {
     router.replace(route.query.redirect_uri || '/')
