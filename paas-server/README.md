@@ -90,7 +90,7 @@ Compose 已挂载 `/var/run/docker.sock`——平台创建的容器会运行在�
 
 控制台默认保留本地账号登录，同时支持 OAuth2 授权码接入 AntX Passport：
 
-1. 在 SSO 控制台登记应用，回调地址填 `https://<你的域名>/sso/callback`；
+1. 在 SSO 控制台登记应用，回调地址填 `https://<你的域名>/sso/callback`（本仓库默认登记为 `https://paas.antx.cc/sso/callback`）；
 2. 在 `paas-server/.env` 填入：
 
 ```bash
