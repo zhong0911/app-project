@@ -2,7 +2,7 @@
 
 一个可自托管的轻量 PaaS：接入 Git 仓库或容器镜像，平台完成构建、发布、运行、日志与回滚。
 
-- 前端：Vue 3 + Vite + Pinia + Vue Router + AntdvNext（基于仓库内 `vue/` 模板）
+- 前端：Vue 3 + Vite + Pinia + Vue Router + AntdvNext（**控制台页面代码在历史提交 `3698cfd`**；仓库内 `vue/` 已回退为通用前端模板，不再包含 PaaS 页面）
 - 后端：Node.js 22 + Express + node:sqlite（无额外数据库依赖）
 - 执行层：真实 Docker（dockerode，支持本机 socket 与远程 Docker API），无 Docker 权限时自动降级为本地模拟驱动
 
@@ -10,8 +10,6 @@
 
 ```
 app-project/
-├── vue/                 # 控制台前端（模板 + PaaS 页面）
-│   └── src/views/paas/  # 总览 / 应用列表 / 应用详情 / 表单 / 日志终端
 └── paas-server/         # PaaS 服务端
     ├── src/executor/    # docker 驱动、mock 驱动
     ├── src/routes/      # auth / apps / overview API
@@ -35,6 +33,10 @@ npm run dev               # 默认 http://localhost:8080
 
 ### 2. 启动前端（开发模式）
 
+> `vue/` 现在只是通用前端模板，**不含** PaaS 控制台页面。需要控制台时先从历史提交取回：
+> `git checkout 3698cfd -- vue/src/views/paas vue/src/api/paas.js vue/src/utils/paas.js`，
+> 并按该提交同步 `router/index.js`、`.env.*` 的 `/overview`、`/apps` 路由与代理配置。
+
 ```bash
 cd vue
 npm install
@@ -47,7 +49,7 @@ npm run dev               # 默认 http://localhost:3000，/api 代理到 8099
 ### 3. 生产部署
 
 ```bash
-cd vue && npm run build                       # 产物在 vue/dist
+cd vue && npm run build                       # 产物在 vue/dist（需先按 2. 取回 PaaS 页面）
 cd ../paas-server && NODE_ENV=production npm start
 ```
 

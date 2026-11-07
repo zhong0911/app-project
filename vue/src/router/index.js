@@ -60,40 +60,6 @@ const routes = [
       },
     ],
   },
-  // PaaS 控制台：总览
-  {
-    path: '/overview',
-    component: ConsoleLayout,
-    meta: { requiresAuth: true },
-    children: [
-      {
-        path: '',
-        name: 'Overview',
-        component: () => import('@/views/paas/Overview.vue'),
-        meta: { title: '控制台总览', requiresAuth: true },
-      },
-    ],
-  },
-  // PaaS 控制台：应用列表与应用详情
-  {
-    path: '/apps',
-    component: ConsoleLayout,
-    meta: { requiresAuth: true },
-    children: [
-      {
-        path: '',
-        name: 'Apps',
-        component: () => import('@/views/paas/Apps.vue'),
-        meta: { title: '应用管理', requiresAuth: true },
-      },
-      {
-        path: ':id',
-        name: 'AppDetail',
-        component: () => import('@/views/paas/AppDetail.vue'),
-        meta: { title: '应用详情', requiresAuth: true },
-      },
-    ],
-  },
   // 管理后台（ConsoleLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
   {
     path: '/admin',
@@ -129,29 +95,21 @@ const router = createRouter({
   routes,
 })
 
-// 全局前置守卫：动态设置页面标题 + 登录校验 + 管理后台管理员校验
+// 全局前置守卫：动态设置页面标题 + 管理后台管理员校验
 router.beforeEach(async (to) => {
   document.title = to.meta?.title ? `${to.meta.title} - ${APP_TITLE}` : APP_TITLE
-
-  const needAuth = to.matched.some((record) => record.meta?.requiresAuth || record.meta?.requiresAdmin)
-  if (!needAuth) {
+  if (!to.meta?.requiresAdmin) {
     return true
   }
-
   const userStore = useUserStore()
   if (!userStore.isLoggedIn) {
     await userStore.fetchLoginUser()
   }
-  if (!userStore.isLoggedIn) {
-    return { path: '/login', query: { redirect_uri: to.fullPath } }
-  }
-
-  if (!to.meta?.requiresAdmin) {
-    return true
-  }
   if (!userStore.isAdmin) {
-    // 已登录非管理员 -> 回控制台总览
-    return { path: '/overview' }
+    // 未登录 -> 走 SSO 登录并回跳；已登录非管理员 -> 回首页
+    return userStore.isLoggedIn
+      ? { path: '/' }
+      : { path: '/login', query: { redirect_uri: to.fullPath } }
   }
   return true
 })

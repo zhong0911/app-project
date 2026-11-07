@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { logoutApi, getBffMeApi, loginApi } from '@/api/user'
+import { logoutApi, getBffMeApi } from '@/api/user'
 
 /**
  * 用户状态
@@ -35,7 +35,8 @@ export const useUserStore = defineStore('user', () => {
     window.location.href = '/sso/authorize'
   }
 
-  /** 拉取 SSO 登录态（BFF 聚合接口；未登录返回 401 时静默忽略） */  let fetchPromise = null
+  /** 拉取 SSO 登录态（BFF 聚合接口；未登录返回 401 时静默忽略） */
+  let fetchPromise = null
   async function fetchLoginUser(force = false) {
     if (!force && userInfo.value) {
       return userInfo.value
@@ -56,12 +57,6 @@ export const useUserStore = defineStore('user', () => {
       fetchPromise = null
     })
     return fetchPromise
-  }
-
-  /** 本地账号登录：提交用户名密码，后端建立会话 Cookie 后拉取登录态 */
-  async function loginWithPassword(username, password) {
-    await loginApi({ username, password })
-    return fetchLoginUser(true)
   }
 
   /**
@@ -90,7 +85,6 @@ export const useUserStore = defineStore('user', () => {
     displayName,
     isAdmin,
     loginWithSso,
-    loginWithPassword,
     fetchLoginUser,
     logout,
   }

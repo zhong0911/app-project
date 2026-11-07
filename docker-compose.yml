@@ -26,5 +26,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # 构建工作目录 + SQLite 持久化
       - ./paas-server/data:/app/data
-      # 前端构建产物（先在 vue 目录执行 npm run build）
+      # 前端构建产物：控制台前端在历史提交 3698cfd，vue/ 已回退为通用模板
+      # 需控制台时先取回 PaaS 页面再在 vue 目录 npm run build
       - ./vue/dist:/app/web-dist:ro
