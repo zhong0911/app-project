@@ -14,6 +14,7 @@ const userStore = useUserStore()
 const { t } = useI18n()
 
 // 退出状态：confirm 待确认 / loading 请求后端中 / done 已退出
+// loading 期间仍保留 confirm 内容（a-spin 半透明遮罩 + 禁点），避免卡片高度跳动
 const state = ref('confirm')
 
 async function handleLogout() {
@@ -37,8 +38,9 @@ async function handleLogout() {
     <a-card class="logout-card" variant="borderless">
       <a-spin :spinning="state === 'loading'" size="large" :description="t('logout.loading')">
         <div class="logout-body">
-          <!-- 待确认：点击后才请求退出 -->
-          <a-result v-if="state === 'confirm'" :title="t('common.logout')">
+          <!-- 待确认 + 请求中：点击后才请求退出；loading 时保留同一块内容，
+               a-spin 以遮罩形式叠加（容器 pointer-events: none），卡片高度不变 -->
+          <a-result v-if="state !== 'done'" :title="t('common.logout')">
             <template #subTitle>
               <p class="logout-sub">{{ t('logout.confirm') }}</p>
             </template>
