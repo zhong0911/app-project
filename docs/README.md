@@ -20,7 +20,7 @@
 | `gin/` | Go：Gin + database/sql | [README](../gin/README.md) |
 | `laravel/` | PHP：Laravel 11（Request/Resource 分层） | [README](../laravel/README.md) |
 | `thinkphp/` | PHP：ThinkPHP 8（Validate/Model/Service） | [README](../thinkphp/README.md) |
-| `vue/` | 前端：Vue 3 + Vite + antdv-next + Pinia + i18n | [README](../vue/README.md) |
+| `vue/` | 前端模板：Vue 3 + Vite + antdv-next + Pinia + i18n（含 SSO 登录与管理后台） | [README](../vue/README.md) |
 | `paas-server/` | AntX PaaS 应用托管平台（Vue 控制台 + Node 服务端 + Docker 执行层） | [README](../paas-server/README.md) |
 
 ## 统一约定（7 套后端一致）

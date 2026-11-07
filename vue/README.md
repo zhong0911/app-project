@@ -1,10 +1,6 @@
-# AntX Vue3 AntdvNext 前端模板
+# Vue3 AntdvNext 项目模板
 
-一个开箱即用的 Vue 3 前端模板，集成了主流的工程化配置与常用库，可作为新业务项目的起点。
-
-> 当前仓库里的 `vue/` 在这套模板之上已承载 **AntX PaaS 控制台**（`/overview`、`/apps` 应用列表与详情、终端日志），后端对接 `paas-server/`；通用能力（主题、i18n、SSO、管理后台）保持不变，可直接裁剪成纯模板使用。
->
-> 配套后端见 [`docs/README.md`](../docs/README.md)，7 套后端接口面完全一致，前端无需按语言改动。
+一个开箱即用的 Vue 3 前端项目模板，集成了主流的工程化配置与常用库，可作为新业务项目的起点。
 
 ## 特性
 
@@ -50,14 +46,11 @@ vue3-antdv-template/
     ├── App.vue                 # 根组件（a-config-provider + a-app，全局主题/语言）
     ├── api/
     │   ├── request.js           # Axios 封装（拦截器）
-    │   ├── user.js              # 用户 / 登录态接口
-    │   ├── admin.js             # 管理后台接口（/api/admin/users*）
-    │   └── paas.js              # PaaS 控制台接口（/api/paas/*）
+    │   └── user.js              # 用户相关接口
     ├── assets/
     │   └── styles/             # 全局样式（含 Tailwind 指令、亮暗渐变背景、滚动条）
     │       └── index.css
     ├── config/
-    │   ├── app.js              # 应用级常量（品牌名、标题）
     │   ├── locale.js           # 全局 locale 配置中心（语言列表、antdv 语言包、切换）
     │   └── theme.js            # 全局主题配置（亮/暗 token、组件级覆盖）
     ├── locales/                # i18n 文案（zh-CN / zh-TW / en-US）与 vue-i18n 实例
@@ -71,27 +64,13 @@ vue3-antdv-template/
     │   └── modules/            # 按业务划分的 store
     │       ├── app.js          # 侧边栏折叠、暗色主题
     │       └── user.js
-    ├── components/
-    │   └── AppIcon.vue         # 品牌图标
     ├── utils/
-    │   ├── app.js              # 全局 message/notification/modal（含 context）+ toggleTheme
-    │   └── paas.js             # PaaS 相关工具（状态映射、格式化）
+    │   └── app.js              # 全局 message/notification/modal（含 context）+ toggleTheme
     └── views/
-        ├── Home.vue            # 首页（落地页）
-        ├── Login.vue           # 登录入口（跳 SSO）
-        ├── Logout.vue          # 登出（撤销会话后回首页）
+        ├── Home.vue            # 首页
         ├── Components.vue      # 组件预览（antdv 常用组件一览）
         ├── About.vue
-        ├── NotFound.vue        # 404 页
-        ├── admin/              # 管理后台
-        │   ├── AdminUsers.vue      # 用户管理
-        │   └── AdminRecycle.vue    # 回收站
-        └── paas/               # PaaS 控制台
-            ├── Overview.vue        # 概览
-            ├── Apps.vue            # 应用列表
-            ├── AppDetail.vue       # 应用详情
-            ├── AppFormModal.vue    # 新建/编辑应用弹窗
-            └── TerminalLog.vue     # 构建/运行日志
+        └── NotFound.vue        # 404 页
 ```
 
 ## 快速开始
@@ -328,16 +307,14 @@ plugins: [
 
 ```bash
 # .env.development
-VITE_APP_TITLE=AntX PaaS
-VITE_API_BASE_URL=/api
-VITE_PROXY_TARGET=http://localhost:8099
+VITE_APP_TITLE=Vue3 AntdvNext Template
+VITE_API_BASE_URL=http://localhost:8080
 ```
 
-| 变量                 | 说明                                              |
-|----------------------|---------------------------------------------------|
-| `VITE_APP_TITLE`     | 应用标题（用于浏览器标题与 Logo）                 |
-| `VITE_API_BASE_URL`  | 前端请求前缀，开发用 `/api` 走 Vite 代理          |
-| `VITE_PROXY_TARGET`  | 代理目标（PaaS 控制台指向 `paas-server` 的 8099） |
+| 变量                | 说明                              |
+|---------------------|-----------------------------------|
+| `VITE_APP_TITLE`    | 应用标题（用于浏览器标题与 Logo） |
+| `VITE_API_BASE_URL` | 后端接口基础地址                  |
 
 开发环境代理在 `vite.config.js` 的 `server.proxy` 中配置，可按需调整 `target` 与 `rewrite`。
 
@@ -349,30 +326,3 @@ VITE_PROXY_TARGET=http://localhost:8099
 ## License
 
 MIT
-
-## PaaS 控制台（`/overview`、`/apps`）
-
-本仓库的 `vue/` 同时是 AntX PaaS 的控制台，接口走 `src/api/paas.js`，开发期代理到 `paas-server`（默认 `http://localhost:8099`）：
-
-| 页面 | 路径 | 说明 |
-| --- | --- | --- |
-| 概览 | `/overview` | 应用数与运行状态统计 |
-| 应用列表 | `/apps` | 卡片式列表，新建 / 编辑 / 启停 / 删除 |
-| 应用详情 | `/apps/:id` | 配置、环境变量、构建历史 |
-| 终端日志 | `/apps/:id` 页签 | `TerminalLog.vue`，构建与运行日志（流式刷新） |
-
-- 布局：`ConsoleLayout.vue`（桌面固定侧边栏 / 移动端抽屉）
-- 状态映射与格式化：`src/utils/paas.js`
-
-## 与后端模板的配套关系
-
-前端只认接口契约，不关心后端语言：
-
-| 约定 | 值 |
-| --- | --- |
-| 响应结构 | `{code, success, message, data, timestamp}`，`request.js` 统一解包 `data` |
-| 登录态 | `GET /api/bff/me`，未登录返回空对象 |
-| SSO 入口 | `/sso/authorize` → `/sso/callback`（Vite 已代理 `/sso`、`/api`） |
-| 管理后台 | `/api/admin/users*`（管理员由后端 `SSO_ADMIN_UID` 判定，前端读 `isAdmin`） |
-
-可选后端：`springboot/`、`fastapi/`、`express/`、`nestjs/`、`gin/`、`laravel/`、`thinkphp/`，启动端口都是 8080，切换后端只需改 `VITE_PROXY_TARGET`。
