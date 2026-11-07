@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
 import { LOCALES, localeKey, setLocale } from '@/config/locale'
+import { ACCOUNT_CENTER_URL } from '@/config/app'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
@@ -87,6 +88,21 @@ function handleMenuClick({ key }) {
 // 退出登录：进入 /logout 页，由该页请求后端单点退出并跳转
 function handleLogout() {
   router.push('/logout')
+}
+
+// 登录后用户菜单：账号中心（跳 SSO 账号中心）+ 退出登录
+const userMenuItems = computed(() => [
+  { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
+  { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
+])
+
+function handleUserMenu({ key }) {
+  if (key === 'account') {
+    // 账号中心在 SSO（passport.antx.cc）侧，新标签打开，避免把当前页面带离前端
+    window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
+    return
+  }
+  handleLogout()
 }
 
 // 进入应用时拉取 SSO 登录态（会话 Cookie 由后端维护；未登录静默忽略）
@@ -188,12 +204,11 @@ onMounted(async () => {
           <a-dropdown
             v-else
             :trigger="['click']"
-            :menu="{ items: [{ key: 'logout', label: t('common.logout'), icon: LogoutOutlined }] }"
-            @menu-click="handleLogout"
+            :menu="{ items: userMenuItems }"
+            @menu-click="handleUserMenu"
           >
-            <a-button size="small" type="text" class="user-btn">
+            <a-button size="small" type="text" shape="circle" class="user-btn">
               <UserOutlined />
-              <span v-if="!isMobile" class="user-name">{{ userStore.displayName || t('common.notLoggedIn') }}</span>
             </a-button>
           </a-dropdown>
         </div>
@@ -282,20 +297,12 @@ onMounted(async () => {
   font-size: 16px;
 }
 
-/* 用户菜单按钮：与语言 / 主题按钮同为 text 类型图标按钮 */
+/* 用户菜单按钮：与语言 / 主题按钮同为 text 类型圆形图标按钮（不显示用户名） */
 .user-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 7px;
+  flex: none;
+  width: 32px;
   height: 32px;
-}
-
-.user-name {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  padding: 0;
 }
 
 /* 内容区：透明背景露出 layout 底色（colorBgLayout），

@@ -1,8 +1,9 @@
 <script setup>
-// 用户管理页：列表 / 添加（指定 SSO uid）/ 启停 / 软删除（移入回收站）
-// 列表用 a-listy（antdv-next 的高性能虚拟列表，无 a-list/a-table）：
+// 用户管理页（表格样式）：UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
+// 表格用 a-listy（antdv-next 的高性能虚拟列表）+ 表头 + 等宽栅格实现列对齐，
+// 不使用 a-table（与项目既有偏好一致：列表类页面统一用 a-listy / a-list）。
 // 行高由组件按 token 计算，因此每一行保持单行布局；加载中显示骨架屏，空数据显示 a-empty，分页靠右
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
@@ -10,7 +11,9 @@ import { useUserStore } from '@/stores/modules/user'
 import {
   createAdminUserApi,
   deleteAdminUserApi,
+  getAdminRolesApi,
   getAdminUsersApi,
+  updateAdminUserApi,
   updateAdminUserStatusApi,
 } from '@/api/admin'
 
@@ -22,16 +25,33 @@ const records = ref([])
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(10)
-const filters = reactive({ uid: '', status: undefined })
+const filters = reactive({ uid: '', status: undefined, role: undefined })
+
+/** 角色字典（来自后端「角色管理」，内置 ADMIN / USER；接口失败时退回内置两项） */
+const roles = ref([])
+const roleOptions = computed(() =>
+  roles.value.length
+    ? roles.value.map((role) => ({ value: role.code, label: `${role.name}（${role.code}）` }))
+    : [
+        { value: 'ADMIN', label: `ADMIN` },
+        { value: 'USER', label: `USER` },
+      ],
+)
+const roleName = (code) => roles.value.find((role) => role.code === code)?.name || code
 
 const addOpen = ref(false)
 const submitting = ref(false)
 const addForm = reactive({ uid: '' })
 
+/** 编辑弹窗：当前仅调整本地角色（uid 由 SSO 提供，不可修改） */
+const editOpen = ref(false)
+const editing = ref(null)
+const editForm = reactive({ role: '' })
+
 /** 首屏骨架屏：没有数据可展示时出现，翻页时用居中的 a-spin 覆盖，避免闪烁 */
 const showSkeleton = ref(false)
 
-/** 虚拟列表行 key 与高度（a-listy 的行高由组件内部计算，这里只给滚动容器高度） */
+/** 虚拟列表行 key 与滚动容器高度（a-listy 的行高由组件内部计算，这里只给容器高度） */
 const rowKey = (item) => item.id
 const listHeight = 440
 
@@ -47,6 +67,7 @@ const load = async () => {
       pageNum: pageNum.value,
       pageSize: pageSize.value,
       uid: filters.uid || undefined,
+      role: filters.role,
       status: filters.status,
     })
     records.value = data.records || []
@@ -58,6 +79,16 @@ const load = async () => {
   } finally {
     loading.value = false
     showSkeleton.value = false
+  }
+}
+
+/** 拉取角色字典（失败时用内置 ADMIN / USER 兜底，不阻塞列表展示） */
+const loadRoles = async () => {
+  try {
+    const { data } = await getAdminRolesApi({ includeDisabled: true })
+    roles.value = data || []
+  } catch {
+    roles.value = []
   }
 }
 
@@ -97,13 +128,35 @@ const handleAdd = async () => {
   }
 }
 
+const openEdit = (record) => {
+  editing.value = record
+  editForm.role = record.role
+  editOpen.value = true
+}
+
+const handleEdit = async () => {
+  if (!editForm.role) {
+    message.warning(t('adminUsers.roleRequired'))
+    return
+  }
+  submitting.value = true
+  try {
+    await updateAdminUserApi(editing.value.id, { role: editForm.role })
+    message.success(t('adminUsers.editSuccess'))
+    editOpen.value = false
+    await load()
+  } finally {
+    submitting.value = false
+  }
+}
+
 const handleStatus = async (record, checked) => {
   try {
     await updateAdminUserStatusApi(record.id, checked ? 1 : 0)
     message.success(t(checked ? 'adminUsers.enableSuccess' : 'adminUsers.disableSuccess'))
     await load()
   } catch {
-    // 失败时重新拉取，保证开关状态与后端一致
+    // 失败时重新拉取，保证状态与后端一致
     await load()
   }
 }
@@ -123,7 +176,10 @@ const handleDelete = (record) => {
   })
 }
 
-onMounted(load)
+onMounted(async () => {
+  await loadRoles()
+  await load()
+})
 </script>
 
 <template>
@@ -137,6 +193,14 @@ onMounted(load)
           allow-clear
           style="width: 180px"
           @press-enter="handleSearch"
+        />
+        <a-select
+          v-model:value="filters.role"
+          :placeholder="t('common.role')"
+          allow-clear
+          style="width: 130px"
+          :options="roleOptions"
+          @change="handleSearch"
         />
         <a-select
           v-model:value="filters.status"
@@ -168,38 +232,67 @@ onMounted(load)
       <a-empty :description="t('adminUsers.empty')" />
     </div>
 
-    <!-- 列表：a-listy 虚拟列表（每行单行布局，行高由组件计算） -->
+    <!-- 表格：表头 + a-listy 虚拟列表（同一套栅格列，保证列对齐） -->
     <a-spin v-else :spinning="loading" :tip="t('common.loading')">
-      <a-listy
-        :items="records"
-        :row-key="rowKey"
-        :height="listHeight"
-        virtual
-        class="user-listy"
-      >
-        <template #itemRender="record">
-          <div class="user-row">
-            <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
-            <a-tag v-if="isSelf(record)" color="blue" class="row-tag">{{ t('adminUsers.me') }}</a-tag>
-            <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">{{ record.role }}</a-tag>
-            <span class="meta-text">#{{ record.id }}</span>
-            <span class="meta-text time-text">{{ record.createTime }}</span>
-            <span class="row-space"></span>
-            <a-switch
-              size="small"
-              :checked="record.status === 1"
-              :disabled="isSelf(record)"
-              @change="(checked) => handleStatus(record, checked)"
-            />
-            <span :class="['status-text', record.status === 1 ? 'status-on' : 'status-off']">
-              {{ record.status === 1 ? t('common.enabled') : t('common.disabled') }}
-            </span>
-            <a-button type="link" size="small" danger :disabled="isSelf(record)" @click="handleDelete(record)">
-              {{ t('common.delete') }}
-            </a-button>
-          </div>
-        </template>
-      </a-listy>
+      <div class="user-table">
+        <div class="table-head user-grid">
+          <span class="head-cell">{{ t('adminUsers.columns.uid') }}</span>
+          <span class="head-cell">{{ t('adminUsers.columns.role') }}</span>
+          <span class="head-cell">{{ t('adminUsers.columns.status') }}</span>
+          <span class="head-cell">{{ t('adminUsers.lastLoginAt') }}</span>
+          <span class="head-cell head-action">{{ t('adminUsers.columns.action') }}</span>
+        </div>
+
+        <a-listy
+          :items="records"
+          :row-key="rowKey"
+          :height="listHeight"
+          virtual
+          class="user-listy"
+        >
+          <template #itemRender="record">
+            <div class="user-grid user-row">
+              <span class="cell-uid">
+                <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
+                <a-tag v-if="isSelf(record)" color="blue" class="row-tag">{{ t('adminUsers.me') }}</a-tag>
+              </span>
+
+              <span class="cell-role">
+                <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">
+                  {{ roleName(record.role) }}
+                </a-tag>
+              </span>
+
+              <span class="cell-status">
+                <a-tag :color="record.status === 1 ? 'success' : 'default'" class="row-tag">
+                  {{ record.status === 1 ? t('common.enabled') : t('common.disabled') }}
+                </a-tag>
+              </span>
+
+              <span class="cell-last-login meta-text mono">
+                {{ record.lastLoginAt || t('adminUsers.neverLoggedIn') }}
+              </span>
+
+              <span class="cell-action">
+                <a-button type="link" size="small" :disabled="isSelf(record)" @click="openEdit(record)">
+                  {{ t('common.edit') }}
+                </a-button>
+                <a-button
+                  type="link"
+                  size="small"
+                  :disabled="isSelf(record)"
+                  @click="handleStatus(record, record.status !== 1)"
+                >
+                  {{ record.status === 1 ? t('common.disable') : t('common.enable') }}
+                </a-button>
+                <a-button type="link" size="small" danger :disabled="isSelf(record)" @click="handleDelete(record)">
+                  {{ t('common.delete') }}
+                </a-button>
+              </span>
+            </div>
+          </template>
+        </a-listy>
+      </div>
     </a-spin>
 
     <!-- 分页靠右 -->
@@ -230,6 +323,24 @@ onMounted(load)
       <a-alert type="info" show-icon :message="t('adminUsers.uidHint')" />
     </a-form>
   </a-modal>
+
+  <a-modal
+    v-model:open="editOpen"
+    :title="t('adminUsers.editTitle')"
+    :ok-text="t('adminUsers.editOk')"
+    :confirm-loading="submitting"
+    @ok="handleEdit"
+  >
+    <a-form layout="vertical">
+      <a-form-item :label="t('adminUsers.columns.uid')">
+        <a-input :value="editing?.uid" disabled />
+      </a-form-item>
+      <a-form-item :label="t('adminUsers.roleLabel')" required>
+        <a-select v-model:value="editForm.role" :options="roleOptions" />
+      </a-form-item>
+      <a-alert type="info" show-icon :message="t('adminUsers.roleHint')" />
+    </a-form>
+  </a-modal>
 </template>
 
 <style scoped>
@@ -245,18 +356,55 @@ onMounted(load)
   justify-content: center;
 }
 
-.user-listy {
+/* 表格容器：表头 + 虚拟列表整体描边 */
+.user-table {
   border: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
   border-radius: 8px;
   overflow: hidden;
 }
 
-/* 行内单行布局：虚拟列表行高固定，内容不换行，超出省略 */
+/* 表头：与数据行共用一套栅格列，保证列对齐 */
+.table-head {
+  height: 40px;
+  padding: 0 12px;
+  display: grid;
+  align-items: center;
+  background: var(--ant-color-fill-alter, rgba(0, 0, 0, 0.02));
+  border-bottom: 1px solid var(--ant-color-border-secondary, rgba(5, 5, 5, 0.06));
+}
+
+.head-cell {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, rgba(0, 0, 0, 0.65));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.head-action {
+  text-align: right;
+}
+
+/* 列宽统一：UID 自适应，其余固定宽度（窄屏用紧凑宽度，宽屏放开，保证任意宽度下 5 列都在） */
+.user-grid {
+  display: grid;
+  grid-template-columns: minmax(70px, 1fr) 88px 78px 148px 150px;
+  gap: 6px;
+}
+
+@media (min-width: 1200px) {
+  .user-grid {
+    grid-template-columns: minmax(0, 1fr) 130px 100px 180px 210px;
+    gap: 8px;
+  }
+}
+
+/* 数据行：单行布局（虚拟列表行高固定，内容不换行） */
 .user-row {
   height: 100%;
-  display: flex;
   align-items: center;
-  gap: 8px;
+  padding: 0 12px;
   overflow: hidden;
 }
 
@@ -267,10 +415,18 @@ onMounted(load)
 .uid-text {
   font-weight: 600;
   font-size: 13px;
-  max-width: 180px;
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.cell-uid {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .row-tag {
@@ -281,27 +437,20 @@ onMounted(load)
   font-size: 12px;
   color: var(--text-secondary);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.time-text {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+.cell-last-login {
+  display: block;
 }
 
-.row-space {
-  flex: 1;
-}
-
-.status-text {
-  font-size: 12px;
+.cell-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px;
   white-space: nowrap;
-}
-
-.status-on {
-  color: #52c41a;
-}
-
-.status-off {
-  color: var(--text-tertiary);
 }
 
 /* 分页靠右对齐 */
@@ -311,14 +460,19 @@ onMounted(load)
   padding-top: 16px;
 }
 
-/* 移动端：隐藏时间列、行内更紧凑、分页居中 */
-@media (max-width: 575px) {
-  .time-text {
-    display: none;
+/* 窄屏：列宽收紧（5 列都保留），操作列按钮间距收紧，分页居中 */
+@media (max-width: 767px) {
+  .user-row,
+  .table-head {
+    padding: 0 8px;
   }
 
-  .user-row {
-    gap: 6px;
+  .cell-action {
+    gap: 0;
+  }
+
+  .cell-action :deep(.ant-btn-link) {
+    padding-inline: 4px;
   }
 
   .pager {

@@ -12,7 +12,6 @@ import {
   LoginOutlined,
   LogoutOutlined,
   UserOutlined,
-  SettingOutlined,
 } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
 import SideMenu from './SideMenu.vue'
@@ -21,7 +20,7 @@ import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { toggleTheme } from '@/utils/app'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
-import { APP_TITLE } from '@/config/app'
+import { ACCOUNT_CENTER_URL, APP_TITLE } from '@/config/app'
 
 const route = useRoute()
 const router = useRouter()
@@ -123,22 +122,19 @@ function handleBrandClick(event) {
   drawerOpen.value = true
 }
 
-const userMenuItems = computed(() => {
-  const items = []
-  if (userStore.isAdmin) {
-    items.push({ key: 'admin', label: t('common.adminPanel'), icon: SettingOutlined })
-  }
-  items.push({ key: 'logout', label: t('common.logout'), icon: LogoutOutlined })
-  return items
-})
+const userMenuItems = computed(() => [
+  { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
+  { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
+])
 
 function handleLocaleChange({ key }) {
   setLocale(key)
 }
 
 function handleUserMenu({ key }) {
-  if (key === 'admin') {
-    router.push('/admin/users')
+  if (key === 'account') {
+    // 账号中心在 SSO（passport.antx.cc）侧，新标签打开，避免把当前页面带离前端
+    window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
   } else if (key === 'logout') {
     router.push('/logout')
   }
@@ -228,9 +224,8 @@ onMounted(async () => {
             :menu="{ items: userMenuItems }"
             @menu-click="handleUserMenu"
           >
-            <a-button type="text" class="icon-btn user-btn">
+            <a-button type="text" shape="circle" class="icon-btn">
               <UserOutlined />
-              <span class="user-name">{{ userStore.displayName || t('common.loggedIn') }}</span>
             </a-button>
           </a-dropdown>
         </div>
@@ -374,13 +369,6 @@ html.dark .site-header {
   cursor: pointer;
 }
 
-.user-name {
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 /* ---------- main / footer ---------- */
 .page-main {
   max-width: 1120px;
@@ -415,8 +403,7 @@ html.dark .site-footer {
     display: none;
   }
 
-  .brand-text small,
-  .user-name {
+  .brand-text small {
     display: none;
   }
 

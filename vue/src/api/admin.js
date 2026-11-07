@@ -18,6 +18,16 @@ export function updateAdminUserStatusApi(id, status) {
   return request.put(`/admin/users/${id}/status`, { status })
 }
 
+/** 编辑用户（当前仅调整本地角色） */
+export function updateAdminUserApi(id, data) {
+  return request.put(`/admin/users/${id}`, data)
+}
+
+/** 角色列表（角色管理，内置 ADMIN / USER） */
+export function getAdminRolesApi(params) {
+  return request.get('/admin/roles', { params, key: 'admin-roles' })
+}
+
 /** 软删除（移入回收站） */
 export function deleteAdminUserApi(id) {
   return request.delete(`/admin/users/${id}`)

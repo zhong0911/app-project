@@ -43,6 +43,13 @@ public interface UserService extends IService<User> {
     void purge(Long id);
 
     /**
+     * 刷新上次登录时间（SSO 登录成功时调用；本地无记录时先自动注册再写）。
+     *
+     * @param uid SSO 用户 uid
+     */
+    void touchLastLogin(String uid);
+
+    /**
      * 按 SSO 用户 uid（access_token 的 sub）查询本地用户。
      *
      * <p>方案A：角色本地化。token 取 sub(=uid) → 查本地表 → 拿角色（ADMIN/USER）。</p>

@@ -4,6 +4,7 @@ import cc.antx.template.common.result.PageResult;
 import cc.antx.template.common.result.Result;
 import cc.antx.template.dto.UserCreateDTO;
 import cc.antx.template.dto.UserQueryDTO;
+import cc.antx.template.dto.UserUpdateDTO;
 import cc.antx.template.service.CurrentUserService;
 import cc.antx.template.service.UserService;
 import cc.antx.template.vo.UserVO;
@@ -65,6 +66,16 @@ public class AdminUserController {
                                       @RequestBody Map<String, Integer> body) {
         currentUserService.requireAdmin(authentication);
         return Result.success(userService.updateStatus(id, body.get("status")));
+    }
+
+    /** 编辑用户（当前仅调整本地角色；uid 由 SSO 提供，不可修改） */
+    @PutMapping("/{id}")
+    public Result<UserVO> update(Authentication authentication,
+                                 @PathVariable Long id,
+                                 @Valid @RequestBody UserUpdateDTO dto) {
+        currentUserService.requireAdmin(authentication);
+        dto.setId(id);
+        return Result.success(userService.updateUser(dto));
     }
 
     /** 软删除（移入回收站） */

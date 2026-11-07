@@ -32,6 +32,10 @@ public class UserVO implements Serializable {
     /** 启停状态：1-启用，0-禁用 */
     private Integer status;
 
+    /** 上次登录时间（从未登录为 null） */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private LocalDateTime lastLoginAt;
+
     /** 逻辑删除标记：0-正常，1-回收站 */
     private Integer deleted;
 

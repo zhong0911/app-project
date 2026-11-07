@@ -12,6 +12,7 @@
         <result column="uid" property="uid"/>
         <result column="role" property="role"/>
         <result column="status" property="status"/>
+        <result column="last_login_at" property="lastLoginAt"/>
         <result column="deleted" property="deleted"/>
         <result column="version" property="version"/>
         <result column="create_time" property="createTime"/>
@@ -19,7 +20,7 @@
     </resultMap>
 
     <select id="selectPageIncludingDeleted" resultMap="UserMap">
-        SELECT id, uid, role, status, deleted, version, create_time, update_time
+        SELECT id, uid, role, status, last_login_at, deleted, version, create_time, update_time
         FROM users
         <where>
             deleted = #{deleted}
@@ -34,14 +35,14 @@
     </select>
 
     <select id="selectByUidIncludingDeleted" resultMap="UserMap">
-        SELECT id, uid, role, status, deleted, version, create_time, update_time
+        SELECT id, uid, role, status, last_login_at, deleted, version, create_time, update_time
         FROM users
         WHERE uid = #{uid}
         LIMIT 1
     </select>
 
     <select id="selectByIdIncludingDeleted" resultMap="UserMap">
-        SELECT id, uid, role, status, deleted, version, create_time, update_time
+        SELECT id, uid, role, status, last_login_at, deleted, version, create_time, update_time
         FROM users
         WHERE id = #{id}
         LIMIT 1
@@ -51,6 +52,13 @@
         UPDATE users
         SET status = #{status}, update_time = NOW()
         WHERE id = #{id}
+    </update>
+
+    <!-- 登录成功时刷新上次登录时间（不动 update_time，避免把"资料更新时间"混成"登录时间"） -->
+    <update id="updateLastLoginAtByUid">
+        UPDATE users
+        SET last_login_at = NOW()
+        WHERE uid = #{uid}
     </update>
 
     <update id="softDeleteById">

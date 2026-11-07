@@ -40,6 +40,9 @@ public class User {
     /** 启停状态：1-启用，0-禁用（禁用后该用户无法访问管理接口） */
     private Integer status;
 
+    /** 上次登录时间（SSO 登录成功时写入；从未登录为 null） */
+    private LocalDateTime lastLoginAt;
+
     /** 逻辑删除标记：0-未删除，1-已删除（进入回收站） */
     @TableLogic
     private Integer deleted;

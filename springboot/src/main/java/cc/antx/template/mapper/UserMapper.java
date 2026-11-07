@@ -31,6 +31,9 @@ public interface UserMapper extends BaseMapper<User> {
     /** 更新启停状态（包含回收站记录） */
     int updateStatusById(@Param("id") Long id, @Param("status") Integer status);
 
+    /** 登录成功时刷新上次登录时间（按 uid） */
+    int updateLastLoginAtByUid(@Param("uid") String uid);
+
     /** 软删除：移入回收站 */
     int softDeleteById(@Param("id") Long id);
 

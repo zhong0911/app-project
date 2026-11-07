@@ -7,6 +7,7 @@ import cc.antx.template.dto.UserQueryDTO;
 import cc.antx.template.dto.UserUpdateDTO;
 import cc.antx.template.entity.User;
 import cc.antx.template.mapper.UserMapper;
+import cc.antx.template.service.RoleService;
 import cc.antx.template.service.UserService;
 import cc.antx.template.vo.UserVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -18,6 +19,8 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.Locale;
+
 /**
  * 用户服务实现。
  *
@@ -25,6 +28,12 @@ import org.springframework.util.StringUtils;
  */
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+
+    private final RoleService roleService;
+
+    public UserServiceImpl(RoleService roleService) {
+        this.roleService = roleService;
+    }
 
     @Override
     public UserVO createUser(UserCreateDTO dto) {
@@ -52,15 +61,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserVO updateUser(UserUpdateDTO dto) {
+        if (dto.getId() == null) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "用户 ID 不能为空");
+        }
         User user = this.getById(dto.getId());
         if (user == null) {
             throw new BusinessException(ResultCode.NOT_FOUND, "用户不存在: " + dto.getId());
         }
-        // 角色白名单校验：仅允许 ADMIN / USER
-        if (!"ADMIN".equalsIgnoreCase(dto.getRole()) && !"USER".equalsIgnoreCase(dto.getRole())) {
-            throw new BusinessException(ResultCode.BAD_REQUEST, "角色不合法，仅支持 ADMIN / USER: " + dto.getRole());
+        // 角色校验：必须存在于角色表中且为启用状态（角色表内置 ADMIN / USER，可自定义扩展）
+        if (!roleService.isAssignable(dto.getRole())) {
+            throw new BusinessException(ResultCode.BAD_REQUEST, "角色不存在或已禁用: " + dto.getRole());
         }
-        user.setRole(dto.getRole().toUpperCase());
+        user.setRole(dto.getRole().trim().toUpperCase(Locale.ROOT));
         // 携带 @Version 字段，update 时自动校验乐观锁
         this.updateById(user);
         return toVO(user);
@@ -135,6 +147,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (rows == 0) {
             throw new BusinessException(ResultCode.NOT_FOUND, "回收站中不存在该用户: " + id);
         }
+    }
+
+    @Override
+    public void touchLastLogin(String uid) {
+        if (!StringUtils.hasText(uid)) {
+            return;
+        }
+        // 本地无记录时先按默认 USER 自动注册（与首次登录约定一致）
+        User user = getOrCreateDefaultUser(uid);
+        if (user == null) {
+            return;
+        }
+        baseMapper.updateLastLoginAtByUid(uid);
     }
 
     @Override
