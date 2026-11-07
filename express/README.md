@@ -1,11 +1,13 @@
-# AntX Node.js（Express）后端模板
+# AntX Express 后端模板（Node.js）
 
 对标 `springboot/` 的等价实现：统一响应、分层（controller → service → repository）、用户管理、SSO 接入。
+
+> 本目录原名 `nodejs/`，为避免与 NestJS 混淆改名为 `express/`；框架仍是 Node.js + Express 4。
 
 ## 目录结构
 
 ```
-nodejs/
+express/
 ├── src/
 │   ├── app.js                     # 装配中间件 + 路由 + 异常（= 自动配置）
 │   ├── server.js                  # 监听端口、优雅退出（= main 启动）
@@ -48,7 +50,7 @@ nodejs/
 ## 启动
 
 ```bash
-cd nodejs
+cd express
 npm install
 cp .env.example .env          # 填 DB_* / SSO_CLIENT_ID / SSO_CLIENT_SECRET
 mysql -uroot -p < sql/init.sql

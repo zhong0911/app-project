@@ -12,7 +12,7 @@ const splitList = (value, fallback) =>
 
 export const config = {
   app: {
-    name: 'nodejs-template',
+    name: 'express-template',
     port: Number(env.SERVER_PORT || 8080),
     debug: env.DEBUG !== 'false',
   },

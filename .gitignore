@@ -1,6 +1,6 @@
 # ---- 依赖与构建产物 ----
 node_modules/
-nodejs/node_modules/
+express/node_modules/
 target/
 springboot/target/
 fastapi/__pycache__/
