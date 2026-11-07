@@ -1,5 +1,6 @@
 <script setup>
 // 侧边菜单内容（logo + 菜单）：桌面 Sider 与移动端 Drawer 复用
+// logo（图标 + 标题）点击返回首页，两个布局都通过 logo-click 事件关闭自己的抽屉
 import AppIcon from '@/components/AppIcon.vue'
 import { APP_TITLE } from '@/config/app'
 
@@ -10,15 +11,15 @@ defineProps({
   collapsed: { type: Boolean, default: false },
 })
 
-defineEmits(['menu-click'])
+defineEmits(['menu-click', 'logo-click'])
 </script>
 
 <template>
   <div class="side-menu">
-    <div class="logo">
+    <router-link to="/" class="logo" @click="$emit('logo-click', $event)">
       <AppIcon :size="34" />
       <span v-if="!collapsed" class="logo-text">{{ APP_TITLE }}</span>
-    </div>
+    </router-link>
     <!-- 菜单 theme 跟随全局主题，背景色由 Layout token（siderBg/lightSiderBg）控制 -->
     <a-menu
       :theme="theme"
@@ -42,6 +43,12 @@ defineEmits(['menu-click'])
   font-size: 15px;
   font-weight: 600;
   overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+
+.logo:hover {
+  color: inherit;
 }
 
 .logo-text {

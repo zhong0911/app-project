@@ -1,14 +1,14 @@
 ﻿<script setup>
-import { computed, ref, onMounted } from 'vue'
+import { computed, nextTick, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
 import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
+import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
 import SideMenu from './SideMenu.vue'
 import {
-  HomeOutlined,
   InfoCircleOutlined,
   AppstoreOutlined,
   GlobalOutlined,
@@ -38,6 +38,15 @@ const isMobile = computed(() => !screens.value?.md)
 // 移动端菜单抽屉
 const drawerOpen = ref(false)
 
+// 抽屉开合时同步 body 滚动锁：antdv-next 关闭后锁可能残留，会让页面滚不动
+watch(drawerOpen, (open) => {
+  if (open) {
+    restoreDrawerScrollLock()
+    return
+  }
+  nextTick(releaseDrawerScrollLock)
+})
+
 // 菜单数据：管理后台（/admin）显示后台 tabs；示例页面显示演示菜单
 const isAdminArea = computed(() => route.path.startsWith('/admin'))
 const menuItems = computed(() => {
@@ -47,8 +56,8 @@ const menuItems = computed(() => {
       { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: DeleteOutlined },
     ]
   }
+  // 菜单只放业务页面；首页入口由侧边栏 logo（图标 + 标题）承担，点击即返回首页
   const items = [
-    { key: '/', label: t('nav.home'), icon: HomeOutlined },
     { key: '/components', label: t('nav.components'), icon: AppstoreOutlined },
     { key: '/about', label: t('nav.about'), icon: InfoCircleOutlined },
   ]
@@ -132,6 +141,7 @@ onMounted(async () => {
         :menus="menuItems"
         :selected-keys="selectedKeys"
         @menu-click="handleMenuClick"
+        @logo-click="drawerOpen = false"
       />
     </a-drawer>
 

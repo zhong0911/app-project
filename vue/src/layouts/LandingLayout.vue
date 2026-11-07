@@ -1,7 +1,7 @@
 <script setup>
 // 落地页布局（LandingLayout）：顶部 header + 内容插槽 + 页脚，无侧边菜单
 // 用于首页等对外展示页面；后台/示例页面使用 ConsoleLayout
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
@@ -15,10 +15,12 @@ import {
   SettingOutlined,
 } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
+import SideMenu from './SideMenu.vue'
 import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { toggleTheme } from '@/utils/app'
+import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,6 +38,15 @@ const isMobile = computed(() => !screens.value?.md)
 // 移动端导航抽屉
 const drawerOpen = ref(false)
 
+// 抽屉开合时同步 body 滚动锁：antdv-next 关闭后锁可能残留，会让页面滚不动
+watch(drawerOpen, (open) => {
+  if (open) {
+    restoreDrawerScrollLock()
+    return
+  }
+  nextTick(releaseDrawerScrollLock)
+})
+
 // 抽屉里的导航项：锚点回首页对应区块，组件预览走路由
 const drawerItems = computed(() => [
   { key: '/#intro', label: t('nav.intro') },
@@ -45,9 +56,44 @@ const drawerItems = computed(() => [
   { key: '/components', label: t('nav.components') },
 ])
 
+// 抽屉内导航：锚点项先回首页再滚到区块；组件预览等路由项直接跳
 function handleDrawerMenu({ key }) {
   drawerOpen.value = false
+  if (key.startsWith('/#')) {
+    const hash = key.slice(1)
+    if (route.path !== '/') {
+      router.push('/')
+    }
+    // 抽屉关闭动画期间 body 被锁滚动，这里的滚动会在解锁后继续动画到目标，无需等待
+    scrollToSection(hash)
+    return
+  }
   router.push(key)
+}
+
+/**
+ * 滚动到区块：顶栏是 sticky（高 64px），scrollIntoView 会把标题顶到栏后面，
+ * 所以按元素位置手算偏移。用即时滚动（smooth 动画会被抽屉的滚动锁还原打断）；
+ * Home 是懒加载组件，元素可能稍后才挂载，用 rAF 逐帧重试。
+ */
+function scrollToSection(hash, frames = 60) {
+  const el = document.querySelector(hash)
+  if (el) {
+    const top = el.getBoundingClientRect().top + window.scrollY - 64
+    window.scrollTo({ top })
+    return
+  }
+  if (frames > 0) {
+    requestAnimationFrame(() => scrollToSection(hash, frames - 1))
+  }
+}
+
+// 抽屉里的 logo 点击：关闭抽屉并回首页；已经停在首页时路由不会变化，手动回到顶部
+function handleLogoClick() {
+  drawerOpen.value = false
+  if (route.path === '/') {
+    window.scrollTo({ top: 0 })
+  }
 }
 
 // 移动端：点品牌图标/标题打开导航抽屉（阻止默认的「回首页」跳转）
@@ -168,7 +214,8 @@ onMounted(async () => {
       </div>
     </header>
 
-    <!-- 移动端导航抽屉（与 ConsoleLayout 一致：左侧滑出，背景跟随主题 token） -->
+    <!-- 移动端导航抽屉：与 ConsoleLayout 同一套 SideMenu（logo 图标 + 标题 + 菜单），
+         logo 点击返回首页，背景跟随主题 token -->
     <a-drawer
       v-if="isMobile"
       v-model:open="drawerOpen"
@@ -177,11 +224,11 @@ onMounted(async () => {
       :closable="false"
       :styles="{ body: { padding: 0 } }"
     >
-      <a-menu
+      <SideMenu
         :theme="appStore.isDark ? 'dark' : 'light'"
-        mode="inline"
-        :items="drawerItems"
-        @click="handleDrawerMenu"
+        :menus="drawerItems"
+        @menu-click="handleDrawerMenu"
+        @logo-click="handleLogoClick"
       />
     </a-drawer>
 
