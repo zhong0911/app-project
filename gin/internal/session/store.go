@@ -18,6 +18,8 @@ type Session struct {
 	RefreshToken string
 	// State SSO 授权请求的 state（回调时校验后清空）
 	State string
+	// RedirectURI SSO 登录成功后要回跳的前端地址（/sso/authorize 写入，回调消费一次）
+	RedirectURI string
 }
 
 type entry struct {

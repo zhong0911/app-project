@@ -9,7 +9,8 @@ server:
         # 会话 Cookie 仅同站发送；prod 额外开启 secure（见 application-prod.yml）
         same-site: lax
 
-# SSO 登录成功后的重定向地址（生产子应用通常指向前端首页，如 https://tools.antx.cc）
+# SSO 登录成功后的兜底地址（优先用前端 /sso/authorize?redirect_uri=xxx 透传的回跳页，
+# 没有或校验不通过才落到这里；默认 /api/auth/me 供接口调试，生产可配成前端首页如 https://tools.antx.cc）
 sso:
   login-success-url: ${SSO_LOGIN_SUCCESS_URL:/api/auth/me}
   # 管理员 SSO uid（access_token 的 sub）；默认 uid=1，可按部署在 .env / application-*.yml 覆盖

@@ -29,7 +29,8 @@ onMounted(async () => {
 })
 
 function handleSsoLogin() {
-  userStore.loginWithSso(route.query.redirect_uri || '')
+  // 回跳优先级：页面参数 > 登录前暂存的地址 > 首页；后端拿到后会在 SSO 回调成功时直接跳过去
+  userStore.loginWithSso(route.query.redirect_uri || userStore.readRedirectUri() || '/')
 }
 </script>
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use App\Services\SsoClient;
 use App\Services\UserService;
 use App\Support\BusinessException;
+use App\Support\RedirectUri;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -21,11 +22,23 @@ class SsoController extends Controller
     ) {
     }
 
-    /** 302 跳 SSO 登录页（带 state，存会话供回调校验） */
+    /**
+     * 302 跳 SSO 登录页（带 state，存会话供回调校验）。
+     * 可带 ?redirect_uri=/xxx（前端回跳地址）：校验后存会话，回调成功后直接跳过去。
+     */
     public function authorize(Request $request): RedirectResponse
     {
         $state = $this->ssoClient->newState();
         $request->session()->put('sso_state', $state);
+
+        // 回跳地址与 state 同会话保存，回调成功时消费一次
+        $rawRedirect = $request->query('redirect_uri');
+        $target = is_string($rawRedirect) ? RedirectUri::sanitize($rawRedirect) : null;
+        if ($target !== null) {
+            $request->session()->put('sso_redirect_uri', $target);
+        } else {
+            $request->session()->forget('sso_redirect_uri');
+        }
 
         return redirect()->away($this->ssoClient->buildAuthorizeUrl($state), 302);
     }
@@ -66,6 +79,9 @@ class SsoController extends Controller
         // 新用户默认注册为 USER
         $this->userService->getOrCreateDefaultUser($uid);
 
-        return redirect()->away(config('sso.login_success_url'), 302);
+        // 优先跳前端透传的回跳地址，否则用配置的兜底地址
+        $redirectUri = $request->session()->pull('sso_redirect_uri');
+
+        return redirect()->away($redirectUri ?: config('sso.login_success_url'), 302);
     }
 }

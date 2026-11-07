@@ -17,11 +17,21 @@ export class SsoController {
     private readonly config: ConfigService,
   ) {}
 
-  /** 302 跳 SSO 登录页（带 state，存会话供回调校验） */
+  /**
+   * 302 跳 SSO 登录页（带 state，存会话供回调校验）。
+   * 可带 ?redirect_uri=<前端回跳地址>（站内路径或白名单内的绝对地址）：校验后存会话，回调成功后直接跳过去。
+   */
   @Get('authorize')
-  authorize(@Req() req: Request, @Res() res: Response) {
+  authorize(@Req() req: Request, @Res() res: Response, @Query('redirect_uri') redirectUri?: string) {
     const state = this.ssoService.newState();
     req.session.ssoState = state;
+    // 回跳地址与 state 同会话保存，回调成功时消费一次
+    const target = this.ssoService.sanitizeRedirectUri(redirectUri);
+    if (target) {
+      req.session.ssoRedirectUri = target;
+    } else {
+      delete req.session.ssoRedirectUri;
+    }
     return res.redirect(302, this.ssoService.buildAuthorizeUrl(state));
   }
 
@@ -53,6 +63,9 @@ export class SsoController {
 
     await this.userService.getOrCreateDefaultUser(String(userInfo.sub));
 
-    return res.redirect(302, this.config.get<string>('sso.loginSuccessUrl')!);
+    // 优先跳前端透传的回跳地址（已在 /sso/authorize 校验过），否则用配置的兜底地址
+    const redirectUri = req.session.ssoRedirectUri;
+    delete req.session.ssoRedirectUri;
+    return res.redirect(302, redirectUri || this.config.get<string>('sso.loginSuccessUrl')!);
   }
 }

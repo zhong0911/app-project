@@ -9,6 +9,45 @@ import { ResultCode } from './result-code.js';
 /** 生成 state（防 CSRF，存会话后回调校验） */
 export const newState = () => randomBytes(24).toString('base64url');
 
+/**
+ * 校验登录成功后的回跳地址（防开放重定向）。
+ *
+ * 前端访问 /sso/authorize 时用 redirect_uri 透传要回跳的页面（如 /admin/users），
+ * 后端存会话、回调成功后 302 过去。规则：
+ * 1. 站内相对路径（单个 / 开头）：放行，浏览器按当前页面源解析，开发（前端 3000 代理）与生产同域都对；
+ * 2. 绝对 http(s) 地址：origin 必须命中 CORS 允许来源白名单（前后端不同域部署时用）；
+ * 3. 协议相对（//evil.com）、反斜杠变体（/\evil.com）、控制字符、超长地址：判非法。
+ *
+ * @returns {string|null} 合法地址；非法返回 null（调用方回退 config.sso.loginSuccessUrl）
+ */
+export function sanitizeRedirectUri(raw, allowedOrigins = config.cors.origins) {
+  if (!raw || typeof raw !== 'string') return null;
+  const target = raw.trim();
+  if (!target || target.length > 2048) return null;
+  // 控制字符（含换行）会污染响应头
+  if (/[\u0000-\u001f\u007f]/.test(target)) return null;
+  if (target.startsWith('/')) {
+    if (target.startsWith('//') || target.startsWith('/\\')) return null;
+    return target;
+  }
+  if (!/^https?:\/\//i.test(target)) return null;
+  let origin;
+  try {
+    origin = new URL(target).origin;
+  } catch {
+    return null;
+  }
+  return (allowedOrigins || []).some((allowed) => {
+    try {
+      return new URL(String(allowed).trim()).origin === origin;
+    } catch {
+      return false;
+    }
+  })
+    ? target
+    : null;
+}
+
 /** 拼装授权跳转地址 */
 export function buildAuthorizeUrl(state) {
   const url = new URL(config.sso.authorizationUri);

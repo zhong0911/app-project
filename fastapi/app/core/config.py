@@ -52,7 +52,8 @@ class Settings(BaseSettings):
     sso_userinfo_uri: str = "https://passport.antx.cc/userinfo"
     sso_jwks_uri: str = "https://passport.antx.cc/oauth2/jwks"
     sso_revoke_uri: str = "https://passport.antx.cc/oauth2/revoke"
-    # 登录成功后前端跳转地址（生产指向子应用首页，如 https://tools.antx.cc）
+    # 登录成功后的兜底跳转地址（优先用前端 /sso/authorize?redirect_uri=xxx 透传的回跳页；
+    # 没有或校验不通过才落到这里，默认 /api/auth/me 供接口调试，生产可配成子应用首页）
     sso_login_success_url: str = "/api/auth/me"
     # 单点退出地址（留空则只退出本应用）
     sso_logout_uri: str = ""

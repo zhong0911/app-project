@@ -9,6 +9,8 @@ declare module 'express-session' {
     uid?: string;
     name?: string;
     ssoState?: string;
+    /** SSO 回调成功后要回跳的前端地址（/sso/authorize?redirect_uri=xxx 写入，回调消费一次） */
+    ssoRedirectUri?: string;
     accessToken?: string;
     refreshToken?: string;
   }

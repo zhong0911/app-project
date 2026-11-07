@@ -13,17 +13,32 @@ from app.common.result_code import ResultCode
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.exceptions import BusinessException
-from app.core.sso import build_authorize_url, exchange_code, fetch_userinfo, new_state
+from app.core.sso import (
+    build_authorize_url,
+    exchange_code,
+    fetch_userinfo,
+    new_state,
+    sanitize_redirect_uri,
+)
 from app.service.user_service import UserService
 
 router = APIRouter(prefix="/sso", tags=["SSO"])
 
 
 @router.get("/authorize", summary="跳转 SSO 登录页")
-async def authorize(request: Request) -> RedirectResponse:
+async def authorize(
+    request: Request,
+    redirect_uri: str | None = Query(default=None, description="登录成功后回跳的前端页面地址"),
+) -> RedirectResponse:
     state = new_state()
     # state 存服务端会话，回调时校验，防 CSRF
     request.session["sso_state"] = state
+    # 回跳地址与 state 同会话保存，回调成功时消费一次
+    target = sanitize_redirect_uri(redirect_uri)
+    if target:
+        request.session["sso_redirect_uri"] = target
+    else:
+        request.session.pop("sso_redirect_uri", None)
     return RedirectResponse(build_authorize_url(state), status_code=302)
 
 
@@ -60,4 +75,6 @@ async def callback(
     # 新用户默认注册为普通用户（USER），管理员由 SSO_ADMIN_UID / 管理接口赋权
     UserService(db).get_or_create_default_user(str(sub))
 
-    return RedirectResponse(settings.sso_login_success_url, status_code=302)
+    # 优先跳前端透传的回跳地址（相对路径保持相对，浏览器按前端源解析），否则用配置的兜底地址
+    target = request.session.pop("sso_redirect_uri", None) or settings.sso_login_success_url
+    return RedirectResponse(target, status_code=302)

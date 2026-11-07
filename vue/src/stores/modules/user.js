@@ -28,16 +28,19 @@ export const useUserStore = defineStore('user', () => {
   /**
    * SSO 登录（OAuth2 客户端，全后端统一规范路径）：
    * 整页跳转到后端 /sso/authorize，后端 302 到授权服务器；
-   * 授权后回调 /sso/callback 换 token 建会话，再跳回前端首页。
+   * 授权后回调 /sso/callback 换 token 建会话，再 302 回前端页面。
    *
-   * @param redirectUri 登录成功后的回跳地址（/login?redirect_uri=xxx 传入）：
-   *   存 localStorage（带 30 分钟过期，见 utils/auth.js），
-   *   回到前端且确认已登录后由布局组件 / 登录页消费一次
-   *   （授权回调链路的最终落地地址由后端 sso.login-success-url 决定）。
+   * @param redirectUri 登录成功后的回跳地址（/login?redirect_uri=xxx 传入，缺省 '/'）：
+   *   1. 转成绝对地址（当前前端源 + 路径）作为 query 参数透传给后端，后端存会话、
+   *      回调成功后直接跳过去；后端按 CORS 允许来源校验 origin，不依赖 Location 相对路径的解析规则；
+   *   2. 同时存 localStorage（带 30 分钟过期，见 utils/auth.js），
+   *      作为兜底：授权链路没带回跳地址时由登录页 / 布局消费一次。
    */
   function loginWithSso(redirectUri = '') {
-    saveRedirectUri(redirectUri)
-    window.location.href = '/sso/authorize'
+    const target = redirectUri || '/'
+    saveRedirectUri(target)
+    const absolute = /^https?:\/\//i.test(target) ? target : `${window.location.origin}${target}`
+    window.location.href = `/sso/authorize?redirect_uri=${encodeURIComponent(absolute)}`
   }
 
   /** 拉取 SSO 登录态（BFF 聚合接口；未登录返回 401 时静默忽略） */

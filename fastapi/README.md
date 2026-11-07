@@ -73,8 +73,8 @@ uvicorn main:app --reload --port 8080
 
 | 方法 | 路径 | 说明 |
 | --- | --- | --- |
-| GET | `/sso/authorize` | 302 跳 SSO 登录页（带 state） |
-| GET | `/sso/callback` | SSO 回调：校验 state、换 token、写会话、跳 `SSO_LOGIN_SUCCESS_URL` |
+| GET | `/sso/authorize` | 302 跳 SSO 登录页（带 state）；可带 `?redirect_uri=xxx`（登录后回跳地址，校验后存会话） |
+| GET | `/sso/callback` | SSO 回调：校验 state、换 token、写会话，再 302 到会话里的 `redirect_uri`（无参数才回退 `SSO_LOGIN_SUCCESS_URL`） |
 | GET | `/api/auth/me` | 当前登录用户（会话 / Bearer / Basic） |
 | POST | `/api/auth/logout` | 撤销 refresh_token + 销毁会话 |
 | GET | `/api/bff/me` | BFF 聚合登录态（uid / role / isAdmin） |
@@ -92,8 +92,8 @@ uvicorn main:app --reload --port 8080
 3. 把 SSO 用户的 `id` 写入本地 `users.uid` 并赋角色（`SSO_ADMIN_UID=1` 默认管理员）
 
 ```
-前端 → /sso/authorize → 302 SSO → 登录/同意 → /sso/callback
-     → 换 access+refresh token → 写服务端会话 → 302 SSO_LOGIN_SUCCESS_URL
+前端 → /sso/authorize?redirect_uri=/xxx → 302 SSO → 登录/同意 → /sso/callback
+     → 换 access+refresh token → 写服务端会话 → 302 回 redirect_uri 指定页面（无参数才回退 SSO_LOGIN_SUCCESS_URL）
 ```
 
 - 方案B：**SSO 只认证，子应用用本地 `users.role` 授权**；token 取 `sub` 查本地表

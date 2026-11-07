@@ -27,6 +27,7 @@ func NewSsoHandler(cfg *config.Config, client *sso.Client, store *session.Store,
 }
 
 // Authorize 302 跳 SSO 登录页。
+// 可带 ?redirect_uri=<前端回跳地址>（站内路径或白名单内的绝对地址）：校验后存会话，回调成功后直接跳过去。
 func (h *SsoHandler) Authorize(c *gin.Context) {
 	state, err := sso.NewState()
 	if err != nil {
@@ -34,9 +35,13 @@ func (h *SsoHandler) Authorize(c *gin.Context) {
 		return
 	}
 
+	// 回跳地址与 state 同会话保存，回调成功时消费一次
+	target := sanitizeRedirectURI(c.Query("redirect_uri"), h.cfg.CORS.AllowedOrigins)
+
 	id, _ := h.ensureSession(c)
 	h.store.Update(id, func(s *session.Session) {
 		s.State = state
+		s.RedirectURI = target
 	})
 
 	c.Redirect(http.StatusFound, h.client.BuildAuthorizeURL(state))
@@ -88,6 +93,8 @@ func (h *SsoHandler) Callback(c *gin.Context) {
 	}
 
 	refreshToken, _ := token["refresh_token"].(string)
+	// 回跳地址在清空会话前取出（回调成功只消费一次）
+	redirectURI := sess.RedirectURI
 
 	// 身份 + token 全部留在服务端会话，前端只拿 Cookie
 	h.store.Update(id, func(s *session.Session) {
@@ -96,12 +103,18 @@ func (h *SsoHandler) Callback(c *gin.Context) {
 		s.AccessToken = accessToken
 		s.RefreshToken = refreshToken
 		s.State = ""
+		s.RedirectURI = ""
 	})
 
 	// 新用户默认注册为 USER
 	h.users.GetOrCreateDefaultUser(sub)
 
-	c.Redirect(http.StatusFound, h.cfg.SSO.LoginSuccessURL)
+	// 优先跳前端透传的回跳地址，否则用配置的兜底地址
+	landing := redirectURI
+	if landing == "" {
+		landing = h.cfg.SSO.LoginSuccessURL
+	}
+	c.Redirect(http.StatusFound, landing)
 }
 
 // ensureSession 读取或创建服务端会话，返回会话 ID 与会话对象。

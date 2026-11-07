@@ -10,15 +10,28 @@ use app\BaseController;
 use app\service\SsoClient;
 use app\service\UserService;
 use app\support\BusinessException;
+use app\support\RedirectUri;
 use think\facade\Session;
 
 class Sso extends BaseController
 {
-    /** 302 跳 SSO 登录页（带 state，存会话供回调校验） */
+    /**
+     * 302 跳 SSO 登录页（带 state，存会话供回调校验）。
+     * 可带 ?redirect_uri=/xxx（前端回跳地址）：校验后存会话，回调成功后直接跳过去。
+     */
     public function authorize()
     {
         $state = (new SsoClient())->newState();
         Session::set('sso_state', $state);
+
+        // 回跳地址与 state 同会话保存，回调成功时消费一次
+        $rawRedirect = $this->request->get('redirect_uri', '');
+        $target = is_string($rawRedirect) ? RedirectUri::sanitize($rawRedirect) : null;
+        if ($target !== null) {
+            Session::set('sso_redirect_uri', $target);
+        } else {
+            Session::delete('sso_redirect_uri');
+        }
 
         return redirect((new SsoClient())->buildAuthorizeUrl($state));
     }
@@ -59,6 +72,10 @@ class Sso extends BaseController
         // 新用户默认注册为 USER
         (new UserService())->getOrCreateDefaultUser($uid);
 
-        return redirect(config('sso.login_success_url'));
+        // 优先跳前端透传的回跳地址，否则用配置的兜底地址
+        $redirectUri = (string) Session::get('sso_redirect_uri');
+        Session::delete('sso_redirect_uri');
+
+        return redirect($redirectUri !== '' ? $redirectUri : config('sso.login_success_url'));
     }
 }

@@ -43,10 +43,7 @@ public class SecurityConfig {
     private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final RestAccessDeniedHandler accessDeniedHandler;
     private final LocalRoleGrantedAuthoritiesConverter localRoleConverter;
-
-    /** OAuth2 登录成功后的重定向地址（默认 API 调试 JSON；生产子应用指向前端首页，如 https://tools.antx.cc） */
-    @Value("${sso.login-success-url:/api/auth/me}")
-    private String loginSuccessUrl;
+    private final SsoLoginSuccessHandler ssoLoginSuccessHandler;
 
     /** 本地联调 httpBasic 开关；生产环境设为 false（见 application-prod.yml） */
     @Value("${app.security.basic-enabled:true}")
@@ -68,10 +65,11 @@ public class SecurityConfig {
                 // API 场景不跳表单登录页
                 .formLogin(form -> form.disable())
                 // OAuth2 Client：回调路径规范为 /sso/callback（与 authorize 入口同级，全后端统一）；
-                // 登录成功后重定向到 loginSuccessUrl（前端首页或 /api/auth/me）
+                // 登录成功后跳回前端：优先会话里的 redirect_uri（前端透传），否则用 sso.login-success-url
+                // （见 SsoLoginSuccessHandler：直接写 Location，避免被改写成后端 Host 的绝对地址）
                 .oauth2Login(oauth2 -> oauth2
                         .loginProcessingUrl("/sso/callback")
-                        .defaultSuccessUrl(loginSuccessUrl, true))
+                        .successHandler(ssoLoginSuccessHandler))
                 // 资源服务器：校验 SSO 签发的 JWT（Bearer token），认证失败走统一 401 JSON
                 .oauth2ResourceServer(rs -> rs
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))

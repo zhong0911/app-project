@@ -3,14 +3,24 @@
  * 路径全后端统一：GET /sso/authorize、GET /sso/callback
  */
 import { config } from '../config/index.js';
-import { buildAuthorizeUrl, exchangeCode, fetchUserInfo, newState } from '../utils/sso.js';
+import { buildAuthorizeUrl, exchangeCode, fetchUserInfo, newState, sanitizeRedirectUri } from '../utils/sso.js';
 import { BusinessError } from '../utils/business-error.js';
 import { userService } from '../services/user.service.js';
 
-/** 302 跳 SSO 登录页（带 state，存会话供回调校验） */
+/**
+ * 302 跳 SSO 登录页（带 state，存会话供回调校验）。
+ * 可带 ?redirect_uri=<前端回跳地址>（站内路径或白名单内的绝对地址）：校验后存会话，回调成功后直接跳过去。
+ */
 export function authorize(req, res) {
   const state = newState();
   req.session.ssoState = state;
+  // 回跳地址与 state 同会话保存，回调成功时消费一次
+  const target = sanitizeRedirectUri(req.query.redirect_uri);
+  if (target) {
+    req.session.ssoRedirectUri = target;
+  } else {
+    delete req.session.ssoRedirectUri;
+  }
   res.redirect(302, buildAuthorizeUrl(state));
 }
 
@@ -39,7 +49,10 @@ export async function callback(req, res, next) {
     // 新用户默认注册为 USER
     await userService.getOrCreateDefaultUser(String(userInfo.sub));
 
-    res.redirect(302, config.sso.loginSuccessUrl);
+    // 优先跳前端透传的回跳地址（已在 /sso/authorize 校验过），否则用配置的兜底地址
+    const redirectUri = req.session.ssoRedirectUri;
+    delete req.session.ssoRedirectUri;
+    res.redirect(302, redirectUri || config.sso.loginSuccessUrl);
   } catch (error) {
     next(error);
   }
