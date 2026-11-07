@@ -54,6 +54,10 @@ public class BffController {
             name = oauth2User.getName();
             Object sub = oauth2User.getAttributes().get("sub");
             uid = sub != null ? String.valueOf(sub) : null;
+            // 只申请 openid 时 SSO 可能不返回 preferred_username，name 缺失时退化为 sub
+            if (!StringUtils.hasText(name)) {
+                name = uid;
+            }
         }
         // 场景二：SSO Bearer Token（资源服务器）
         else if (authentication instanceof JwtAuthenticationToken jwtToken) {

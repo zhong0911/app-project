@@ -94,7 +94,9 @@ spring:
             # 子应用在 SSO 控制台注册的 client-id / client-secret（默认 passport.antx.cc，均先用占位值）
             client-id: ${SSO_CLIENT_ID:your-sso-client-id}
             client-secret: ${SSO_CLIENT_SECRET:your-sso-client-secret}
-            scope: openid,profile,email,roles,permissions
+            # 默认只申请 openid（够用：登录只消费 sub）；需要更多声明时用 SSO_SCOPE 覆盖，
+            # 例如 SSO_SCOPE=openid,profile,email,roles,permissions
+            scope: ${SSO_SCOPE:openid}
             authorization-grant-type: authorization_code
             # callback 回调地址（规范路径 /sso/callback，需在 SSO 控制台注册为 redirect_uri）
             redirect-uri: "{baseUrl}/sso/callback"
@@ -106,8 +108,9 @@ spring:
             token-uri: ${SSO_TOKEN_URI:https://passport.antx.cc/oauth2/token}
             user-info-uri: ${SSO_USERINFO_URI:https://passport.antx.cc/userinfo}
             jwk-set-uri: ${SSO_JWKS_URI:https://passport.antx.cc/oauth2/jwks}
-            # 用 preferred_username 作为登录用户 name；缺失时回退 sub
-            user-name-attribute: preferred_username
+            # 用 sub 作为登录用户 name：只申请 openid 时 SSO 不保证返回 preferred_username，
+            # 需显示昵称时另配 SSO_USER_NAME_ATTRIBUTE=preferred_username 并申请 profile
+            user-name-attribute: ${SSO_USER_NAME_ATTRIBUTE:sub}
       # 资源服务器：校验 SSO 签发的 JWT（Bearer token）
       resourceserver:
         jwt:

@@ -33,7 +33,9 @@ SSO 按申请的 scope 往 token 里写声明（`applyScopedClaims`）：
 | `roles` | `roles`（角色代码列表） |
 | `permissions` | `permissions` |
 
-> 子应用申请 `openid,profile,email,roles,permissions`。方案B 只用 sub，token 内 roles/permissions 未消费——可保留备用，也可精简 scope 减小 token 体积。
+> 子应用默认只申请 `openid`（登录只消费 token 里的 `sub`），token 体积最小；
+> 需要昵称/邮箱/角色等信息时用 `SSO_SCOPE` 覆盖，例如
+> `SSO_SCOPE=openid,profile,email,roles,permissions`，并把 `SSO_USER_NAME_ATTRIBUTE` 设为 `preferred_username`。
 
 ## 四、子应用接入清单（三件事）
 
