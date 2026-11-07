@@ -5,6 +5,7 @@ export default {
     logout: '退出登录',
     adminPanel: '管理后台',
     query: '查询',
+    refresh: '刷新',
     reset: '重置',
     add: '添加',
     edit: '编辑',
@@ -283,6 +284,7 @@ export default {
   },
   adminRecycle: {
     title: '回收站',
+    tabUsers: '用户',
     empty: '回收站是空的',
     searchUid: '按 SSO uid 搜索',
     hint: '回收站中的用户为软删除状态，可恢复到用户列表，或彻底删除（不可恢复）。',

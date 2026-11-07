@@ -21,6 +21,7 @@ import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { toggleTheme } from '@/utils/app'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
+import { APP_TITLE } from '@/config/app'
 
 const route = useRoute()
 const router = useRouter()
@@ -56,6 +57,14 @@ const drawerItems = computed(() => [
   { key: '/components', label: t('nav.components') },
 ])
 
+// 桌面导航的锚点项：统一走 scrollToSection，原生 href 跳转会把标题顶到 sticky 顶栏后面
+const anchorNav = [
+  { hash: '#intro', labelKey: 'nav.intro' },
+  { hash: '#stack', labelKey: 'nav.stack' },
+  { hash: '#usage', labelKey: 'nav.usage' },
+  { hash: '#structure', labelKey: 'nav.structure' },
+]
+
 // 抽屉内导航：锚点项先回首页再滚到区块；组件预览等路由项直接跳
 function handleDrawerMenu({ key }) {
   drawerOpen.value = false
@@ -64,8 +73,11 @@ function handleDrawerMenu({ key }) {
     if (route.path !== '/') {
       router.push('/')
     }
-    // 抽屉关闭动画期间 body 被锁滚动，这里的滚动会在解锁后继续动画到目标，无需等待
-    scrollToSection(hash)
+    // 抽屉关闭会锁 body 滚动，先解除再滚，否则平滑动画会被打断
+    nextTick(() => {
+      releaseDrawerScrollLock()
+      scrollToSection(hash)
+    })
     return
   }
   router.push(key)
@@ -73,18 +85,26 @@ function handleDrawerMenu({ key }) {
 
 /**
  * 滚动到区块：顶栏是 sticky（高 64px），scrollIntoView 会把标题顶到栏后面，
- * 所以按元素位置手算偏移。用即时滚动（smooth 动画会被抽屉的滚动锁还原打断）；
+ * 所以按元素位置手算偏移，命中即平滑滚动（与抽屉菜单同一套手感）。
  * Home 是懒加载组件，元素可能稍后才挂载，用 rAF 逐帧重试。
+ * 平滑动画依赖渲染帧，页面切到后台时不会推进，所以补一次即时滚动兜底。
  */
-function scrollToSection(hash, frames = 60) {
+function scrollToSection(hash, smooth = true, frames = 60) {
   const el = document.querySelector(hash)
   if (el) {
     const top = el.getBoundingClientRect().top + window.scrollY - 64
-    window.scrollTo({ top })
+    window.scrollTo({ top, behavior: smooth ? 'smooth' : 'auto' })
+    if (smooth) {
+      setTimeout(() => {
+        if (Math.abs(window.scrollY - top) > 2) {
+          window.scrollTo({ top })
+        }
+      }, 400)
+    }
     return
   }
   if (frames > 0) {
-    requestAnimationFrame(() => scrollToSection(hash, frames - 1))
+    requestAnimationFrame(() => scrollToSection(hash, smooth, frames - 1))
   }
 }
 
@@ -157,21 +177,24 @@ onMounted(async () => {
         >
           <AppIcon :size="36" />
           <span class="brand-text">
-            <strong>AntX Frontend</strong>
+            <strong>{{ APP_TITLE }}</strong>
             <small>{{ t('landing.brandSubtitle') }}</small>
           </span>
         </router-link>
 
+        <!-- 桌面导航：锚点走平滑滚动（与抽屉菜单同一套滚动逻辑，含 sticky 顶栏偏移） -->
         <nav class="site-nav">
-          <a href="#intro">{{ t('nav.intro') }}</a>
-          <a href="#stack">{{ t('nav.stack') }}</a>
-          <a href="#usage">{{ t('nav.usage') }}</a>
-          <a href="#structure">{{ t('nav.structure') }}</a>
+          <a
+            v-for="item in anchorNav"
+            :key="item.hash"
+            :href="item.hash"
+            @click.prevent="scrollToSection(item.hash)"
+          >{{ t(item.labelKey) }}</a>
           <router-link to="/components">{{ t('nav.components') }}</router-link>
         </nav>
 
         <div class="header-actions">
-          <!-- 语言切换 -->
+          <!-- 语言切换：与主题按钮同款的圆形图标按钮，不显示当前语言文字 -->
           <a-dropdown
             :trigger="['click']"
             :menu="{
@@ -181,10 +204,11 @@ onMounted(async () => {
             }"
             @menu-click="handleLocaleChange"
           >
-            <a-button type="text" class="icon-btn">
-              <GlobalOutlined />
-              <span class="lang-label">{{ currentLocaleLabel }}</span>
-            </a-button>
+            <a-tooltip :title="currentLocaleLabel">
+              <a-button type="text" shape="circle" class="icon-btn">
+                <GlobalOutlined />
+              </a-button>
+            </a-tooltip>
           </a-dropdown>
 
           <!-- 主题切换 -->
@@ -334,10 +358,6 @@ html.dark .site-header {
   cursor: pointer;
 }
 
-.lang-label {
-  font-size: 13px;
-}
-
 .user-name {
   max-width: 120px;
   overflow: hidden;
@@ -380,7 +400,6 @@ html.dark .site-footer {
   }
 
   .brand-text small,
-  .lang-label,
   .user-name {
     display: none;
   }

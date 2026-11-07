@@ -162,7 +162,7 @@ onMounted(async () => {
           <span v-if="currentMenuTitle" class="page-title">{{ currentMenuTitle }}</span>
         </div>
         <div class="header-right">
-          <!-- 语言切换：走全局 locale 配置（config/locale.js） -->
+          <!-- 语言切换：与主题按钮同款的圆形图标按钮，不显示当前语言文字 -->
           <a-dropdown
             :trigger="['click']"
             :menu="{
@@ -172,10 +172,11 @@ onMounted(async () => {
             }"
             @menu-click="handleLocaleChange"
           >
-            <a-button size="small" type="text" class="lang-btn">
-              <GlobalOutlined />
-              <span v-if="!isMobile" class="lang-text">{{ currentLocaleLabel }}</span>
-            </a-button>
+            <a-tooltip :title="currentLocaleLabel">
+              <a-button size="small" type="text" shape="circle" class="lang-btn">
+                <GlobalOutlined />
+              </a-button>
+            </a-tooltip>
           </a-dropdown>
           <a-tooltip :title="appStore.isDark ? t('common.toLight') : t('common.toDark')">
             <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">

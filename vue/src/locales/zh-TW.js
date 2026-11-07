@@ -5,6 +5,7 @@ export default {
     logout: '登出',
     adminPanel: '管理後台',
     query: '查詢',
+    refresh: '重新整理',
     reset: '重設',
     add: '新增',
     edit: '編輯',
@@ -282,6 +283,7 @@ export default {
     deleteSuccess: '已移入回收站',
   },
   adminRecycle: {
+    tabUsers: '使用者',
     empty: '回收站是空的',
     title: '回收站',
     searchUid: '按 SSO uid 搜尋',

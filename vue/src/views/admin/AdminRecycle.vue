@@ -1,5 +1,6 @@
 <script setup>
-// 回收站：展示软删除用户，支持恢复与彻底删除
+// 回收站：按资源类型分 tab 展示软删除数据，当前只实现「用户」回收站
+// （角色 / 部门等其他类型的 tab 预留，等有对应数据再补 tab 项，避免空壳）
 // 列表用 a-listy（antdv-next 的高性能虚拟列表）：每行单行布局；
 // 加载中显示骨架屏，空数据显示 a-empty，分页靠右
 import { onMounted, reactive, ref } from 'vue'
@@ -9,6 +10,9 @@ import { message, modal } from '@/utils/app'
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
 
 const { t } = useI18n()
+
+/** 当前 tab：默认用户回收站；后续新增类型时在此切换对应的数据源 */
+const activeTab = ref('users')
 
 const loading = ref(false)
 const records = ref([])
@@ -109,55 +113,60 @@ onMounted(load)
       </a-space>
     </template>
 
-    <a-alert type="info" show-icon :message="t('adminRecycle.hint')" class="recycle-hint" />
+    <!-- 按类型分 tab：当前只有「用户」回收站；其他类型（角色/部门等）预留，等有数据再补 tab 项 -->
+    <a-tabs v-model:active-key="activeTab" class="recycle-tabs">
+      <a-tab-pane key="users" :tab="t('adminRecycle.tabUsers')">
+        <a-alert type="info" show-icon :message="t('adminRecycle.hint')" class="recycle-hint" />
 
-    <!-- 加载中：首屏骨架屏 -->
-    <a-skeleton v-if="showSkeleton" active :title="false" :paragraph="{ rows: 8 }" />
+        <!-- 加载中：首屏骨架屏 -->
+        <a-skeleton v-if="showSkeleton" active :title="false" :paragraph="{ rows: 8 }" />
 
-    <!-- 空数据 -->
-    <div v-else-if="!records.length" class="list-empty">
-      <a-empty :description="t('adminRecycle.empty')" />
-    </div>
+        <!-- 空数据 -->
+        <div v-else-if="!records.length" class="list-empty">
+          <a-empty :description="t('adminRecycle.empty')" />
+        </div>
 
-    <!-- 列表：a-listy 虚拟列表（每行单行布局） -->
-    <a-spin v-else :spinning="loading" :tip="t('common.loading')">
-      <a-listy
-        :items="records"
-        :row-key="rowKey"
-        :height="listHeight"
-        virtual
-        class="recycle-listy"
-      >
-        <template #itemRender="record">
-          <div class="recycle-row">
-            <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
-            <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">{{ record.role }}</a-tag>
-            <span class="meta-text">#{{ record.id }}</span>
-            <span class="meta-text time-text">{{ record.updateTime }}</span>
-            <span class="row-space"></span>
-            <a-button type="link" size="small" @click="handleRestore(record)">
-              {{ t('adminRecycle.restore') }}
-            </a-button>
-            <a-button type="link" size="small" danger @click="handlePurge(record)">
-              {{ t('adminRecycle.purge') }}
-            </a-button>
-          </div>
-        </template>
-      </a-listy>
-    </a-spin>
+        <!-- 列表：a-listy 虚拟列表（每行单行布局） -->
+        <a-spin v-else :spinning="loading" :tip="t('common.loading')">
+          <a-listy
+            :items="records"
+            :row-key="rowKey"
+            :height="listHeight"
+            virtual
+            class="recycle-listy"
+          >
+            <template #itemRender="record">
+              <div class="recycle-row">
+                <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
+                <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">{{ record.role }}</a-tag>
+                <span class="meta-text">#{{ record.id }}</span>
+                <span class="meta-text time-text">{{ record.updateTime }}</span>
+                <span class="row-space"></span>
+                <a-button type="link" size="small" @click="handleRestore(record)">
+                  {{ t('adminRecycle.restore') }}
+                </a-button>
+                <a-button type="link" size="small" danger @click="handlePurge(record)">
+                  {{ t('adminRecycle.purge') }}
+                </a-button>
+              </div>
+            </template>
+          </a-listy>
+        </a-spin>
 
-    <!-- 分页靠右 -->
-    <div class="pager">
-      <a-pagination
-        :current="pageNum"
-        :page-size="pageSize"
-        :total="total"
-        show-size-changer
-        :show-total="(count) => t('common.total', { total: count })"
-        @change="handlePageChange"
-        @show-size-change="handlePageChange"
-      />
-    </div>
+        <!-- 分页靠右 -->
+        <div class="pager">
+          <a-pagination
+            :current="pageNum"
+            :page-size="pageSize"
+            :total="total"
+            show-size-changer
+            :show-total="(count) => t('common.total', { total: count })"
+            @change="handlePageChange"
+            @show-size-change="handlePageChange"
+          />
+        </div>
+      </a-tab-pane>
+    </a-tabs>
   </a-card>
 </template>
 
@@ -167,6 +176,11 @@ onMounted(load)
 }
 
 .recycle-hint {
+  margin-bottom: 16px;
+}
+
+/* 分类型 tab：去掉顶部多余间距，tab 内容紧贴标题栏下方 */
+.recycle-tabs :deep(.ant-tabs-nav) {
   margin-bottom: 16px;
 }
 

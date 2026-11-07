@@ -66,13 +66,6 @@ const handleSearch = () => {
   load()
 }
 
-const handleReset = () => {
-  filters.uid = ''
-  filters.status = undefined
-  pageNum.value = 1
-  load()
-}
-
 /** 分页变化（页码 / 每页条数） */
 const handlePageChange = (page, size) => {
   pageNum.value = page
@@ -158,9 +151,8 @@ onMounted(load)
         />
         <a-button type="primary" @click="handleSearch">
           <ReloadOutlined />
-          {{ t('common.query') }}
+          {{ t('common.refresh') }}
         </a-button>
-        <a-button @click="handleReset">{{ t('common.reset') }}</a-button>
         <a-button type="primary" @click="openAdd">
           <PlusOutlined />
           {{ t('adminUsers.addUser') }}

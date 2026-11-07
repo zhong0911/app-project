@@ -5,6 +5,7 @@ export default {
     logout: 'Sign out',
     adminPanel: 'Admin',
     query: 'Search',
+    refresh: 'Refresh',
     reset: 'Reset',
     add: 'Add',
     edit: 'Edit',
@@ -283,6 +284,7 @@ export default {
   },
   adminRecycle: {
     title: 'Recycle bin',
+    tabUsers: 'Users',
     empty: 'Recycle bin is empty',
     searchUid: 'Search by SSO uid',
     hint: 'Users here are soft-deleted. You can restore them to the user list or delete them permanently.',
