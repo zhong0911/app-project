@@ -56,7 +56,7 @@ SSO 按申请的 scope 往 token 里写声明（`applyScopedClaims`）：
 前端 {app}.antx.cc → /sso/authorize?redirect_uri=https://{app}.antx.cc/xxx → 后端 → 302 SSO
 → sso.antx.cc 登录/同意 → 回调 {app}.antx.cc/sso/callback
 → 后端换 access+refresh → 存 Redis session → 下 SESSION Cookie
-→ 302 回会话里的 redirect_uri（无参数才回退 SSO_LOGIN_SUCCESS_URL，默认 /api/auth/me）
+→ 302 回会话里的 redirect_uri（无参数才回退 SSO_LOGIN_SUCCESS_URL，默认 / 即站点首页）
 → 前端回目标页 → /api/bff/me 拿 uid/role/name
 ```
 

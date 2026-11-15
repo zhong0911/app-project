@@ -23,8 +23,8 @@ import java.util.List;
  * <p>落地顺序：</p>
  * <ol>
  *   <li>会话里的 {@code sso_redirect_uri}（前端 /sso/authorize?redirect_uri=xxx 透传，回调时消费一次）；</li>
- *   <li>没有或校验不通过 → {@code sso.login-success-url}（默认 /api/auth/me，便于接口联调；
- *       生产可配成前端首页）。</li>
+ *   <li>没有或校验不通过 → {@code sso.login-success-url}（默认 / 即站点首页；
+ *       也可配成前端首页等绝对地址）。</li>
  * </ol>
  *
  * <p><b>为什么不用 defaultSuccessUrl</b>：Spring Security 的默认重定向策略会把相对路径改写成
@@ -49,7 +49,7 @@ public class SsoLoginSuccessHandler implements AuthenticationSuccessHandler {
     private final UserService userService;
 
     public SsoLoginSuccessHandler(
-            @Value("${sso.login-success-url:/api/auth/me}") String loginSuccessUrl,
+            @Value("${sso.login-success-url:/}") String loginSuccessUrl,
             @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}") List<String> allowedOrigins,
             UserService userService) {
         this.loginSuccessUrl = loginSuccessUrl;

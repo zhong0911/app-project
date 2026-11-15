@@ -111,7 +111,7 @@ func Load() *Config {
 			UserinfoURI:      env("SSO_USERINFO_URI", "https://passport.antx.cc/userinfo"),
 			JWKSURI:          env("SSO_JWKS_URI", "https://passport.antx.cc/oauth2/jwks"),
 			RevokeURI:        env("SSO_REVOKE_URI", "https://passport.antx.cc/oauth2/revoke"),
-			LoginSuccessURL:  env("SSO_LOGIN_SUCCESS_URL", "/api/auth/me"),
+			LoginSuccessURL:  env("SSO_LOGIN_SUCCESS_URL", "/"),
 			LogoutURI:        env("SSO_LOGOUT_URI", ""),
 			AdminUID:         env("SSO_ADMIN_UID", "1"),
 		},

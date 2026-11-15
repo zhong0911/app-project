@@ -3,9 +3,11 @@ import { create } from 'zustand'
 import { getBffMeApi, logoutApi } from '@/api/user'
 import {
   broadcastAuth,
+  buildAuthorizeUrl,
+  clearRedirectUri,
+  normalizeRedirectUri,
   onAuthBroadcast,
   readRedirectUri,
-  clearRedirectUri,
   saveRedirectUri,
 } from '@/utils/auth'
 
@@ -49,9 +51,9 @@ export const useUserStore = create((set, get) => ({
    *      作为兜底：授权链路没带回跳地址时由登录页 / 布局消费一次。
    */
   loginWithSso: (redirectUri = '') => {
-    const target = redirectUri || '/'
+    const target = normalizeRedirectUri(redirectUri)
     saveRedirectUri(target)
-    window.location.href = `/sso/authorize?redirect_uri=${encodeURIComponent(target)}`
+    window.location.href = buildAuthorizeUrl(target)
   },
 
   /** 拉取 SSO 登录态（BFF 聚合接口；未登录返回 401 时静默忽略） */

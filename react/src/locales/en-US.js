@@ -294,7 +294,6 @@ export default {
     title: 'Recycle bin',
     tabUsers: 'Users',
     empty: 'Recycle bin is empty',
-    hint: 'Users here are soft-deleted. You can restore them to the user list or delete them permanently.',
     columns: {
       id: 'ID',
       uid: 'User identifier',

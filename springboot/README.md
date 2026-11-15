@@ -192,7 +192,7 @@ SSO_CLIENT_SECRET=xxxx                   # SSO 注册的 client-secret
 | 场景 | 地址 | 说明 |
 |---|---|---|
 | **跳转 SSO 登录页** | 浏览器访问 `http://localhost:8080/sso/authorize?redirect_uri=<登录后回跳地址>` | 302 到 SSO `/oauth2/authorize`，带 client_id/scope/redirect_uri/state；`redirect_uri` 校验后存会话（见 `controller/OAuth2LoginController.java`） |
-| **SSO 授权回调** | `http://localhost:8080/sso/callback` | SSO 授权后重定向回来，Spring 用 client-secret 换 token、建会话，再 302 到会话里的 `redirect_uri`（无参数才回退 `SSO_LOGIN_SUCCESS_URL`，默认 `/api/auth/me`，见 `config/security/SsoLoginSuccessHandler.java`） |
+| **SSO 授权回调** | `http://localhost:8080/sso/callback` | SSO 授权后重定向回来，Spring 用 client-secret 换 token、建会话，再 302 到会话里的 `redirect_uri`（无参数才回退 `SSO_LOGIN_SUCCESS_URL`，默认 `/` 即站点首页，见 `config/security/SsoLoginSuccessHandler.java`） |
 | **获取当前登录用户** | `GET /api/auth/me` | 返回 `type=sso-login` + SSO 用户资料 |
 
 > 服务端 → 前端跳转：前端浏览器直接访问 `http://localhost:8080/sso/authorize` 即可。

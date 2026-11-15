@@ -59,7 +59,7 @@ export const config = {
     userinfoUri: env.SSO_USERINFO_URI || 'https://passport.antx.cc/userinfo',
     jwksUri: env.SSO_JWKS_URI || 'https://passport.antx.cc/oauth2/jwks',
     revokeUri: env.SSO_REVOKE_URI || 'https://passport.antx.cc/oauth2/revoke',
-    loginSuccessUrl: env.SSO_LOGIN_SUCCESS_URL || '/api/auth/me',
+    loginSuccessUrl: env.SSO_LOGIN_SUCCESS_URL || '/',
     logoutUri: env.SSO_LOGOUT_URI || '',
     adminUid: env.SSO_ADMIN_UID || '1',
   },

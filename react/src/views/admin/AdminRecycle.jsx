@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, Empty, Table, Tabs, Tag, Tooltip } from 'antd'
+import { Button, Card, Empty, Table, Tabs, Tag, Tooltip } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
@@ -177,18 +177,15 @@ export default function AdminRecycle() {
             key: 'users',
             label: t('adminRecycle.tabUsers'),
             children: (
-              <>
-                <Alert type="info" showIcon message={t('adminRecycle.hint')} className="recycle-hint-block" />
-                <Table
-                  columns={columns}
-                  dataSource={records}
-                  loading={loading}
-                  pagination={pagination}
-                  rowKey="id"
-                  onChange={handleTableChange}
-                  locale={{ emptyText: <Empty description={t('adminRecycle.empty')} /> }}
-                />
-              </>
+              <Table
+                columns={columns}
+                dataSource={records}
+                loading={loading}
+                pagination={pagination}
+                rowKey="id"
+                onChange={handleTableChange}
+                locale={{ emptyText: <Empty description={t('adminRecycle.empty')} /> }}
+              />
             ),
           },
         ]}

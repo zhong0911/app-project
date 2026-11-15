@@ -53,7 +53,7 @@ export const configuration = () => ({
     userinfoUri: process.env.SSO_USERINFO_URI ?? 'https://passport.antx.cc/userinfo',
     jwksUri: process.env.SSO_JWKS_URI ?? 'https://passport.antx.cc/oauth2/jwks',
     revokeUri: process.env.SSO_REVOKE_URI ?? 'https://passport.antx.cc/oauth2/revoke',
-    loginSuccessUrl: process.env.SSO_LOGIN_SUCCESS_URL ?? '/api/auth/me',
+    loginSuccessUrl: process.env.SSO_LOGIN_SUCCESS_URL ?? '/',
     logoutUri: process.env.SSO_LOGOUT_URI ?? '',
     adminUid: process.env.SSO_ADMIN_UID ?? '1',
   },

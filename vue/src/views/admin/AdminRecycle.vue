@@ -112,8 +112,6 @@ onMounted(load)
     <!-- 按类型分 tab：当前只有「用户」回收站；其他类型（角色/部门等）预留，等有数据再补 tab 项 -->
     <a-tabs v-model:active-key="activeTab" class="recycle-tabs">
       <a-tab-pane key="users" :tab="t('adminRecycle.tabUsers')">
-        <a-alert type="info" show-icon :message="t('adminRecycle.hint')" class="recycle-hint" />
-
         <a-table
           :columns="columns"
           :data-source="records"
@@ -165,10 +163,6 @@ onMounted(load)
 <style scoped>
 .admin-card {
   border-radius: 12px;
-}
-
-.recycle-hint {
-  margin-bottom: 16px;
 }
 
 /* 分类型 tab：去掉顶部多余间距，tab 内容紧贴标题栏下方 */

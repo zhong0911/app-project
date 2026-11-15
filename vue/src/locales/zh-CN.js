@@ -295,7 +295,6 @@ export default {
     title: '回收站',
     tabUsers: '用户',
     empty: '回收站是空的',
-    hint: '回收站中的用户为软删除状态，可恢复到用户列表，或彻底删除（不可恢复）。',
     columns: {
       id: 'ID',
       uid: '用户唯一标识',

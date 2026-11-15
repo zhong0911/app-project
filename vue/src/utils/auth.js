@@ -83,6 +83,31 @@ export const clearRedirectUri = () => {
 }
 
 /**
+ * 规整回跳地址：只放行「站内相对路径」与 http(s) 绝对地址，
+ * 空值、`//evil.com`、`/\evil.com`、`javascript:` 等一律退回首页。
+ * 相对路径交给后端直接放行，浏览器再按前端当前源解析，前后端同域与代理场景都安全。
+ */
+export const normalizeRedirectUri = (uri) => {
+  const raw = String(uri || '').trim()
+  if (!raw || raw.startsWith('//') || raw.startsWith('/\\')) {
+    return '/'
+  }
+  if (raw.startsWith('/') || /^https?:\/\//i.test(raw)) {
+    return raw
+  }
+  return '/'
+}
+
+/**
+ * 构造后端 SSO 授权入口：用 URLSearchParams 统一编码，
+ * 不再手写字符串拼接，含 query / hash / 中文的地址不会被二次编码或截断。
+ */
+export const buildAuthorizeUrl = (redirectUri) => {
+  const query = new URLSearchParams({ redirect_uri: normalizeRedirectUri(redirectUri) })
+  return `/sso/authorize?${query.toString()}`
+}
+
+/**
  * 广播登录态变化（'login' / 'logout'）
  * 利用 localStorage 写入触发其他标签页的 storage 事件；带时间戳避免同值写入不触发。
  */
