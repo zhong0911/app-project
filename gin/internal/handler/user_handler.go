@@ -95,7 +95,7 @@ func (h *UserHandler) Page(c *gin.Context) {
 func parseID(c *gin.Context) (uint64, bool) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
-		c.JSON(http.StatusOK, response.Error(errno.CodeBadRequest, "用户 ID 不合法"))
+		c.JSON(errno.HTTPStatus(errno.CodeBadRequest), response.Error(errno.CodeBadRequest, "用户 ID 不合法"))
 		return 0, false
 	}
 	return id, true

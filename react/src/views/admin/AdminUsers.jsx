@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Alert, Badge, Button, Empty, Form, Input, Modal, Select, Space, Table, Tag } from 'antd'
 import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
@@ -11,7 +11,7 @@ import {
   updateAdminUserApi,
   updateAdminUserStatusApi,
 } from '@/api/admin'
-import { useUserStore } from '@/stores/user'
+import { useUserStore, useIsAdmin } from '@/stores/user'
 import ColumnPicker from '@/components/ColumnPicker'
 import { message, modal } from '@/utils/app'
 import { usePageTitle } from '@/utils/useTitle'
@@ -31,6 +31,7 @@ export default function AdminUsers() {
   usePageTitle(t('nav.adminUsers'))
 
   const userInfo = useUserStore((s) => s.userInfo)
+  const isAdmin = useIsAdmin()
 
   // 列表查询条件（单一对象，变更即触发请求）
   const [query, setQuery] = useState({
@@ -76,11 +77,22 @@ export default function AdminUsers() {
   /** 当前登录管理员自身：禁止禁用/删除自己（uid 一律按字符串比较，避免 int/string 误判） */
   const isSelf = (record) => String(record.uid ?? '') === String(userInfo?.uid ?? '')
 
+  /**
+   * 行内展示的角色：配置的管理员（SSO_ADMIN_UID）若库里历史角色仍是 USER，
+   * 列表统一按 ADMIN 展示，与后端 VO 的「读时兜底」保持同一口径
+   */
+  const roleOf = (record) => (isSelf(record) && isAdmin ? 'ADMIN' : record.role)
+
   /* ---------------- 列表加载 ---------------- */
+  /** silent：操作后的静默刷新，不点亮刷新按钮、不给表格加载态（此时行内按钮/弹窗自己已有 loading） */
+  const silentRef = useRef(false)
+
   useEffect(() => {
     let cancelled = false
+    const silent = silentRef.current
+    silentRef.current = false
     const run = async () => {
-      setLoading(true)
+      if (!silent) setLoading(true)
       try {
         const { data } = await getAdminUsersApi({
           pageNum: query.pageNum,
@@ -98,7 +110,7 @@ export default function AdminUsers() {
         setRecords([])
         setTotal(0)
       } finally {
-        if (!cancelled) setLoading(false)
+        if (!cancelled && !silent) setLoading(false)
       }
     }
     run()
@@ -114,12 +126,17 @@ export default function AdminUsers() {
       .catch(() => setRoles([]))
   }, [])
 
-  const refresh = () => setQuery((q) => ({ ...q, _t: Date.now() }))
+  const refresh = ({ silent = false } = {}) => {
+    silentRef.current = silent
+    setQuery((q) => ({ ...q, _t: Date.now() }))
+  }
 
-  const reloadAfterRemove = () =>
+  const reloadAfterRemove = ({ silent = false } = {}) => {
+    silentRef.current = silent
     setQuery((q) =>
       records.length === 1 && q.pageNum > 1 ? { ...q, pageNum: q.pageNum - 1 } : { ...q, _t: Date.now() },
     )
+  }
 
   const handleSearch = () => setQuery((q) => ({ ...q, pageNum: 1, uid: uidInput }))
 
@@ -152,7 +169,7 @@ export default function AdminUsers() {
 
   const openEdit = (record) => {
     setEditing(record)
-    setEditRole(record.role)
+    setEditRole(roleOf(record))
   }
 
   const handleEdit = async () => {
@@ -165,7 +182,7 @@ export default function AdminUsers() {
       await updateAdminUserApi(editing.id, { role: editRole })
       message.success(t('adminUsers.editSuccess'))
       setEditing(null)
-      refresh()
+      refresh({ silent: true })
     } finally {
       setSubmitting(false)
     }
@@ -180,10 +197,11 @@ export default function AdminUsers() {
     try {
       await updateAdminUserStatusApi(record.id, enabled ? 1 : 0)
       message.success(t(enabled ? 'adminUsers.enableSuccess' : 'adminUsers.disableSuccess'))
-      refresh()
+      // 行内按钮已有 loading，这里静默刷新，不再同时点亮刷新按钮和表格加载态
+      refresh({ silent: true })
     } catch {
       // 失败时重新拉取，保证状态与后端一致
-      refresh()
+      refresh({ silent: true })
     } finally {
       setActingId(null)
     }
@@ -198,7 +216,7 @@ export default function AdminUsers() {
       onOk: async () => {
         await deleteAdminUserApi(record.id)
         message.success(t('adminUsers.deleteSuccess'))
-        reloadAfterRemove()
+        reloadAfterRemove({ silent: true })
       },
     })
   }
@@ -223,9 +241,10 @@ export default function AdminUsers() {
       dataIndex: 'role',
       key: 'role',
       width: 140,
-      render: (value) => (
-        <Tag color={value === 'ADMIN' ? 'gold' : 'default'} className="row-tag">
-          {roleName(value)}
+      // 默认态标签（无边框、无自定义色），弱化视觉噪音
+      render: (value, record) => (
+        <Tag bordered={false} className="row-tag">
+          {roleName(roleOf(record))}
         </Tag>
       ),
     },
@@ -299,6 +318,7 @@ export default function AdminUsers() {
             value={query.status}
             placeholder={t('adminUsers.statusPlaceholder')}
             allowClear
+            className="filter-select"
             options={[
               { value: 1, label: t('common.enabled') },
               { value: 0, label: t('common.disabled') },
@@ -309,6 +329,7 @@ export default function AdminUsers() {
             value={query.role}
             placeholder={t('common.role')}
             allowClear
+            className="filter-select"
             options={roleOptions}
             onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, role: value }))}
           />

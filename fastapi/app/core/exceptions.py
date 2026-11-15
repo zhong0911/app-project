@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.common.result_code import RESULT_MESSAGE, ResultCode
+from app.common.result_code import RESULT_MESSAGE, ResultCode, http_status
 from app.schemas.common import fail
 
 
@@ -19,8 +19,8 @@ class BusinessException(Exception):
 
 
 def _json(code: int, message: str) -> JSONResponse:
-    # 统一响应体固定五字段，HTTP 状态码与业务码分开（与 Spring 模板一致：HTTP 200 + code）
-    return JSONResponse(status_code=200, content=fail(code, message))
+    # 统一响应体固定五字段；HTTP 状态码与业务码对应（不再恒 200）
+    return JSONResponse(status_code=http_status(code), content=fail(code, message))
 
 
 def register_exception_handlers(app: FastAPI) -> None:

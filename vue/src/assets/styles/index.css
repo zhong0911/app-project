@@ -75,29 +75,65 @@ html::before {
   width: 100%;
 }
 
+/* 列表页工具栏：PC 端一行横排（搜索框自适应、下拉定宽、操作靠右），窄屏自动折两列 */
 .user-toolbar {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   margin-bottom: 16px;
 }
 
 .user-toolbar .toolbar-row {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-/* 搜索框：整行宽度，搜索按钮由 input-search 内嵌右侧，与输入框连体 */
+/* 搜索框：吸走剩余宽度但设上限，避免大屏下拉得过长；搜索按钮由 input-search 内嵌，与输入框连体 */
 .user-toolbar .search-input {
-  grid-column: 1 / -1;
-  min-width: 0;
+  flex: 1 1 240px;
+  min-width: 200px;
+  max-width: 360px;
 }
 
+/* 状态 / 角色下拉：定宽，与搜索框同一行并排 */
+.user-toolbar .filter-select {
+  flex: 0 0 128px;
+  width: 128px;
+}
+
+/* 操作行（新建 + 刷新 / 列设置）：靠右对齐 */
 .user-toolbar .action-row {
-  justify-content: space-between;
-  margin-top: 4px;
+  margin-left: auto;
+  margin-top: 0;
+  justify-content: flex-end;
+}
+
+/* 窄屏：搜索整行、两个下拉各半行、操作行两端对齐（控件本身不放大） */
+@media (max-width: 767px) {
+  .user-toolbar {
+    gap: 8px 6px;
+  }
+
+  .user-toolbar .search-input {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  .user-toolbar .filter-select {
+    flex: 1 1 0;
+    min-width: 0;
+    width: auto;
+  }
+
+  .user-toolbar .action-row {
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
 }
 
 /* 列设置弹层：竖排复选框 */

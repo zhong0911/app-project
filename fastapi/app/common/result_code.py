@@ -33,3 +33,27 @@ RESULT_MESSAGE: dict[ResultCode, str] = {
     ResultCode.DB_ERROR: "数据库操作失败",
     ResultCode.FILE_ERROR: "文件操作失败",
 }
+
+# 业务码 → HTTP 状态码（与各语言模板保持一致）：
+# BUSINESS_ERROR(1000) → 400、DATA_CONFLICT(1001) → 409、DB_ERROR / FILE_ERROR → 500
+_HTTP_STATUS = {
+    int(ResultCode.SUCCESS): 200,
+    int(ResultCode.BAD_REQUEST): 400,
+    int(ResultCode.UNAUTHORIZED): 401,
+    int(ResultCode.FORBIDDEN): 403,
+    int(ResultCode.NOT_FOUND): 404,
+    int(ResultCode.METHOD_NOT_ALLOWED): 405,
+    int(ResultCode.INTERNAL_ERROR): 500,
+    int(ResultCode.BUSINESS_ERROR): 400,
+    int(ResultCode.DATA_CONFLICT): 409,
+    int(ResultCode.DB_ERROR): 500,
+    int(ResultCode.FILE_ERROR): 500,
+}
+
+
+def http_status(code: int) -> int:
+    """业务码 → HTTP 状态码；未知码是合法状态码就沿用，否则按 500 处理。"""
+    status = _HTTP_STATUS.get(int(code))
+    if status is not None:
+        return status
+    return int(code) if 400 <= int(code) < 600 else 500

@@ -1,7 +1,8 @@
 <?php
 /**
  * 全局异常渲染（对标 Spring Boot 的 GlobalExceptionHandler）。
- * HTTP 状态恒 200，业务码放在响应体的 code。
+ * HTTP 状态码与响应体 code 对应（Result::error 内部按 ResultCode::status 映射）：
+ * 400/401/403/404/405/500 直接沿用，BUSINESS_ERROR(1000)→400、DATA_CONFLICT(1001)→409。
  */
 
 namespace app;

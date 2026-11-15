@@ -2,6 +2,7 @@
 /**
  * 应用装配（对标 Spring Boot 的启动类 + 自动配置）。
  * 注册路由、中间件别名、会话，并把异常统一渲染成五字段响应。
+ * HTTP 状态码与响应体 code 对应（Result::error 内部按 ResultCode::status 映射）。
  */
 
 use App\Http\Middleware\EnsureAdmin;

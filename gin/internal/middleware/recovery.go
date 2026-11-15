@@ -19,7 +19,7 @@ func Recovery(cfg *config.Config) gin.HandlerFunc {
 			if err := recover(); err != nil {
 				log.Printf("[panic] %v", err)
 				message := errno.Message[errno.CodeInternalError]
-				c.AbortWithStatusJSON(http.StatusOK, response.Error(errno.CodeInternalError, message))
+				c.AbortWithStatusJSON(errno.HTTPStatus(errno.CodeInternalError), response.Error(errno.CodeInternalError, message))
 			}
 		}()
 		c.Next()

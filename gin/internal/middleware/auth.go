@@ -113,7 +113,7 @@ func resolve(c *gin.Context, cfg *config.Config, ssoClient *sso.Client) *Princip
 func RequireLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if currentUID(c) == "" {
-			c.AbortWithStatusJSON(200, response.Error(errno.CodeUnauthorized, errno.Message[errno.CodeUnauthorized]))
+			c.AbortWithStatusJSON(errno.HTTPStatus(errno.CodeUnauthorized), response.Error(errno.CodeUnauthorized, errno.Message[errno.CodeUnauthorized]))
 			return
 		}
 		c.Next()
@@ -145,10 +145,10 @@ func RequireAdmin(users *service.UserService) gin.HandlerFunc {
 		if _, err := users.RequireAdmin(principal.UID); err != nil {
 			var bizErr *errno.BusinessError
 			if errors.As(err, &bizErr) {
-				c.AbortWithStatusJSON(200, response.Error(bizErr.Code, bizErr.Message))
+				c.AbortWithStatusJSON(errno.HTTPStatus(bizErr.Code), response.Error(bizErr.Code, bizErr.Message))
 				return
 			}
-			c.AbortWithStatusJSON(200, response.Error(errno.CodeInternalError, errno.Message[errno.CodeInternalError]))
+			c.AbortWithStatusJSON(errno.HTTPStatus(errno.CodeInternalError), response.Error(errno.CodeInternalError, errno.Message[errno.CodeInternalError]))
 			return
 		}
 		c.Next()

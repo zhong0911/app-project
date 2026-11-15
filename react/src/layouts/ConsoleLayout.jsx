@@ -132,12 +132,12 @@ export default function ConsoleLayout() {
   // 退出登录：进入 /logout 页，由该页请求后端单点退出并跳转
   const handleLogout = () => navigate('/logout')
 
-  // 登录后用户菜单：管理员多一个「管理后台」入口；账号中心（跳 SSO 账号中心）+ 退出登录
+  // 登录后用户菜单：账号中心 → 管理后台（仅管理员，且已在后台时不出现）→ 退出登录
   const userMenuItems = [
-    ...(isAdmin
+    { key: 'account', label: t('common.accountCenter'), icon: <UserOutlined /> },
+    ...(isAdmin && !isAdminArea
       ? [{ key: 'admin', label: t('common.adminPanel'), icon: <SettingOutlined /> }]
       : []),
-    { key: 'account', label: t('common.accountCenter'), icon: <UserOutlined /> },
     { key: 'logout', label: t('common.logout'), icon: <LogoutOutlined /> },
   ]
 

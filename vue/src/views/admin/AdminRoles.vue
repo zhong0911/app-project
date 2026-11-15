@@ -30,8 +30,8 @@ const visibleKeys = ref(['code', 'name', 'description', 'status', 'action'])
 const columns = computed(() => columnDefs.value.filter((col) => visibleKeys.value.includes(col.key)))
 
 /** 接口按启用状态维度返回全部角色（角色总量很小，不分页，页面不做关键字 / 状态筛选） */
-const load = async () => {
-  loading.value = true
+const load = async ({ silent = false } = {}) => {
+  if (!silent) loading.value = true
   try {
     const { data } = await getAdminRolesApi({ includeDisabled: true })
     allRecords.value = data || []
@@ -39,9 +39,12 @@ const load = async () => {
     // 错误提示由 axios 拦截器统一处理，这里只保证失败时不残留旧数据
     allRecords.value = []
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
   }
 }
+
+/** 旧后端可能返回不带 id 的角色项：缺 id 时禁用行内操作，避免请求 /admin/roles/undefined */
+const hasId = (record) => record?.id !== undefined && record?.id !== null && record?.id !== ''
 
 const records = computed(() => allRecords.value)
 
@@ -83,7 +86,7 @@ const handleAdd = async () => {
     })
     message.success(t('adminRoles.addSuccess'))
     addOpen.value = false
-    await load()
+    await load({ silent: true })
   } finally {
     submitting.value = false
   }
@@ -127,7 +130,7 @@ const handleEdit = async () => {
     })
     message.success(t('adminRoles.editSuccess'))
     editOpen.value = false
-    await load()
+    await load({ silent: true })
   } finally {
     submitting.value = false
   }
@@ -148,9 +151,9 @@ const handleStatus = async (record, checked) => {
       sort: record.sort,
     })
     message.success(t(checked ? 'adminRoles.enableSuccess' : 'adminRoles.disableSuccess'))
-    await load()
+    await load({ silent: true })
   } catch {
-    await load()
+    await load({ silent: true })
   } finally {
     actingId.value = null
   }
@@ -165,7 +168,7 @@ const handleDelete = (record) => {
     onOk: async () => {
       await deleteAdminRoleApi(record.id)
       message.success(t('adminRoles.deleteSuccess'))
-      await load()
+      await load({ silent: true })
     },
   })
 }
@@ -225,13 +228,14 @@ onMounted(load)
         </template>
         <template v-else-if="column.key === 'action'">
           <span class="cell-action">
-            <a-button type="link" size="small" @click="openEdit(record)">
+            <a-button type="link" size="small" :disabled="!hasId(record)" @click="openEdit(record)">
               {{ t('common.edit') }}
             </a-button>
             <a-button
               type="link"
               size="small"
               :loading="actingId === record.id"
+              :disabled="!hasId(record)"
               @click="handleStatus(record, record.status !== 1)"
             >
               {{ record.status === 1 ? t('common.disable') : t('common.enable') }}
@@ -240,7 +244,7 @@ onMounted(load)
               type="link"
               size="small"
               danger
-              :disabled="record.builtIn === 1"
+              :disabled="record.builtIn === 1 || !hasId(record)"
               @click="handleDelete(record)"
             >
               {{ t('common.delete') }}

@@ -1,10 +1,11 @@
 /**
  * 全局异常过滤器（对标 Spring Boot 的 GlobalExceptionHandler）。
  * 把业务异常 / 参数校验失败 / 未知异常统一转成五字段响应。
+ * HTTP 状态码与响应体 code 对应（不再恒 200）。
  */
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { BusinessException } from '../exceptions/business.exception';
-import { ResultCode, RESULT_MESSAGE } from '../result/result-code';
+import { httpStatusOf, ResultCode, RESULT_MESSAGE } from '../result/result-code';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -30,8 +31,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message = exception?.message ?? message;
     }
 
-    // 与 Spring 模板一致：HTTP 200 + 业务码，前端只看 code 字段
-    response.status(200).json({
+    // HTTP 状态码与业务码对应（1000→400、1001→409，其余按 4xx/5xx）
+    response.status(httpStatusOf(code)).json({
       code,
       success: false,
       message,

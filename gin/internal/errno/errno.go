@@ -33,6 +33,34 @@ var Message = map[int]string{
 	CodeFileError:      "文件操作失败",
 }
 
+// httpStatus 业务码 → HTTP 状态码（与各语言模板保持一致）。
+var httpStatus = map[int]int{
+	CodeSuccess:        200,
+	CodeBadRequest:     400,
+	CodeUnauthorized:   401,
+	CodeForbidden:      403,
+	CodeNotFound:       404,
+	CodeMethodNotAllow: 405,
+	CodeInternalError:  500,
+	CodeBusinessError:  400,
+	CodeDataConflict:   409,
+	CodeDBError:        500,
+	CodeFileError:      500,
+}
+
+// HTTPStatus 把业务码映射成真实 HTTP 状态码：
+// BUSINESS_ERROR(1000)→400、DATA_CONFLICT(1001)→409、DB_ERROR / FILE_ERROR→500；
+// 未知码本身是合法状态码就沿用，否则按 500 处理。
+func HTTPStatus(code int) int {
+	if status, ok := httpStatus[code]; ok {
+		return status
+	}
+	if code >= 400 && code < 600 {
+		return code
+	}
+	return 500
+}
+
 // BusinessError 业务异常：handler 里统一转成 Result。
 type BusinessError struct {
 	Code    int

@@ -106,17 +106,13 @@ function handleLogout() {
   router.push('/logout')
 }
 
-// 登录后用户菜单：账号中心（跳 SSO 账号中心）+ 退出登录
-// 登录后用户菜单：管理员多一个「管理后台」入口；账号中心（跳 SSO 账号中心）+ 退出登录
+// 登录后用户菜单：账号中心 → 管理后台（仅管理员，且已在后台时不出现）→ 退出登录
 const userMenuItems = computed(() => {
-  const items = []
-  if (userStore.isAdmin) {
+  const items = [{ key: 'account', label: t('common.accountCenter'), icon: UserOutlined }]
+  if (userStore.isAdmin && !isAdminArea.value) {
     items.push({ key: 'admin', label: t('common.adminPanel'), icon: SettingOutlined })
   }
-  items.push(
-    { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
-    { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
-  )
+  items.push({ key: 'logout', label: t('common.logout'), icon: LogoutOutlined })
   return items
 })
 
@@ -355,12 +351,18 @@ onMounted(async () => {
   font-size: 16px;
 }
 
-/* 用户菜单按钮：与语言 / 主题按钮同为 text 类型圆形图标按钮（不显示用户名） */
+/* 用户菜单按钮：与语言 / 主题按钮同为 text 类型圆形图标按钮（不显示用户名）；
+   显式写死 border-radius，避免主题/尺寸覆盖把圆角变成圆角矩形 */
 .user-btn {
   flex: none;
   width: 32px;
   height: 32px;
+  min-width: 32px;
   padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 登录态探测中的占位：与「登录」按钮同宽，避免探测完成后按钮出现时布局跳动 */

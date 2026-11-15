@@ -74,8 +74,18 @@ const pagination = computed(() => ({
 /** 当前登录管理员自身：禁止禁用/删除自己（uid 一律按字符串比较，避免 int/string 误判） */
 const isSelf = (record) => String(record.uid ?? '') === String(userStore.userInfo?.uid ?? '')
 
-const load = async () => {
-  loading.value = true
+/**
+ * 行内展示的角色：配置的管理员（SSO_ADMIN_UID）若库里历史角色仍是 USER，
+ * 列表统一按 ADMIN 展示，与后端 VO 的「读时兜底」保持同一口径
+ */
+const roleOf = (record) => (isSelf(record) && userStore.isAdmin ? 'ADMIN' : record.role)
+
+/**
+ * 列表加载
+ * silent=true：操作后的静默刷新（不点亮刷新按钮、不给表格加载态，此时行内按钮/弹窗自己已有 loading）
+ */
+const load = async ({ silent = false } = {}) => {
+  if (!silent) loading.value = true
   try {
     const { data } = await getAdminUsersApi({
       pageNum: pageNum.value,
@@ -91,7 +101,7 @@ const load = async () => {
     records.value = []
     total.value = 0
   } finally {
-    loading.value = false
+    if (!silent) loading.value = false
   }
 }
 
@@ -135,7 +145,7 @@ const handleAdd = async () => {
     addOpen.value = false
     pageNum.value = 1
     records.value = []
-    await load()
+    await load({ silent: true })
   } finally {
     submitting.value = false
   }
@@ -143,7 +153,7 @@ const handleAdd = async () => {
 
 const openEdit = (record) => {
   editing.value = record
-  editForm.role = record.role
+  editForm.role = roleOf(record)
   editOpen.value = true
 }
 
@@ -157,7 +167,7 @@ const handleEdit = async () => {
     await updateAdminUserApi(editing.value.id, { role: editForm.role })
     message.success(t('adminUsers.editSuccess'))
     editOpen.value = false
-    await load()
+    await load({ silent: true })
   } finally {
     submitting.value = false
   }
@@ -172,10 +182,11 @@ const handleStatus = async (record, checked) => {
   try {
     await updateAdminUserStatusApi(record.id, checked ? 1 : 0)
     message.success(t(checked ? 'adminUsers.enableSuccess' : 'adminUsers.disableSuccess'))
-    await load()
+    // 行内按钮已有 loading，这里静默刷新，不再同时点亮刷新按钮和表格加载态
+    await load({ silent: true })
   } catch {
     // 失败时重新拉取，保证状态与后端一致
-    await load()
+    await load({ silent: true })
   } finally {
     actingId.value = null
   }
@@ -191,7 +202,7 @@ const handleDelete = (record) => {
       await deleteAdminUserApi(record.id)
       message.success(t('adminUsers.deleteSuccess'))
       if (records.value.length === 1 && pageNum.value > 1) pageNum.value -= 1
-      await load()
+      await load({ silent: true })
     },
   })
 }
@@ -224,6 +235,7 @@ onMounted(async () => {
         v-model:value="filters.status"
         :placeholder="t('adminUsers.statusPlaceholder')"
         allow-clear
+        class="filter-select"
         :options="[
           { value: 1, label: t('common.enabled') },
           { value: 0, label: t('common.disabled') },
@@ -234,6 +246,7 @@ onMounted(async () => {
         v-model:value="filters.role"
         :placeholder="t('common.role')"
         allow-clear
+        class="filter-select"
         :options="roleOptions"
         @change="handleSearch"
       />
@@ -279,8 +292,9 @@ onMounted(async () => {
         </template>
 
         <template v-else-if="column.key === 'role'">
-          <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">
-            {{ roleName(record.role) }}
+          <!-- 默认态标签（无边框、无自定义色），弱化视觉噪音 -->
+          <a-tag :bordered="false" class="row-tag">
+            {{ roleName(roleOf(record)) }}
           </a-tag>
         </template>
 

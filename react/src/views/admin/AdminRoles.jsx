@@ -35,9 +35,12 @@ export default function AdminRoles() {
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({ code: '', name: '', description: '' })
 
-  /** 接口只按启用状态维度返回数据，关键字与状态在页面内过滤（角色总量很小，不分页） */
-  const load = async () => {
-    setLoading(true)
+  /**
+   * 接口只按启用状态维度返回数据，关键字与状态在页面内过滤（角色总量很小，不分页）
+   * silent=true：操作后的静默刷新，不点亮刷新按钮、不给表格加载态
+   */
+  const load = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true)
     try {
       const { data } = await getAdminRolesApi({ includeDisabled: true })
       setAllRecords(data || [])
@@ -45,9 +48,12 @@ export default function AdminRoles() {
       // 错误提示由 axios 拦截器统一处理，这里只保证失败时不残留旧数据
       setAllRecords([])
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
+
+  /** 旧后端可能返回不带 id 的角色项：缺 id 时禁用行内操作，避免请求 /admin/roles/undefined */
+  const hasId = (record) => record?.id !== undefined && record?.id !== null && record?.id !== ''
 
   useEffect(() => {
     load()
@@ -80,7 +86,7 @@ export default function AdminRoles() {
       await createAdminRoleApi({ code, name, description: addForm.description.trim() || undefined })
       message.success(t('adminRoles.addSuccess'))
       setAddOpen(false)
-      await load()
+      await load({ silent: true })
     } finally {
       setSubmitting(false)
     }
@@ -118,7 +124,7 @@ export default function AdminRoles() {
       })
       message.success(t('adminRoles.editSuccess'))
       setEditOpen(false)
-      await load()
+      await load({ silent: true })
     } finally {
       setSubmitting(false)
     }
@@ -139,9 +145,9 @@ export default function AdminRoles() {
         sort: record.sort,
       })
       message.success(t(checked ? 'adminRoles.enableSuccess' : 'adminRoles.disableSuccess'))
-      await load()
+      await load({ silent: true })
     } catch {
-      await load()
+      await load({ silent: true })
     } finally {
       setActingId(null)
     }
@@ -156,7 +162,7 @@ export default function AdminRoles() {
       onOk: async () => {
         await deleteAdminRoleApi(record.id)
         message.success(t('adminRoles.deleteSuccess'))
-        await load()
+        await load({ silent: true })
       },
     })
   }
@@ -205,18 +211,25 @@ export default function AdminRoles() {
       width: 190,
       render: (_, record) => (
         <span className="cell-action">
-          <Button type="link" size="small" onClick={() => openEdit(record)}>
+          <Button type="link" size="small" disabled={!hasId(record)} onClick={() => openEdit(record)}>
             {t('common.edit')}
           </Button>
           <Button
             type="link"
             size="small"
             loading={actingId === record.id}
+            disabled={!hasId(record)}
             onClick={() => handleStatus(record, record.status !== 1)}
           >
             {record.status === 1 ? t('common.disable') : t('common.enable')}
           </Button>
-          <Button type="link" size="small" danger disabled={record.builtIn === 1} onClick={() => handleDelete(record)}>
+          <Button
+            type="link"
+            size="small"
+            danger
+            disabled={record.builtIn === 1 || !hasId(record)}
+            onClick={() => handleDelete(record)}
+          >
             {t('common.delete')}
           </Button>
         </span>

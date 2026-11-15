@@ -24,13 +24,14 @@ class Result
 
     public static function error(int $code = ResultCode::BUSINESS_ERROR, ?string $message = null): JsonResponse
     {
+        // HTTP 状态码与业务码对应（不再恒 200）
         return response()->json([
             'code' => $code,
             'success' => false,
             'message' => $message ?? ResultCode::message($code),
             'data' => null,
             'timestamp' => now()->getTimestampMs(),
-        ]);
+        ], ResultCode::status($code));
     }
 
     /**
