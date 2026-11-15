@@ -218,7 +218,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <a-card variant="borderless" class="admin-card">
+  <div class="admin-page">
     <!-- 工具栏：搜索框整行 → 状态 / 角色并排 → 添加按钮 + 刷新 / 列设置 -->
     <div class="user-toolbar">
       <div class="toolbar-row search-row">
@@ -338,7 +338,7 @@ onMounted(async () => {
         </template>
       </template>
     </a-table>
-  </a-card>
+  </div>
 
   <a-modal
     v-model:open="addOpen"
@@ -379,8 +379,8 @@ onMounted(async () => {
 </template>
 
 <style scoped>
-.admin-card {
-  border-radius: 12px;
+.admin-page {
+  width: 100%;
 }
 
 /* 工具栏：两列栅格 —— 搜索整行、状态/角色并排、操作行两端对齐 */

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Card, Empty, Table, Tabs, Tag, Tooltip } from 'antd'
+import { Button, Empty, Table, Tabs, Tag, Tooltip } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
@@ -158,19 +158,16 @@ export default function AdminRecycle() {
   }
 
   return (
-    <Card
-      variant="borderless"
-      className="admin-card"
-      extra={
-        <Tooltip title={t('common.refresh')}>
-          <Button icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />
-        </Tooltip>
-      }
-    >
-      {/* 按类型分 tab：当前只有「用户」回收站 */}
+    <div className="admin-page">
+      {/* 按类型分 tab：当前只有「用户」回收站；刷新按钮挂在 tab 栏右侧 */}
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
+        tabBarExtraContent={
+          <Tooltip title={t('common.refresh')}>
+            <Button shape="circle" icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />
+          </Tooltip>
+        }
         items={[
           {
             key: 'users',
@@ -182,6 +179,7 @@ export default function AdminRecycle() {
                 loading={loading}
                 pagination={pagination}
                 rowKey="id"
+                scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
                 locale={{ emptyText: <Empty description={t('adminRecycle.empty')} /> }}
               />
@@ -189,6 +187,6 @@ export default function AdminRecycle() {
           },
         ]}
       />
-    </Card>
+    </div>
   )
 }

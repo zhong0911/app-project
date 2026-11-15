@@ -221,9 +221,13 @@
   width: 100%;
 }
 
-.image-card,
-.admin-card {
+.image-card {
   border-radius: 12px;
+}
+
+/* 后台页（用户管理 / 回收站 / 角色管理）不套外层卡片，内容直接铺在 layout content 上 */
+.admin-page {
+  width: 100%;
 }
 
 .hidden-input {

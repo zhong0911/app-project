@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Badge, Button, Card, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag, Tooltip } from 'antd'
+import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag, Tooltip } from 'antd'
 import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
 
 import {
@@ -291,7 +291,7 @@ export default function AdminUsers() {
 
   return (
     <>
-      <Card variant="borderless" className="admin-card">
+      <div className="admin-page">
         {/* 工具栏：搜索框整行 → 状态 / 角色并排 → 添加按钮 + 刷新 / 列设置 */}
         <div className="user-toolbar">
           <div className="toolbar-row">
@@ -365,7 +365,7 @@ export default function AdminUsers() {
           onChange={handleTableChange}
           locale={{ emptyText: <Empty description={t('adminUsers.empty')} /> }}
         />
-      </Card>
+      </div>
 
       {/* 新增用户：只填用户唯一标识 */}
       <Modal

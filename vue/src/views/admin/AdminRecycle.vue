@@ -99,17 +99,16 @@ onMounted(load)
 </script>
 
 <template>
-  <a-card variant="borderless" class="admin-card">
-    <template #extra>
-      <a-tooltip :title="t('common.refresh')">
-        <a-button :loading="loading" @click="handleRefresh">
-          <ReloadOutlined />
-        </a-button>
-      </a-tooltip>
-    </template>
-
+  <div class="admin-page">
     <!-- 按类型分 tab：当前只有「用户」回收站；其他类型（角色/部门等）预留，等有数据再补 tab 项 -->
     <a-tabs v-model:active-key="activeTab" class="recycle-tabs">
+      <template #rightExtra>
+        <a-tooltip :title="t('common.refresh')">
+          <a-button shape="circle" :loading="loading" @click="handleRefresh">
+            <ReloadOutlined />
+          </a-button>
+        </a-tooltip>
+      </template>
       <a-tab-pane key="users" :tab="t('adminRecycle.tabUsers')">
         <a-table
           :columns="columns"
@@ -156,12 +155,12 @@ onMounted(load)
         </a-table>
       </a-tab-pane>
     </a-tabs>
-  </a-card>
+  </div>
 </template>
 
 <style scoped>
-.admin-card {
-  border-radius: 12px;
+.admin-page {
+  width: 100%;
 }
 
 /* 分类型 tab：去掉顶部多余间距，tab 内容紧贴标题栏下方 */
