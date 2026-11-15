@@ -44,10 +44,10 @@ export default function RequireAdmin({ children }) {
   }, [])
 
   if (!checked || !userInfo) {
-    return <PageLoading height="100vh" />
+    return <PageLoading />
   }
   if (userInfo.isAdmin !== true) {
-    return <PageLoading height="100vh" />
+    return <PageLoading />
   }
   return children
 }

@@ -7,6 +7,8 @@ import 'antd/dist/reset.css'
 import '@/assets/styles/index.css'
 // 布局与页面结构样式
 import '@/assets/styles/components.css'
+// 落地页（首页 / LandingLayout）样式
+import '@/assets/styles/landing.css'
 
 import App from './App'
 import PageLoading from '@/components/PageLoading'
@@ -17,7 +19,7 @@ setupAppContext()
 
 createRoot(document.getElementById('root')).render(
   // 路由懒加载的顶层兜底：页面 chunk 加载中时居中显示 loading
-  <Suspense fallback={<PageLoading height="100vh" />}>
+  <Suspense fallback={<PageLoading />}>
     <App />
   </Suspense>,
 )

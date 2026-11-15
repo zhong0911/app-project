@@ -3,8 +3,11 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, Outlet } from 'react-router-dom'
 import { Button, Drawer, Dropdown, Grid, Layout } from 'antd'
 import {
+  AppstoreOutlined,
   DeleteOutlined,
   GlobalOutlined,
+  HomeOutlined,
+  InfoCircleOutlined,
   LogoutOutlined,
   MenuFoldOutlined,
   MenuOutlined,
@@ -93,7 +96,7 @@ export default function ConsoleLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 菜单数据：管理后台（/admin）显示后台 tabs；业务区只放图床
+  // 菜单数据：管理后台（/admin）显示后台 tabs；业务区放首页 / 示例页 / 图床
   const isAdminArea = location.pathname.startsWith('/admin')
   const menuItems = isAdminArea
     ? [
@@ -101,7 +104,10 @@ export default function ConsoleLayout() {
         { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: <DeleteOutlined /> },
       ]
     : [
-        // 菜单只放业务页面；首页入口由侧边栏 logo（图标 + 标题）承担，点击即回到图床
+        // 首页走落地页布局（LandingLayout），这里作为回首页的入口
+        { key: '/', label: t('nav.home'), icon: <HomeOutlined /> },
+        { key: '/about', label: t('nav.about'), icon: <InfoCircleOutlined /> },
+        { key: '/components', label: t('nav.components'), icon: <AppstoreOutlined /> },
         { key: '/image-bed', label: t('nav.imageBed'), icon: <PictureOutlined /> },
         // 管理员身份由后端下发，非管理员看不到后台入口
         ...(isAdmin

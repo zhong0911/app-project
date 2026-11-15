@@ -9,6 +9,33 @@
   flex: none;
 }
 
+/* ---------- 页面容器（关于 / 组件预览等示例页） ---------- */
+.page,
+.component-preview {
+  padding: 8px;
+}
+
+/* 组件预览的每个分区卡片统一留白 */
+.section-card {
+  margin-bottom: 16px;
+}
+
+/* 移动端：结果页状态按钮组允许换行 */
+.result-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+/* ---------- 加载占位（全屏时统一用可见视口高度） ---------- */
+.page-loading {
+  width: 100%;
+}
+
+.page-loading-full {
+  min-height: 100vh;
+  min-height: 100svh;
+}
+
 /* ---------- 侧边菜单 ---------- */
 .side-menu .logo {
   display: flex;

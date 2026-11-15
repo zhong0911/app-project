@@ -1,6 +1,6 @@
 # React 前端模板
 
-与仓库里 `vue/` 模板**能力一一对齐**的 React 版本：同样的图床 + 管理后台形态、同样的 SSO 会话认证方式、同样的主题 / 语言 / 组件库配置，只把框架层换成 React 生态。
+一套可直接落地业务的 React 前端基线：内置落地页、示例页、SSO 会话登录、管理后台、亮暗主题、国际化与图床示例模块。能力与仓库里 `vue/` 模板一一对齐，只把框架层换成 React 生态；页面结构按模板形态组织（首页是项目介绍落地页，不是业务首页）。
 
 - 前端框架：React 18
 - 构建工具：Vite 6
@@ -28,7 +28,25 @@
 | 主题 | antd token（亮/暗） | 同 token 配置（`config/theme.js`） |
 | 登录态 | 后端会话 Cookie，前端不存 token | 完全一致 |
 
-语言包（`src/locales/zh-CN.js` / `zh-TW.js` / `en-US.js`）直接从 vue 模板复用，文案 key 完全相同。
+语言包（`src/locales/zh-CN.js` / `zh-TW.js` / `en-US.js`）结构与 vue 模板一致，文案 key 相同；文案内容已改为 React 口径（技术栈、目录名、默认端口）。
+
+## 页面结构
+
+| 路径 | 布局 | 说明 |
+| --- | --- | --- |
+| `/` | `LandingLayout` | 落地页首页：Hero、项目介绍、技术栈、使用指南、目录结构、管理后台入口 |
+| `/home` | — | 旧链接兼容，redirect 到 `/` |
+| `/about` | `ConsoleLayout` | 示例页：模板使用的技术栈与版本 |
+| `/components` | `ConsoleLayout` | 示例页：常用 Ant Design 组件一览（含暗色适配） |
+| `/image-bed` | `ConsoleLayout` | 图床示例模块：上传 / 粘贴 / 复制直链 / 回收站（**可整块删除**） |
+| `/admin/users`、`/admin/recycle` | `ConsoleLayout` + `RequireAdmin` | 管理后台，仅管理员可进 |
+| `/login`、`/logout` | 独立全屏 | SSO 登录入口 / 退出确认 |
+| `*` | — | 404 |
+
+两套布局：
+
+- `LandingLayout`：吸顶 header + 锚点导航 + 页脚，无侧边菜单；移动端导航收进左侧抽屉（点品牌区打开）。
+- `ConsoleLayout`：桌面固定侧栏（220px，可折叠 80px）+ 顶栏 + 内容区；移动端侧栏转抽屉。
 
 ## 目录结构
 
@@ -51,22 +69,24 @@ react/
     │   ├── admin.js            # 用户管理、角色字典、回收站
     │   └── image.js            # 图床列表、上传、删除、恢复、彻底删除
     ├── assets/styles/
-    │   ├── index.css           # Tailwind + 设计令牌 + 滚动条（含 100svh 视口处理）
-    │   └── components.css      # 布局与页面结构样式
+    │   ├── index.css           # Tailwind + 设计令牌 + 滚动条（视口高度用 100vh + 100svh）
+    │   ├── components.css      # 布局与页面结构样式
+    │   └── landing.css         # 落地页与首页样式
     ├── components/
     │   ├── AppIcon.jsx         # 应用图标（内联 SVG，可换成图片）
-    │   ├── PageLoading.jsx     # 居中加载占位
+    │   ├── PageLoading.jsx     # 居中加载占位（默认铺满可见视口）
     │   └── RequireAdmin.jsx    # 管理员路由守卫
     ├── config/
     │   ├── app.js              # 应用标题、账号中心地址
     │   ├── locale.js           # 语言配置中心（antd 语言包 + dayjs + i18next 联动）
     │   └── theme.js            # 亮/暗主题 token
     ├── layouts/
+    │   ├── LandingLayout.jsx   # 落地页布局：header + 锚点导航 + 页脚（移动端抽屉）
     │   ├── ConsoleLayout.jsx   # 后台布局：固定侧栏 + 顶栏 + 内容区（移动端转抽屉）
     │   └── SideMenu.jsx        # logo + 菜单（桌面 Sider 与移动 Drawer 复用）
     ├── locales/
     │   ├── index.js            # i18next 初始化
-    │   ├── zh-CN.js / zh-TW.js / en-US.js
+    │   └── zh-CN.js / zh-TW.js / en-US.js
     ├── router/index.jsx        # 路由表（懒加载 + 管理员守卫 + 404）
     ├── stores/
     │   ├── app.js              # 侧栏折叠、暗色主题
@@ -77,10 +97,13 @@ react/
     │   ├── scroll-lock.js      # 抽屉滚动锁修复
     │   └── useTitle.js         # document.title 同步
     └── views/
+        ├── Home.jsx            # 首页落地页
+        ├── About.jsx           # 关于（技术栈版本）
+        ├── Components.jsx      # 组件预览
         ├── Login.jsx           # SSO 登录入口
         ├── Logout.jsx          # 退出确认（含 SSO 全局退出跳转）
         ├── NotFound.jsx        # 404
-        ├── ImageBed.jsx        # 图床：上传 / 粘贴 / 复制 / 回收站
+        ├── ImageBed.jsx        # 图床示例：上传 / 粘贴 / 复制 / 回收站
         └── admin/
             ├── AdminUsers.jsx  # 用户管理
             └── AdminRecycle.jsx
@@ -104,7 +127,7 @@ npm run preview  # 预览构建产物
 
 | 变量 | 说明 |
 | --- | --- |
-| `VITE_APP_TITLE` | 应用标题（`index.html` 的 `<title>` 与侧栏 logo 文案） |
+| `VITE_APP_TITLE` | 应用标题（`index.html` 的 `<title>`、落地页品牌与侧栏 logo 文案），默认 `AntX 模板` |
 | `VITE_API_BASE_URL` | 接口基础地址。开发用 `/api`（走 Vite 代理），生产填完整域名 |
 | `VITE_PROXY_TARGET` | 开发环境代理目标（真实后端地址，默认 `http://localhost:8080`） |
 | `VITE_ACCOUNT_CENTER_URL` | 账号中心地址，用户菜单「账号中心」跳转目标 |
@@ -126,8 +149,19 @@ npm run preview  # 预览构建产物
 ## 主题与国际化
 
 - 主题：`config/theme.js` 定义亮/暗两套 token，`App.jsx` 传给 `<ConfigProvider theme>`；切暗色时给 `<html>` 加 `dark` 类（Tailwind `darkMode: 'class'`），持久化到 `localStorage` + Cookie 的 `theme-mode`，`index.html` 里有首屏防闪脚本。
-- 国际化：`src/locales` 下三套语言包，`config/locale.js` 同时切换 antd 语言包、dayjs 与 i18next。i18next 的插值定界符已配成单花括号（`{total}`），因此 vue 模板的文案可直接复用。
+- 国际化：`src/locales` 下三套语言包，`config/locale.js` 同时切换 antd 语言包、dayjs 与 i18next。i18next 的插值定界符配成单花括号（`{total}`），与 vue 模板文案保持兼容。
 - 新增语言：在 `LOCALES` 加一项（含 antd 语言包与 dayjs locale 名），再补一份语言文件。
+
+## 视口高度与移动端
+
+页面不再用裸 `100vh`，统一写成 `100vh` + `100svh` 双声明：
+
+```css
+min-height: 100vh;
+min-height: 100svh; /* 移动端用可见视口高度，避免被浏览器地址栏/标签栏遮挡 */
+```
+
+涉及 `index.css`（html/body、渐变底）、`components.css`（布局根、侧栏、内容区、登录页、404、加载占位）与 `landing.css`（落地页）。`PageLoading` 不传 `height` 时走 `.page-loading-full`，同样使用这套双声明。
 
 ## 可裁剪的能力
 
@@ -135,14 +169,16 @@ npm run preview  # 预览构建产物
 
 | 要删的能力 | 删除步骤 |
 | --- | --- |
+| 图床示例模块 | 删 `views/ImageBed.jsx`、`api/image.js`；`router/index.jsx` 去掉 `/image-bed` 路由；`ConsoleLayout` 的 `menuItems` 去掉图床项 |
+| 示例页 | 删 `views/About.jsx`、`views/Components.jsx`；`router` 去掉 `/about`、`/components`；`landing`/`home` 文案里的对应 key 可一并清理 |
+| 落地页首页 | 删 `layouts/LandingLayout.jsx`、`views/Home.jsx`、`assets/styles/landing.css`；`router` 的 `/` 改成自己的首页（可直接用 `ConsoleLayout`） |
 | 管理后台 | 删 `views/admin/`、`components/RequireAdmin.jsx`、`api/admin.js`；`router/index.jsx` 去掉 `/admin` 路由；`ConsoleLayout` 的 `menuItems` 去掉后台项 |
-| 图床业务页 | 删 `views/ImageBed.jsx`、`api/image.js`；`router` 把 `/image-bed` 换成自己的业务路由 |
 | 国际化 | 删 `src/locales/`、`config/locale.js`；去掉 `main.jsx` 的 i18n 引入与 `App.jsx` 的 `locale` 参数；页面里的 `t('xxx')` 换成固定文案 |
 | 主题切换 | 删 `config/theme.js`、`stores/app.js` 的 `isDark`/`toggleDark`、`index.html` 的首屏脚本、顶栏主题按钮；`App.jsx` 只传默认 token |
 | Tailwind | 删 `tailwind.config.js`、`postcss.config.js`、`index.css` 里的 `@tailwind` 三行与 `package.json` 相关依赖 |
 
 ## 说明
 
-- 已弃用的营销页（`/home`、`/about`、`/components`）在本模板中**不实现页面**，只保留到 `/image-bed` 的 redirect，避免旧链接 404。
-- 品牌名显示用 `AntX`（X 大写），包名 / 域名用小写 `antx`。
+- 品牌文案显示 `AntX`（X 大写），包名 / 域名用小写 `antx`。
 - 接口统一五字段响应：`{ code, success, message, data, timestamp }`，`code` 为 `200` 或 `0` 都视为成功。
+- 图床模块是模板里唯一有完整业务闭环的示例（上传、去重、直链、回收站），用来演示「列表 + 操作 + 上传」这类典型页面怎么写；不需要可直接按上表删除。
