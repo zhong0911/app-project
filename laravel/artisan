@@ -1,0 +1,20 @@
+#!/usr/bin/env php
+<?php
+
+use Symfony\Component\Console\Input\ArgvInput;
+
+define('LARAVEL_START', microtime(true));
+
+// 维护模式（php artisan down 时存在）：交给框架进程处理
+if (file_exists($maintenance = __DIR__.'/storage/framework/maintenance.php')) {
+    require $maintenance;
+}
+
+// 注册 Composer 自动加载
+require __DIR__.'/vendor/autoload.php';
+
+// 启动框架并执行控制台命令
+$status = (require_once __DIR__.'/bootstrap/app.php')
+    ->handleCommand(new ArgvInput);
+
+exit($status);

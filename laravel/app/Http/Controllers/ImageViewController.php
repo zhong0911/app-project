@@ -6,6 +6,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Image;
 use App\Services\ImageService;
 use App\Support\BusinessException;
 use Illuminate\Http\Request;
@@ -20,7 +21,7 @@ class ImageViewController extends Controller
 
     public function show(string $uuid, Request $request): StreamedResponse|\Illuminate\Http\Response
     {
-        $image = $this->imageService->findForView($uuid);
+        $image = $this->findImage($uuid);
 
         $etag = '"'.$image->hash.'"';
         if ($image->hash !== '' && trim((string) $request->headers->get('If-None-Match')) === $etag) {
@@ -29,12 +30,12 @@ class ImageViewController extends Controller
 
         $disk = Storage::disk((string) config('image.disk', 'images'));
         if (! $disk->exists($image->storage_key)) {
-            throw BusinessException::notFound('图片文件已丢失');
+            abort(404);
         }
 
         $stream = $disk->readStream($image->storage_key);
         if ($stream === null) {
-            throw BusinessException::notFound('图片文件已丢失');
+            abort(404);
         }
 
         $this->imageService->markVisit($image);
@@ -55,5 +56,18 @@ class ImageViewController extends Controller
                 'X-Content-Type-Options' => 'nosniff',
             ],
         );
+    }
+
+    /**
+     * 直链是给浏览器 / CDN / <img> 用的，不套 API 的五字段契约：
+     * 记录不存在（含已删除、已彻底删除）一律按 HTTP 404 返回。
+     */
+    private function findImage(string $uuid): Image
+    {
+        try {
+            return $this->imageService->findForView($uuid);
+        } catch (BusinessException) {
+            abort(404);
+        }
     }
 }

@@ -11,3 +11,6 @@
 .phpunit.result.cache
 .idea/
 .DS_Store
+/database/*.sqlite
+/bootstrap/cache/*.php
+
