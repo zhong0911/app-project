@@ -35,8 +35,8 @@ export class RoleController {
 
   /** 删除角色（内置角色、仍被用户使用的角色不可删） */
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<ResultBody<void>> {
+  async remove(@Param('id') id: string): Promise<ResultBody<null>> {
     await this.roleService.deleteRole(Number(id));
-    return Result.success();
+    return Result.success(null);
   }
 }
