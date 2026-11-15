@@ -44,6 +44,11 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
           changeOrigin: true,
         },
+        // SSO 控制台登记的回调为 http://localhost:3000/oss/callback，同样转发到后端
+        '/oss': {
+          target: env.VITE_PROXY_TARGET || 'http://localhost:8080',
+          changeOrigin: true,
+        },
       },
     },
 
