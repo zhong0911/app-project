@@ -4,6 +4,7 @@
  * 统一前缀 /api（见 bootstrap/app.php 的 withRouting(api:)）。
  */
 
+use App\Http\Controllers\Api\AdminRoleController;
 use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BffController;
@@ -30,6 +31,7 @@ Route::middleware('sso.auth')->group(function () {
 
 // 管理端（需管理员）
 Route::middleware('sso.admin')->group(function () {
+    Route::get('/admin/roles', [AdminRoleController::class, 'list']);
     Route::get('/admin/users', [AdminUserController::class, 'page']);
     Route::get('/admin/users/recycle', [AdminUserController::class, 'recycle']);
     Route::post('/admin/users', [AdminUserController::class, 'create']);
