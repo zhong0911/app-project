@@ -26,7 +26,7 @@ const { t } = useI18n()
 
 // 首屏关键指标：value 为数字/短语，label 走 i18n
 const stats = [
-  { value: '5', labelKey: 'home.stats.backends' },
+  { value: '7', labelKey: 'home.stats.backends' },
   { value: 'SSO', labelKey: 'home.stats.sso' },
   { value: '2', labelKey: 'home.stats.layouts' },
   { value: '100%', labelKey: 'home.stats.lazy' },
