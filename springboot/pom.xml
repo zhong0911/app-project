@@ -153,12 +153,9 @@
             <version>${fastjson2.version}</version>
         </dependency>
 
-        <!-- 启动时自动加载项目根目录 .env 文件（十二要素配置） -->
-        <dependency>
-            <groupId>me.paulschwarz</groupId>
-            <artifactId>spring-dotenv</artifactId>
-            <version>5.1.0</version>
-        </dependency>
+        <!-- .env 由 Spring Boot 原生 spring.config.import 加载（见 application.yml），
+             不再依赖 spring-dotenv：该库 5.1.0 的 jar 内没有 META-INF 注册文件，
+             在 Spring Boot 4.1 下不会被装配，.env 实际不生效。 -->
 
         <!-- Lombok：简化实体/POJO -->
         <dependency>

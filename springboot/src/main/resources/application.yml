@@ -33,6 +33,11 @@ spring:
   application:
     name: springboot-template
 
+  # 加载工作目录下的 .env（十二要素配置）：按 properties 格式解析，键名原样进入 Environment，
+  # 下方 ${SSO_CLIENT_ID} / ${DB_PASSWORD} 等占位符即可解析。optional 前缀表示文件缺失时不报错。
+  config:
+    import: optional:file:./.env[.properties]
+
   # 当前激活环境：dev / prod（命令行可用 --spring.profiles.active=prod 覆盖）
   profiles:
     active: dev
@@ -98,8 +103,10 @@ spring:
             # 例如 SSO_SCOPE=openid,profile,email,roles,permissions
             scope: ${SSO_SCOPE:openid}
             authorization-grant-type: authorization_code
-            # callback 回调地址（规范路径 /sso/callback，需在 SSO 控制台注册为 redirect_uri）
-            redirect-uri: "{baseUrl}/sso/callback"
+            # callback 回调地址：默认 "{baseUrl}/sso/callback"（随当前请求的 host:port 变化）；
+            # 若 SSO 控制台只登记了固定地址，用 .env 的 SSO_REDIRECT_URI 显式覆盖，
+            # 否则端口一变（8080/8081/3001...）就会因 redirect_uri 未登记被 SSO 拒绝。
+            redirect-uri: ${SSO_REDIRECT_URI:{baseUrl}/sso/callback}
             client-name: AntX SSO
         provider:
           sso:
