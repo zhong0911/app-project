@@ -14,7 +14,8 @@ class UserResource extends JsonResource
     {
         return [
             'id' => (int) $this->id,
-            'uid' => $this->uid,
+            // 唯一标识一律输出字符串（整型 uid 也按字符串返回）
+            'uid' => (string) $this->uid,
             'role' => $this->role,
             'status' => (int) $this->status,
             'deleted' => (int) $this->deleted,

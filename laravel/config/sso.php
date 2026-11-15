@@ -17,7 +17,8 @@ return [
     'revoke_uri' => env('SSO_REVOKE_URI', 'https://passport.antx.cc/oauth2/revoke'),
     'login_success_url' => env('SSO_LOGIN_SUCCESS_URL', '/api/auth/me'),
     'logout_uri' => env('SSO_LOGOUT_URI', ''),
-    // 管理员 uid（= access_token 的 sub）
+    // 管理员唯一标识（= access_token 的 sub）：可能是整数 uid，也可能是 username/email/phone，
+    // 按字符串比较，默认 "1"
     'admin_uid' => env('SSO_ADMIN_UID', '1'),
 
     // 本地联调 Basic（生产置 false）

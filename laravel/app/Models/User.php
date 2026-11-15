@@ -2,7 +2,10 @@
 /**
  * 用户实体（对标 Spring Boot 的 entity/User）。
  *
- * 表 users 以 SSO uid 为身份键：用户名/昵称/邮箱由 SSO 提供，本地只维护角色、启停、软删除。
+ * 表 users 以「用户唯一标识」为身份键：取自 access_token 的 sub，
+ * SSO 应用可把它配置成 uid / username / email / phone，所以本地一律按字符串存储
+ * （SSO 的 uid 是整数，落库时也转成字符串）。用户名/昵称/邮箱由 SSO 提供，
+ * 本地只维护角色、启停、软删除。
  */
 
 namespace App\Models;

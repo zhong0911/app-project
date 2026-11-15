@@ -9,6 +9,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Services\UserService;
 use App\Support\Result;
+use App\Support\UserIdentity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -25,7 +26,8 @@ class BffController extends Controller
             return Result::success([]);
         }
 
-        $uid = (string) $principal->uid;
+        // 唯一标识统一成字符串：SSO uid 是整数，前端/接口层一律按字符串处理
+        $uid = UserIdentity::orEmpty($principal->uid);
         $data = [
             'authType' => $principal->authType,
             'uid' => $uid,

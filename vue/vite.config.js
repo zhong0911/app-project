@@ -52,6 +52,12 @@ export default defineConfig(({ mode }) => {
       },
     },
 
+    // 预览服务（npm run preview）同样绑定 0.0.0.0，方便局域网或容器访问
+    preview: {
+      host: '0.0.0.0',
+      port: 3000,
+    },
+
     build: {
       outDir: 'dist',
       sourcemap: false,

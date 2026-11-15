@@ -11,6 +11,7 @@ use App\Services\SsoClient;
 use App\Services\UserService;
 use App\Support\BusinessException;
 use App\Support\RedirectUri;
+use App\Support\UserIdentity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -61,11 +62,14 @@ class SsoController extends Controller
         }
 
         $userInfo = $this->ssoClient->fetchUserInfo($accessToken);
-        if (! isset($userInfo['sub'])) {
+
+        // sub 是用户唯一标识：SSO 应用可配置成 uid（整数）/ username / email / phone，
+        // 统一规范化成字符串再写入会话与本地表
+        $uid = UserIdentity::orEmpty($userInfo['sub'] ?? null);
+        if ($uid === '') {
             throw BusinessException::unauthorized('SSO 未返回用户标识 sub');
         }
 
-        $uid = (string) $userInfo['sub'];
         $name = $userInfo['preferred_username'] ?? $userInfo['name'] ?? $uid;
 
         // 身份 + token 全部留在服务端会话，前端只拿 Cookie

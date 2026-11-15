@@ -28,7 +28,7 @@
 - 分页：`{pageNum, pageSize, total, pages, records}`，默认 `1/10`，上限 500
 - 路径：`/sso/authorize`、`/sso/callback`、`/api/auth/*`、`/api/bff/me`、`/api/users*`、`/api/admin/users*`、`/api/demo/*`
 - 权限：未登录 401、非管理员 403、账号被禁用 403
-- 用户：`users.uid` = SSO `sub`，本地维护 `role` / `status` / `deleted`（回收站）/ `version`
+- 用户：`users.uid` = SSO `sub`（用户唯一标识，可能是整数 uid / username / email / phone，一律按字符串存），本地维护 `role` / `status` / `deleted`（回收站）/ `version`
 - 建表：每套目录下 `sql/init.sql` 内容一致，可直接 `mysql < sql/init.sql`
 
 ## 本地端口

@@ -18,8 +18,9 @@ import { usePageTitle } from '@/utils/useTitle'
 /**
  * 用户管理页
  *
- * 列：UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
- * - 用户唯一标识是 SSO uid（access_token 的 sub），本地表不存昵称邮箱
+ * 列：用户唯一标识 / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
+ * - 用户唯一标识取自 access_token 的 sub：SSO 应用可配置成 uid / username / email / phone，
+ *   所以一律按字符串处理（SSO 的 uid 是整数，落库时也转成字符串），本地表不存昵称邮箱
  * - 角色来自后端「角色管理」，内置 ADMIN / USER；角色同时决定 JWT 里下发的权限
  * - 管理员不能停用/删除自己，避免把自己锁在后台外
  */
@@ -67,8 +68,8 @@ export default function AdminUsers() {
 
   const roleName = (code) => roles.find((role) => role.code === code)?.name || code
 
-  /** 当前登录管理员自身：禁止禁用/删除自己 */
-  const isSelf = (record) => record.uid === userInfo?.uid
+  /** 当前登录管理员自身：禁止禁用/删除自己（uid 一律按字符串比较，避免 int/string 误判） */
+  const isSelf = (record) => String(record.uid ?? '') === String(userInfo?.uid ?? '')
 
   /* ---------------- 列表加载 ---------------- */
   useEffect(() => {
@@ -327,7 +328,7 @@ export default function AdminUsers() {
         />
       </Card>
 
-      {/* 新增用户：只填 SSO uid */}
+      {/* 新增用户：只填用户唯一标识 */}
       <Modal
         open={addOpen}
         title={t('adminUsers.addTitle')}
@@ -342,10 +343,10 @@ export default function AdminUsers() {
               value={addUid}
               onChange={(e) => setAddUid(e.target.value)}
               placeholder={t('adminUsers.uidPlaceholder')}
+              maxLength={64}
               allowClear
             />
           </Form.Item>
-          <Alert type="info" showIcon message={t('adminUsers.uidHint')} />
         </Form>
       </Modal>
 

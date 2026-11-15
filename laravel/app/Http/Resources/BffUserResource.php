@@ -14,7 +14,8 @@ class BffUserResource extends JsonResource
     {
         return [
             'authType' => $this['authType'] ?? null,
-            'uid' => $this['uid'] ?? null,
+            // 唯一标识一律输出字符串
+            'uid' => isset($this['uid']) ? (string) $this['uid'] : null,
             'localId' => $this['localId'] ?? null,
             'role' => $this['role'] ?? null,
             'isAdmin' => $this['isAdmin'] ?? false,

@@ -1,6 +1,6 @@
 <script setup>
 // 用户管理页：只用 a-table 本身的能力（不额外传 scroll / size / 外置分页），
-// 列为 UID / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
+// 列为用户唯一标识 / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
@@ -63,8 +63,8 @@ const pagination = computed(() => ({
   showTotal: (count) => t('common.total', { total: count }),
 }))
 
-/** 当前登录管理员自身：禁止禁用/删除自己，避免把自己锁在后台外 */
-const isSelf = (record) => record.uid === userStore.userInfo?.uid
+/** 当前登录管理员自身：禁止禁用/删除自己（uid 一律按字符串比较，避免 int/string 误判） */
+const isSelf = (record) => String(record.uid ?? '') === String(userStore.userInfo?.uid ?? '')
 
 const load = async () => {
   loading.value = true
@@ -298,9 +298,13 @@ onMounted(async () => {
   >
     <a-form layout="vertical">
       <a-form-item :label="t('adminUsers.uidLabel')" required>
-        <a-input v-model:value="addForm.uid" :placeholder="t('adminUsers.uidPlaceholder')" allow-clear />
+        <a-input
+          v-model:value="addForm.uid"
+          :placeholder="t('adminUsers.uidPlaceholder')"
+          :maxlength="64"
+          allow-clear
+        />
       </a-form-item>
-      <a-alert type="info" show-icon :message="t('adminUsers.uidHint')" />
     </a-form>
   </a-modal>
 

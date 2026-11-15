@@ -9,6 +9,7 @@ namespace App\Http\Middleware;
 use App\Services\SsoClient;
 use App\Support\BusinessException;
 use App\Support\Principal;
+use App\Support\UserIdentity;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,10 +31,10 @@ class ResolveIdentity
 
     private function resolve(Request $request): Principal
     {
-        // 1) SSO 浏览器登录：会话里存了 uid
+        // 1) SSO 浏览器登录：会话里存了用户唯一标识（写入时已规范化为字符串）
         if ($request->hasSession() && $request->session()->has('uid')) {
             return new Principal(
-                uid: (string) $request->session()->get('uid'),
+                uid: UserIdentity::orEmpty($request->session()->get('uid')),
                 name: $request->session()->get('name'),
                 authType: 'sso-login',
             );
@@ -48,7 +49,8 @@ class ResolveIdentity
             } catch (BusinessException) {
                 return new Principal(authType: 'invalid');
             }
-            $uid = isset($claims['sub']) ? (string) $claims['sub'] : null;
+            // sub 就是用户唯一标识：可能是 uid(整数) / username / email / phone，统一转字符串
+            $uid = UserIdentity::normalize($claims['sub'] ?? null);
             $name = $claims['preferred_username'] ?? $claims['name'] ?? $uid;
             return new Principal(uid: $uid, name: $name, authType: 'sso-jwt', claims: $claims);
         }
@@ -59,7 +61,7 @@ class ResolveIdentity
             if ($decoded !== false) {
                 [$username, $password] = array_pad(explode(':', $decoded, 2), 2, '');
                 if ($username === config('sso.basic_username') && $password === config('sso.basic_password')) {
-                    return new Principal(uid: $username, name: $username, authType: 'basic');
+                    return new Principal(uid: UserIdentity::orEmpty($username), name: $username, authType: 'basic');
                 }
             }
             return new Principal(authType: 'invalid');

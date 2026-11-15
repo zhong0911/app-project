@@ -86,7 +86,7 @@ php artisan serve --port=8080
 
 1. SSO 控制台注册应用，拿 client-id / client-secret，登记回调 `http://localhost:8080/sso/callback`
 2. `.env` 填 `SSO_CLIENT_ID` / `SSO_CLIENT_SECRET` / `SSO_ISSUER`
-3. 本地 `users.uid` = SSO 用户 id；`SSO_ADMIN_UID=1` 为默认管理员
+3. 本地 `users.uid` = SSO 用户唯一标识（access_token 的 `sub`，可为整数 uid / username / email / phone，一律按字符串存）；`SSO_ADMIN_UID=1` 为默认管理员
 
 - 方案B：SSO 只认证，`users.role` 决定子应用权限
 - `SsoClient#verifyToken` 用 JWKS 验签并校验 issuer（JWKS 缓存 10 分钟）

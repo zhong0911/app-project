@@ -14,6 +14,16 @@ class UserQueryRequest extends FormRequest
         return true;
     }
 
+    /** 唯一标识可能是数字形态（SSO uid），统一转字符串后再做精确匹配 */
+    protected function prepareForValidation(): void
+    {
+        $uid = $this->input('uid');
+
+        if ($uid !== null && ! is_array($uid) && ! is_bool($uid)) {
+            $this->merge(['uid' => trim((string) $uid)]);
+        }
+    }
+
     public function rules(): array
     {
         return [

@@ -54,7 +54,7 @@ class SsoClient
         return (array) $response->json();
     }
 
-    /** 获取用户资料（sub 即用户 uid） */
+    /** 获取用户资料（sub 即用户唯一标识：可能是整数 uid，也可能是 username / email / phone） */
     public function fetchUserInfo(string $accessToken): array
     {
         $response = Http::withToken($accessToken)

@@ -10,6 +10,7 @@ use App\Repositories\UserRepository;
 use App\Support\BusinessException;
 use App\Support\Result;
 use App\Support\ResultCode;
+use App\Support\UserIdentity;
 
 class UserService
 {
@@ -19,14 +20,26 @@ class UserService
     {
     }
 
+    /**
+     * 管理员手动添加用户：只认「用户唯一标识」（sub），可能是整数 uid / username / email / phone，
+     * 一律按字符串落库。
+     */
     public function createUser(string $uid): array
     {
+        $uid = UserIdentity::orEmpty($uid);
+        if ($uid === '') {
+            throw BusinessException::badRequest('用户唯一标识不能为空');
+        }
+        if (! UserIdentity::fits($uid)) {
+            throw BusinessException::badRequest('用户唯一标识长度不能超过 ' . UserIdentity::MAX_LENGTH . ' 个字符');
+        }
+
         $exists = $this->repository->findByUidIncludingDeleted($uid);
         if ($exists !== null) {
             if ($exists->deleted === 1) {
-                throw BusinessException::conflict("该 uid 已在回收站，请先恢复: {$uid}");
+                throw BusinessException::conflict("该用户唯一标识已在回收站，请先恢复: {$uid}");
             }
-            throw BusinessException::conflict("SSO 用户已存在: {$uid}");
+            throw BusinessException::conflict("该用户已存在: {$uid}");
         }
         return $this->toVO($this->repository->create($uid));
     }
@@ -109,13 +122,19 @@ class UserService
 
     public function getByUid(string $uid): ?User
     {
+        $uid = UserIdentity::orEmpty($uid);
+
         return $uid !== '' ? $this->repository->findByUid($uid) : null;
     }
 
     /** 新登录用户默认注册为 USER（并发下靠唯一键兜底） */
     public function getOrCreateDefaultUser(string $uid): ?User
     {
-        if ($uid === '') {
+        $uid = UserIdentity::orEmpty($uid);
+
+        // 空标识或超过列宽（VARCHAR(64)）时不落库：既不截断避免不同用户撞键，也不阻断登录，
+        // 这类用户在本地没有角色记录，按 SSO 下发权限处理
+        if ($uid === '' || ! UserIdentity::fits($uid)) {
             return null;
         }
 
@@ -133,12 +152,15 @@ class UserService
 
     public function isAdmin(string $uid): bool
     {
-        return $uid !== '' && $uid === (string) config('sso.admin_uid');
+        $adminUid = trim((string) config('sso.admin_uid'));
+
+        return $uid !== '' && $adminUid !== '' && $uid === $adminUid;
     }
 
     /** 管理接口鉴权：未登录 401，非管理员 403，被禁用 403 */
     public function requireAdmin(string $uid): string
     {
+        $uid = UserIdentity::orEmpty($uid);
         if ($uid === '') {
             throw BusinessException::unauthorized();
         }
@@ -161,7 +183,8 @@ class UserService
 
         return [
             'id' => (int) $user->id,
-            'uid' => $user->uid,
+            // 唯一标识一律输出字符串：整型 uid 也按字符串返回，前端不用区分类型
+            'uid' => (string) $user->uid,
             'role' => $user->role,
             'status' => (int) $user->status,
             'deleted' => (int) $user->deleted,
