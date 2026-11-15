@@ -68,6 +68,50 @@ html::before {
 }
 
 /* ==============================
+   后台管理页面（用户管理 / 角色管理 / 回收站）
+   三个页面都不套外层卡片，工具栏结构统一：搜索整行 → 状态/角色并排 → 操作行
+   ============================== */
+.admin-page {
+  width: 100%;
+}
+
+.user-toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.user-toolbar .toolbar-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 搜索框：整行宽度，搜索按钮由 input-search 内嵌右侧，与输入框连体 */
+.user-toolbar .search-input {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.user-toolbar .action-row {
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+/* 列设置弹层：竖排复选框 */
+.column-setting {
+  min-width: 150px;
+}
+
+.column-setting .ant-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ==============================
    全局滚动条（亮/暗两套）
    ============================== */
 ::-webkit-scrollbar {

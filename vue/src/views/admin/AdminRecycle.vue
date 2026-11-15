@@ -103,11 +103,9 @@ onMounted(load)
     <!-- 按类型分 tab：当前只有「用户」回收站；其他类型（角色/部门等）预留，等有数据再补 tab 项 -->
     <a-tabs v-model:active-key="activeTab" class="recycle-tabs">
       <template #rightExtra>
-        <a-tooltip :title="t('common.refresh')">
-          <a-button shape="circle" :loading="loading" @click="handleRefresh">
-            <ReloadOutlined />
-          </a-button>
-        </a-tooltip>
+        <a-button :loading="loading" @click="handleRefresh">
+          <ReloadOutlined />
+        </a-button>
       </template>
       <a-tab-pane key="users" :tab="t('adminRecycle.tabUsers')">
         <a-table

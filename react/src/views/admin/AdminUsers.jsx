@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag, Tooltip } from 'antd'
+import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag } from 'antd'
 import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
 
 import {
@@ -294,18 +294,15 @@ export default function AdminUsers() {
       <div className="admin-page">
         {/* 工具栏：搜索框整行 → 状态 / 角色并排 → 添加按钮 + 刷新 / 列设置 */}
         <div className="user-toolbar">
-          <div className="toolbar-row">
-            <Input
-              value={uidInput}
-              onChange={(e) => setUidInput(e.target.value)}
-              placeholder={t('adminUsers.searchUid')}
-              allowClear
-              prefix={<SearchOutlined />}
-              className="search-input"
-              onPressEnter={handleSearch}
-            />
-            <Button className="search-btn" icon={<SearchOutlined />} onClick={handleSearch} />
-          </div>
+          <Input.Search
+            value={uidInput}
+            onChange={(e) => setUidInput(e.target.value)}
+            placeholder={t('adminUsers.searchUid')}
+            allowClear
+            enterButton={<SearchOutlined />}
+            className="search-input"
+            onSearch={handleSearch}
+          />
 
           <Select
             value={query.status}
@@ -330,9 +327,7 @@ export default function AdminUsers() {
               {t('adminUsers.addUser')}
             </Button>
             <Space size={8}>
-              <Tooltip title={t('common.refresh')}>
-                <Button shape="circle" icon={<ReloadOutlined />} loading={loading} onClick={handleSearch} />
-              </Tooltip>
+              <Button icon={<ReloadOutlined />} loading={loading} onClick={handleSearch} />
               <Popover
                 trigger="click"
                 placement="bottomRight"
@@ -349,7 +344,7 @@ export default function AdminUsers() {
                   </div>
                 }
               >
-                <Button shape="circle" icon={<SettingOutlined />} />
+                <Button icon={<SettingOutlined />} />
               </Popover>
             </Space>
           </div>

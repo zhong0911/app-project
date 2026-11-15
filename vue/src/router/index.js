@@ -75,6 +75,12 @@ const routes = [
         meta: { title: '用户管理', requiresAdmin: true },
       },
       {
+        path: 'roles',
+        name: 'AdminRoles',
+        component: () => import('@/views/admin/AdminRoles.vue'),
+        meta: { title: '角色管理', requiresAdmin: true },
+      },
+      {
         path: 'recycle',
         name: 'AdminRecycle',
         component: () => import('@/views/admin/AdminRecycle.vue'),

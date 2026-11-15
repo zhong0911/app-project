@@ -15,6 +15,7 @@ import {
   MoonOutlined,
   SettingOutlined,
   SunOutlined,
+  SafetyOutlined,
   TeamOutlined,
   UserOutlined,
 } from '@ant-design/icons'
@@ -102,6 +103,7 @@ export default function ConsoleLayout() {
   const menuItems = isAdminArea
     ? [
         { key: '/admin/users', label: t('nav.adminUsers'), icon: <TeamOutlined /> },
+        { key: '/admin/roles', label: t('nav.adminRoles'), icon: <SafetyOutlined /> },
         { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: <DeleteOutlined /> },
       ]
     : [

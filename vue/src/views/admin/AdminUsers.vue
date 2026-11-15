@@ -221,22 +221,17 @@ onMounted(async () => {
   <div class="admin-page">
     <!-- 工具栏：搜索框整行 → 状态 / 角色并排 → 添加按钮 + 刷新 / 列设置 -->
     <div class="user-toolbar">
-      <div class="toolbar-row search-row">
-        <a-input
-          v-model:value="filters.uid"
-          :placeholder="t('adminUsers.searchUid')"
-          allow-clear
-          class="search-input"
-          @press-enter="handleSearch"
-        >
-          <template #prefix>
-            <SearchOutlined />
-          </template>
-        </a-input>
-        <a-button class="search-btn" @click="handleSearch">
+      <a-input-search
+        v-model:value="filters.uid"
+        :placeholder="t('adminUsers.searchUid')"
+        allow-clear
+        class="search-input"
+        @search="handleSearch"
+      >
+        <template #enterButton>
           <SearchOutlined />
-        </a-button>
-      </div>
+        </template>
+      </a-input-search>
 
       <a-select
         v-model:value="filters.status"
@@ -262,22 +257,18 @@ onMounted(async () => {
           {{ t('adminUsers.addUser') }}
         </a-button>
         <a-space :size="8">
-          <a-tooltip :title="t('common.refresh')">
-            <a-button shape="circle" :loading="loading" @click="handleSearch">
-              <ReloadOutlined />
-            </a-button>
-          </a-tooltip>
+          <a-button :loading="loading" @click="handleSearch">
+            <ReloadOutlined />
+          </a-button>
           <a-popover trigger="click" placement="bottomRight">
             <template #content>
               <div class="column-setting">
                 <a-checkbox-group v-model:value="visibleKeys" :options="columnOptions" />
               </div>
             </template>
-            <a-tooltip :title="t('adminUsers.columnSetting')">
-              <a-button shape="circle">
-                <SettingOutlined />
-              </a-button>
-            </a-tooltip>
+            <a-button>
+              <SettingOutlined />
+            </a-button>
           </a-popover>
         </a-space>
       </div>
@@ -383,47 +374,7 @@ onMounted(async () => {
   width: 100%;
 }
 
-/* 工具栏：两列栅格 —— 搜索整行、状态/角色并排、操作行两端对齐 */
-.user-toolbar {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.toolbar-row {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.search-input {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.search-btn {
-  flex: 0 0 auto;
-  width: 36px;
-  padding-inline: 0;
-}
-
-.action-row {
-  justify-content: space-between;
-  margin-top: 4px;
-}
-
-.column-setting {
-  min-width: 150px;
-}
-
-.column-setting :deep(.ant-checkbox-group) {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
+/* 工具栏 / 列设置样式已提到全局（assets/styles/index.css），与角色管理页共用 */
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }

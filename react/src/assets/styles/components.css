@@ -289,15 +289,10 @@
   gap: 8px;
 }
 
+/* 搜索框：整行宽度，搜索按钮由 Input.Search 内嵌右侧，与输入框连体 */
 .user-toolbar .search-input {
-  flex: 1 1 auto;
+  grid-column: 1 / -1;
   min-width: 0;
-}
-
-.user-toolbar .search-btn {
-  flex: 0 0 auto;
-  width: 36px;
-  padding-inline: 0;
 }
 
 .user-toolbar .action-row {

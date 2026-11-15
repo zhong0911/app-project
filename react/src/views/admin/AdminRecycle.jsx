@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Button, Empty, Table, Tabs, Tag, Tooltip } from 'antd'
+import { Button, Empty, Table, Tabs, Tag } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
@@ -164,9 +164,7 @@ export default function AdminRecycle() {
         activeKey={activeTab}
         onChange={setActiveTab}
         tabBarExtraContent={
-          <Tooltip title={t('common.refresh')}>
-            <Button shape="circle" icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />
-          </Tooltip>
+          <Button icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />
         }
         items={[
           {

@@ -13,6 +13,7 @@ const Login = lazy(() => import('@/views/Login'))
 const Logout = lazy(() => import('@/views/Logout'))
 const NotFound = lazy(() => import('@/views/NotFound'))
 const AdminUsers = lazy(() => import('@/views/admin/AdminUsers'))
+const AdminRoles = lazy(() => import('@/views/admin/AdminRoles'))
 const AdminRecycle = lazy(() => import('@/views/admin/AdminRecycle'))
 
 /**
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Navigate to="/admin/users" replace /> },
       { path: 'users', element: <AdminUsers /> },
+      { path: 'roles', element: <AdminRoles /> },
       { path: 'recycle', element: <AdminRecycle /> },
     ],
   },

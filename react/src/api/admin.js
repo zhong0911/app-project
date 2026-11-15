@@ -28,6 +28,21 @@ export function getAdminRolesApi(params) {
   return request.get('/admin/roles', { params, key: 'admin-roles' })
 }
 
+/** 新增角色 */
+export function createAdminRoleApi(data) {
+  return request.post('/admin/roles', data)
+}
+
+/** 更新角色（内置角色编码不可改） */
+export function updateAdminRoleApi(id, data) {
+  return request.put(`/admin/roles/${id}`, data)
+}
+
+/** 删除角色（内置角色、仍被用户使用的角色不允许删除） */
+export function deleteAdminRoleApi(id) {
+  return request.delete(`/admin/roles/${id}`)
+}
+
 /** 软删除（移入回收站） */
 export function deleteAdminUserApi(id) {
   return request.delete(`/admin/users/${id}`)

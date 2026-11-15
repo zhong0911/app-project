@@ -20,6 +20,7 @@ import {
   MoonOutlined,
   SettingOutlined,
   TeamOutlined,
+  SafetyOutlined,
   DeleteOutlined,
   HomeOutlined,
   InfoCircleOutlined,
@@ -55,6 +56,7 @@ const menuItems = computed(() => {
   if (isAdminArea.value) {
     return [
       { key: '/admin/users', label: t('nav.adminUsers'), icon: TeamOutlined },
+      { key: '/admin/roles', label: t('nav.adminRoles'), icon: SafetyOutlined },
       { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: DeleteOutlined },
     ]
   }
