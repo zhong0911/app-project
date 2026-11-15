@@ -1,27 +1,17 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
-import LandingLayout from '@/layouts/LandingLayout.vue'
 import { APP_TITLE } from '@/config/app'
 import { AUTH_UNAUTHORIZED_EVENT } from '@/api/request'
 import { useUserStore } from '@/stores/modules/user'
 
 const routes = [
-  // 首页：营销落地页（LandingLayout 自带 header / footer，无侧边菜单）
-  {
-    path: '/',
-    component: LandingLayout,
-    children: [
-      {
-        path: '',
-        name: 'Home',
-        component: () => import('@/views/Home.vue'),
-        meta: { title: '首页' },
-      },
-    ],
-  },
-  // 兼容旧链接
-  { path: '/home', redirect: '/' },
+  // 站点首页就是图床（ConsoleLayout + 左侧菜单），不再经过模板营销页
+  { path: '/', redirect: '/image-bed' },
+  // 兼容旧链接（模板时期首页、示例页）
+  { path: '/home', redirect: '/image-bed' },
+  { path: '/about', redirect: '/image-bed' },
+  { path: '/components', redirect: '/image-bed' },
   // 登录页（独立全屏，不在布局内）
   {
     path: '/login',
@@ -35,31 +25,6 @@ const routes = [
     name: 'Logout',
     component: () => import('@/views/Logout.vue'),
     meta: { title: '退出登录' },
-  },
-  // 示例页面：沿用带侧边菜单的 ConsoleLayout
-  {
-    path: '/about',
-    component: ConsoleLayout,
-    children: [
-      {
-        path: '',
-        name: 'About',
-        component: () => import('@/views/About.vue'),
-        meta: { title: '关于' },
-      },
-    ],
-  },
-  {
-    path: '/components',
-    component: ConsoleLayout,
-    children: [
-      {
-        path: '',
-        name: 'Components',
-        component: () => import('@/views/Components.vue'),
-        meta: { title: '组件预览' },
-      },
-    ],
   },
   // 图床（ConsoleLayout + 左侧菜单）
   {

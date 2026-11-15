@@ -10,8 +10,6 @@ import { useUserStore } from '@/stores/modules/user'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
 import SideMenu from './SideMenu.vue'
 import {
-  InfoCircleOutlined,
-  AppstoreOutlined,
   GlobalOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -49,7 +47,7 @@ watch(drawerOpen, (open) => {
   nextTick(releaseDrawerScrollLock)
 })
 
-// 菜单数据：管理后台（/admin）显示后台 tabs；示例页面显示演示菜单
+// 菜单数据：管理后台（/admin）显示后台 tabs；业务区只放图床
 const isAdminArea = computed(() => route.path.startsWith('/admin'))
 const menuItems = computed(() => {
   if (isAdminArea.value) {
@@ -58,12 +56,8 @@ const menuItems = computed(() => {
       { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: DeleteOutlined },
     ]
   }
-  // 菜单只放业务页面；首页入口由侧边栏 logo（图标 + 标题）承担，点击即返回首页
-  const items = [
-    { key: '/image-bed', label: t('nav.imageBed'), icon: PictureOutlined },
-    { key: '/components', label: t('nav.components'), icon: AppstoreOutlined },
-    { key: '/about', label: t('nav.about'), icon: InfoCircleOutlined },
-  ]
+  // 菜单只放业务页面；首页入口由侧边栏 logo（图标 + 标题）承担，点击即回到图床
+  const items = [{ key: '/image-bed', label: t('nav.imageBed'), icon: PictureOutlined }]
   if (userStore.isAdmin) {
     items.push({ key: '/admin/users', label: t('common.adminPanel'), icon: SettingOutlined })
   }
