@@ -5,7 +5,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { LOCALES, localeKey, setLocale } from '@/config/locale'
-import { ACCOUNT_CENTER_URL } from '@/config/app'
+import { ACCOUNT_CENTER_URL, APP_TITLE } from '@/config/app'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import {
@@ -16,6 +16,7 @@ import {
   InboxOutlined,
   LogoutOutlined,
   MoonOutlined,
+  PictureOutlined,
   ReloadOutlined,
   SunOutlined,
   UndoOutlined,
@@ -342,7 +343,48 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="tool-page-card">
+  <div class="image-bed-page">
+    <!-- 页面自带顶栏：没有布局组件，也不含任何菜单 -->
+    <header class="page-header">
+      <div class="brand" @click="router.push('/image-bed')">
+        <PictureOutlined class="brand-icon" />
+        <span class="brand-title">{{ APP_TITLE }}</span>
+      </div>
+      <div class="page-actions">
+        <a-dropdown
+          :trigger="['click']"
+          :menu="{
+            items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
+            selectable: true,
+            selectedKeys: [localeKey],
+          }"
+          @menu-click="handleLocaleChange"
+        >
+          <a-button type="text" shape="circle" class="icon-btn">
+            <GlobalOutlined />
+          </a-button>
+        </a-dropdown>
+        <a-button type="text" shape="circle" class="icon-btn" @click="appStore.toggleDark()">
+          <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
+        </a-button>
+        <a-button v-if="!userStore.isLoggedIn" type="primary" size="small" @click="router.push('/login')">
+          {{ t('common.login') }}
+        </a-button>
+        <a-dropdown v-else :trigger="['click']" :menu="{ items: userMenuItems }" @menu-click="handleUserMenu">
+          <a-button type="text" shape="circle" class="icon-btn">
+            <UserOutlined />
+          </a-button>
+        </a-dropdown>
+        <!-- 控制台：仅管理员显示，位于顶栏最右 -->
+        <a-tooltip v-if="userStore.isAdmin" :title="t('common.console')">
+          <a-button type="text" shape="circle" class="icon-btn console-btn" @click="goConsole">
+            <DashboardOutlined />
+          </a-button>
+        </a-tooltip>
+      </div>
+    </header>
+
+    <div class="tool-page-card">
     <a-card variant="borderless" class="image-card">
       <template #title>{{ t('imageBed.title') }}</template>
       <template #extra>
@@ -362,40 +404,6 @@ onUnmounted(() => {
             <UploadOutlined />
             {{ t('imageBed.upload') }}
           </a-button>
-          <!-- 页面级开关：语言 / 主题 / 用户 / 控制台（右起第一个即管理员入口） -->
-          <a-dropdown
-            :trigger="['click']"
-            :menu="{
-              items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
-              selectable: true,
-              selectedKeys: [localeKey],
-            }"
-            @menu-click="handleLocaleChange"
-          >
-            <a-button type="text" shape="circle" class="icon-btn">
-              <GlobalOutlined />
-            </a-button>
-          </a-dropdown>
-          <a-button type="text" shape="circle" class="icon-btn" @click="appStore.toggleDark()">
-            <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
-          </a-button>
-          <a-button
-            v-if="!userStore.isLoggedIn"
-            type="primary"
-            @click="router.push('/login')"
-          >
-            {{ t('common.login') }}
-          </a-button>
-          <a-dropdown v-else :trigger="['click']" :menu="{ items: userMenuItems }" @menu-click="handleUserMenu">
-            <a-button type="text" shape="circle" class="icon-btn">
-              <UserOutlined />
-            </a-button>
-          </a-dropdown>
-          <a-tooltip v-if="userStore.isAdmin" :title="t('common.console')">
-            <a-button type="text" shape="circle" class="icon-btn console-btn" @click="goConsole">
-              <DashboardOutlined />
-            </a-button>
-          </a-tooltip>
         </a-space>
       </template>
 
@@ -513,19 +521,63 @@ onUnmounted(() => {
         </template>
       </a-table>
     </a-card>
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* 页面独立后自行负责外边距（原先由布局的内容区提供） */
-.tool-page-card {
-  width: 100%;
+/* 页面根：自带顶栏，没有任何布局组件包裹 */
+.image-bed-page {
   min-height: 100svh;
-  padding: 16px 24px 24px;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 页面右上角的小圆按钮：语言 / 主题 / 用户 / 控制台 */
+/* 顶栏：sticky 半透明 + 毛玻璃，亮/暗各一套底色 */
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: 64px;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+:global(html.dark) .page-header {
+  background: rgba(20, 22, 30, 0.72);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.brand-icon {
+  font-size: 20px;
+}
+
+.brand-title {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 顶栏小圆按钮：语言 / 主题 / 用户 / 控制台 */
 .icon-btn {
   flex: none;
   width: 32px;
@@ -534,6 +586,14 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* 内容区：顶栏之外由页面自己给边距 */
+.tool-page-card {
+  width: 100%;
+  flex: 1;
+  padding: 16px 24px 24px;
+  box-sizing: border-box;
 }
 
 .image-card {
@@ -610,6 +670,14 @@ onUnmounted(() => {
 
 /* 窄屏：操作列文字按钮收紧，避免换行 */
 @media (max-width: 767px) {
+  .page-header {
+    padding: 0 12px;
+  }
+
+  .page-actions {
+    gap: 4px;
+  }
+
   .tool-page-card {
     padding: 8px 12px 16px;
   }
