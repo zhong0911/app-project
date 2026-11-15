@@ -124,7 +124,7 @@ userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 前端作为 OAuth2 客户端的入口层，token 全程在后端（会话 Cookie），前端不接触 token：
 
 ```
-点「SSO 登录」→ 整页跳转 /sso/authorize?redirect_uri=绝对回跳地址（dev 由 vite 代理到后端）
+点「SSO 登录」→ 整页跳转 /sso/authorize?redirect_uri=站内相对路径（dev 由 vite 代理到后端）
 → 后端 302 到授权服务器登录页 → 授权后回调后端 /sso/callback
 → 后端换 token、建会话 → 302 回前端 redirect_uri 指定的页面（无参数才落到 SSO_LOGIN_SUCCESS_URL）
 → 前端 onMounted 调 /api/bff/me 拉取登录态（uid / role / name）
@@ -132,8 +132,8 @@ userStore.loginWithSso('/admin')   // 整页跳转 SSO 授权
 
 - 登录入口：`userStore.loginWithSso()`（`LandingLayout.vue` / `ConsoleLayout.vue` 顶栏，未登录时显示）。
 - 登录态拉取：`userStore.fetchLoginUser()`（BFF 聚合接口 `GET /api/bff/me`，未登录 401 静默忽略）。
-- 回跳地址：`loginWithSso(redirectUri)` 把「当前源 + 路径」拼成绝对地址透传给后端（后端存会话、回调成功后直接跳过去，不再落到后端的 `/api/auth/me`）；同时存 `localStorage`（`utils/auth.js`，30 分钟过期，一个地址只消费一次）作为兜底，跨标签页/跨页面都能带上；旧版写在 `sessionStorage` 的值会自动迁移。
-- 后端校验回跳地址：站内相对路径直接放行；绝对地址的 origin 必须在后端 `CORS_ALLOWED_ORIGINS` 白名单内（dev 默认含 `http://localhost:3000`），防止开放重定向——**换端口/换域名部署时两边都要同步改**。
+- 回跳地址：`loginWithSso(redirectUri)` 把**站内相对路径**（如 `/admin/users`）透传给后端（后端存会话、回调成功后直接跳过去，不再落到后端的 `/api/auth/me`）；同时存 `localStorage`（`utils/auth.js`，30 分钟过期，一个地址只消费一次）作为兜底，跨标签页/跨页面都能带上；旧版写在 `sessionStorage` 的值会自动迁移。
+- 后端校验回跳地址：站内相对路径直接放行（浏览器按前端当前源解析 302，同域部署和 vite 代理都准确）；传绝对地址（跨域部署）时，其 origin 需命中后端 `CORS_ALLOWED_ORIGINS` 或与请求源 / `APP_URL` 同源，用于防止开放重定向。
 - 多标签页同步：登录/退出通过 `localStorage` 广播（key `antx_auth_event`），其他标签页收到 `storage` 事件后自动拉取或清空登录态。
 - 401 统一处理：接口层派发 `auth:unauthorized`，`router` 集中清状态并跳 `/login?redirect_uri=当前地址`；探测型接口（`/bff/me`、`/auth/logout`）置 `skipAuthRedirect` 不跳转，避免循环。
 - dev 代理：`vite.config.js` 已把 `/sso` 与 `/api` 一并代理到后端。

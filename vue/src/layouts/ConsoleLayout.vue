@@ -93,12 +93,25 @@ function handleLogout() {
 }
 
 // 登录后用户菜单：账号中心（跳 SSO 账号中心）+ 退出登录
-const userMenuItems = computed(() => [
-  { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
-  { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
-])
+// 登录后用户菜单：管理员多一个「管理后台」入口；账号中心（跳 SSO 账号中心）+ 退出登录
+const userMenuItems = computed(() => {
+  const items = []
+  if (userStore.isAdmin) {
+    items.push({ key: 'admin', label: t('common.adminPanel'), icon: SettingOutlined })
+  }
+  items.push(
+    { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
+    { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
+  )
+  return items
+})
 
 function handleUserMenu({ key }) {
+  if (key === 'admin') {
+    // 后台入口（仅管理员可见）：/admin 默认重定向到用户管理
+    router.push('/admin')
+    return
+  }
   if (key === 'account') {
     // 账号中心在 SSO（passport.antx.cc）侧，新标签打开，避免把当前页面带离前端
     window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
@@ -194,25 +207,29 @@ onMounted(async () => {
           <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
             <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
           </a-button>
-          <!-- 用户菜单：未登录显示登录入口（跳转 /login 页） -->
-          <a-button
-            v-if="!userStore.isLoggedIn"
-            size="small"
-            type="primary"
-            @click="router.push('/login')"
-          >
-            {{ t('common.login') }}
-          </a-button>
-          <a-dropdown
-            v-else
-            :trigger="['click']"
-            :menu="{ items: userMenuItems }"
-            @menu-click="handleUserMenu"
-          >
-            <a-button size="small" type="text" shape="circle" class="user-btn">
-              <UserOutlined />
+          <!-- 用户菜单：未登录显示登录入口（跳转 /login 页）；
+               登录态探测完成前只留等宽占位，避免先闪一下登录按钮 -->
+          <template v-if="userStore.loginChecked">
+            <a-button
+              v-if="!userStore.isLoggedIn"
+              size="small"
+              type="primary"
+              @click="router.push('/login')"
+            >
+              {{ t('common.login') }}
             </a-button>
-          </a-dropdown>
+            <a-dropdown
+              v-else
+              :trigger="['click']"
+              :menu="{ items: userMenuItems }"
+              @menu-click="handleUserMenu"
+            >
+              <a-button size="small" type="text" shape="circle" class="user-btn">
+                <UserOutlined />
+              </a-button>
+            </a-dropdown>
+          </template>
+          <span v-else class="auth-slot" aria-hidden="true" />
         </div>
       </a-layout-header>
 
@@ -307,6 +324,13 @@ onMounted(async () => {
   width: 32px;
   height: 32px;
   padding: 0;
+}
+
+/* 登录态探测中的占位：与「登录」按钮同宽，避免探测完成后按钮出现时布局跳动 */
+.auth-slot {
+  display: inline-block;
+  width: 56px;
+  height: 24px;
 }
 
 /* 内容区：透明背景露出 layout 底色（colorBgLayout），

@@ -135,7 +135,7 @@ npm run preview  # 预览构建产物
 
 前端**不保存任何 token**：
 
-1. 点「SSO 登录」→ 整页跳转后端 `/sso/authorize?redirect_uri=<绝对地址>`；
+1. 点「SSO 登录」→ 整页跳转后端 `/sso/authorize?redirect_uri=<站内相对路径>`（跨域部署时可传绝对地址，需后端放行该 origin）；
 2. 后端 302 到授权服务器，用户授权后回调后端 `/sso/callback`，后端用授权码换 token 并**建立服务端会话**（Session 落 Redis）；
 3. 后端 302 回前端页面，此后所有请求靠会话 Cookie（`withCredentials: true`）；
 4. 前端通过 `/api/bff/me` 拿到当前用户（`uid`、`isAdmin`）；

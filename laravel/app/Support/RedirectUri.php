@@ -4,8 +4,9 @@
  *
  * 前端访问 /sso/authorize 时用 redirect_uri 透传要回跳的页面地址，后端存会话、
  * 回调成功后 302 过去。规则：
- * 1. 站内相对路径（单个 / 开头）：放行，浏览器按当前页面源解析；
- * 2. 绝对 http(s) 地址：origin 必须命中 CORS 允许来源白名单（前端传的就是这种，前后端分域也一致）；
+ * 1. 站内相对路径（单个 / 开头）：放行，浏览器按当前页面源解析（同域部署与 vite 代理最常见）；
+ * 2. 绝对 http(s) 地址：origin 命中「当前请求源」「APP_URL 源」「CORS 允许来源白名单」之一即放行，
+ *    这样同源部署（含反向代理）不必额外配白名单，跨域部署仍可显式配置；
  * 3. 协议相对（//evil.com）、反斜杠变体（/\evil.com）、控制字符、超长地址：判非法。
  *
  * 非法返回 null，由调用方回退 config('sso.login_success_url')。
@@ -18,7 +19,7 @@ class RedirectUri
     /** 回跳地址最大长度（浏览器与各类代理的兼容上限） */
     private const MAX_LENGTH = 2048;
 
-    public static function sanitize(?string $raw): ?string
+    public static function sanitize(?string $raw, ?string $currentOrigin = null): ?string
     {
         if ($raw === null) {
             return null;
@@ -43,6 +44,15 @@ class RedirectUri
         $origin = self::originOf($target);
         if ($origin === null) {
             return null;
+        }
+        // 同源放行：与当前请求源、应用 APP_URL 同源时直接通过。
+        // 同域反向代理与「前端直连后端」场景下，这类地址本来就不会写进 CORS 白名单，
+        // 但跳回自身站点不存在开放重定向风险。
+        foreach ([$currentOrigin, (string) config('app.url')] as $candidate) {
+            $trustedOrigin = self::originOf((string) $candidate);
+            if ($trustedOrigin !== null && $trustedOrigin === $origin) {
+                return $target;
+            }
         }
         foreach ((array) config('cors.allowed_origins', []) as $allowed) {
             if (is_string($allowed) && self::originOf($allowed) === $origin) {

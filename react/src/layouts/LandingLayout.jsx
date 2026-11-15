@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Drawer, Dropdown, Grid } from 'antd'
 import {
+  DashboardOutlined,
   GlobalOutlined,
   LoginOutlined,
   LogoutOutlined,
@@ -16,7 +17,7 @@ import PageLoading from '@/components/PageLoading'
 import { ACCOUNT_CENTER_URL, APP_TITLE } from '@/config/app'
 import { LOCALES, useLocaleStore } from '@/config/locale'
 import { useAppStore } from '@/stores/app'
-import { useIsLoggedIn, useUserStore } from '@/stores/user'
+import { useIsAdmin, useIsLoggedIn, useLoginChecked, useUserStore } from '@/stores/user'
 import { refreshAppContext } from '@/utils/app'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
 import SideMenu from './SideMenu'
@@ -48,6 +49,9 @@ export default function LandingLayout() {
   const localeKey = useLocaleStore((s) => s.key)
   const setLocale = useLocaleStore((s) => s.setLocale)
   const isLoggedIn = useIsLoggedIn()
+  const isAdmin = useIsAdmin()
+  // 首次登录态探测完成前不渲染登录按钮，避免首帧闪一下「登录」
+  const loginChecked = useLoginChecked()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -148,11 +152,20 @@ export default function LandingLayout() {
   }
 
   const userMenuItems = [
+    // 管理员才看到后台入口（isAdmin 由后端按本地角色判定，经 BFF 下发）
+    ...(isAdmin
+      ? [{ key: 'admin', label: t('common.adminPanel'), icon: <DashboardOutlined /> }]
+      : []),
     { key: 'account', label: t('common.accountCenter'), icon: <UserOutlined /> },
     { key: 'logout', label: t('common.logout'), icon: <LogoutOutlined /> },
   ]
 
   const handleUserMenu = ({ key }) => {
+    if (key === 'admin') {
+      // 后台入口（仅管理员可见）：/admin 默认重定向到用户管理
+      navigate('/admin')
+      return
+    }
     if (key === 'account') {
       // 账号中心在 SSO（passport.antx.cc）侧，新标签打开
       window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
@@ -236,8 +249,10 @@ export default function LandingLayout() {
               }}
             />
 
-            {/* 登录 / 用户菜单 */}
-            {!isLoggedIn ? (
+            {/* 登录 / 用户菜单：登录态探测完成前只留等宽占位，避免先闪一下登录按钮 */}
+            {!loginChecked ? (
+              <span className="auth-slot" aria-hidden="true" />
+            ) : !isLoggedIn ? (
               <Button type="primary" onClick={goLogin} icon={<LoginOutlined />}>
                 {t('common.login')}
               </Button>

@@ -33,8 +33,11 @@ class SsoController extends Controller
         $request->session()->put('sso_state', $state);
 
         // 回跳地址与 state 同会话保存，回调成功时消费一次
+        // 传当前请求源进去，让「同源但不在 CORS 白名单」的地址也能通过校验
         $rawRedirect = $request->query('redirect_uri');
-        $target = is_string($rawRedirect) ? RedirectUri::sanitize($rawRedirect) : null;
+        $target = is_string($rawRedirect)
+            ? RedirectUri::sanitize($rawRedirect, $request->getSchemeAndHttpHost())
+            : null;
         if ($target !== null) {
             $request->session()->put('sso_redirect_uri', $target);
         } else {

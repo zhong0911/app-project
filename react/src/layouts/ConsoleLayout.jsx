@@ -23,7 +23,7 @@ import PageLoading from '@/components/PageLoading'
 import { ACCOUNT_CENTER_URL } from '@/config/app'
 import { LOCALES, useLocaleStore } from '@/config/locale'
 import { useAppStore } from '@/stores/app'
-import { useUserStore, useIsLoggedIn, useIsAdmin } from '@/stores/user'
+import { useUserStore, useIsLoggedIn, useIsAdmin, useLoginChecked } from '@/stores/user'
 import { refreshAppContext } from '@/utils/app'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
 import SideMenu from './SideMenu'
@@ -56,6 +56,8 @@ export default function ConsoleLayout() {
 
   const isLoggedIn = useIsLoggedIn()
   const isAdmin = useIsAdmin()
+  // 首次登录态探测完成前不渲染登录按钮，避免首帧闪一下「登录」
+  const loginChecked = useLoginChecked()
 
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -128,13 +130,21 @@ export default function ConsoleLayout() {
   // 退出登录：进入 /logout 页，由该页请求后端单点退出并跳转
   const handleLogout = () => navigate('/logout')
 
-  // 登录后用户菜单：账号中心（跳 SSO 账号中心）+ 退出登录
+  // 登录后用户菜单：管理员多一个「管理后台」入口；账号中心（跳 SSO 账号中心）+ 退出登录
   const userMenuItems = [
+    ...(isAdmin
+      ? [{ key: 'admin', label: t('common.adminPanel'), icon: <SettingOutlined /> }]
+      : []),
     { key: 'account', label: t('common.accountCenter'), icon: <UserOutlined /> },
     { key: 'logout', label: t('common.logout'), icon: <LogoutOutlined /> },
   ]
 
   const handleUserMenu = ({ key }) => {
+    if (key === 'admin') {
+      // 后台入口（仅管理员可见）：/admin 默认重定向到用户管理
+      navigate('/admin')
+      return
+    }
     if (key === 'account') {
       // 账号中心在 SSO（passport.antx.cc）侧，新标签打开，避免把当前页面带离前端
       window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
@@ -228,8 +238,11 @@ export default function ConsoleLayout() {
               }}
             />
 
-            {/* 用户菜单：未登录显示登录入口（跳转 /login 页） */}
-            {!isLoggedIn ? (
+            {/* 用户菜单：未登录显示登录入口（跳转 /login 页）；
+                登录态探测完成前只留等宽占位，避免先闪一下登录按钮 */}
+            {!loginChecked ? (
+              <span className="auth-slot" aria-hidden="true" />
+            ) : !isLoggedIn ? (
               <Button size="small" type="primary" onClick={() => navigate('/login')}>
                 {t('common.login')}
               </Button>

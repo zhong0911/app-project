@@ -134,6 +134,13 @@
   padding: 0;
 }
 
+/* 登录态探测中的占位：与「登录」按钮同宽，避免探测完成后按钮出现时布局跳动 */
+.auth-slot {
+  display: inline-block;
+  width: 88px;
+  height: 32px;
+}
+
 .content {
   margin: 16px;
   padding: 24px;

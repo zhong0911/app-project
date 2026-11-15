@@ -12,6 +12,7 @@ import {
   LoginOutlined,
   LogoutOutlined,
   UserOutlined,
+  DashboardOutlined,
 } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
 import SideMenu from './SideMenu.vue'
@@ -122,17 +123,28 @@ function handleBrandClick(event) {
   drawerOpen.value = true
 }
 
-const userMenuItems = computed(() => [
-  { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
-  { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
-])
+const userMenuItems = computed(() => {
+  const items = []
+  // 管理员才看到后台入口（isAdmin 由后端按 SSO_ADMIN_UID 与本地角色判定，经 BFF 下发）
+  if (userStore.isAdmin) {
+    items.push({ key: 'admin', label: t('common.adminPanel'), icon: DashboardOutlined })
+  }
+  items.push(
+    { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
+    { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
+  )
+  return items
+})
 
 function handleLocaleChange({ key }) {
   setLocale(key)
 }
 
 function handleUserMenu({ key }) {
-  if (key === 'account') {
+  if (key === 'admin') {
+    // 后台入口（仅管理员可见）：/admin 默认重定向到用户管理
+    router.push('/admin')
+  } else if (key === 'account') {
     // 账号中心在 SSO（passport.antx.cc）侧，新标签打开，避免把当前页面带离前端
     window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
   } else if (key === 'logout') {
@@ -213,21 +225,24 @@ onMounted(async () => {
             <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
           </a-button>
 
-          <!-- 登录 / 用户菜单 -->
-          <a-button v-if="!userStore.isLoggedIn" type="primary" @click="goLogin">
-            <LoginOutlined />
-            {{ t('common.login') }}
-          </a-button>
-          <a-dropdown
-            v-else
-            :trigger="['click']"
-            :menu="{ items: userMenuItems }"
-            @menu-click="handleUserMenu"
-          >
-            <a-button type="text" shape="circle" class="icon-btn">
-              <UserOutlined />
+          <!-- 登录 / 用户菜单：登录态探测完成前只留等宽占位，避免先闪一下登录按钮 -->
+          <template v-if="userStore.loginChecked">
+            <a-button v-if="!userStore.isLoggedIn" type="primary" @click="goLogin">
+              <LoginOutlined />
+              {{ t('common.login') }}
             </a-button>
-          </a-dropdown>
+            <a-dropdown
+              v-else
+              :trigger="['click']"
+              :menu="{ items: userMenuItems }"
+              @menu-click="handleUserMenu"
+            >
+              <a-button type="text" shape="circle" class="icon-btn">
+                <UserOutlined />
+              </a-button>
+            </a-dropdown>
+          </template>
+          <span v-else class="auth-slot" aria-hidden="true" />
         </div>
       </div>
     </header>
@@ -362,6 +377,13 @@ html.dark .site-header {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* 登录态探测中的占位：与「登录」按钮同宽，避免探测完成后按钮出现时布局跳动 */
+.auth-slot {
+  display: inline-block;
+  width: 88px;
+  height: 32px;
 }
 
 /* 移动端品牌区即菜单入口：整块可点（图标 + 标题） */

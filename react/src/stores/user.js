@@ -29,6 +29,9 @@ let fetchPromise = null
 export const useUserStore = create((set, get) => ({
   userInfo: null,
 
+  /** 首次登录态探测是否已完成：未完成时布局不渲染「登录 / 用户」按钮，避免首帧闪一下 */
+  loginChecked: false,
+
   /** 清空本地登录态（不发请求、不跳转；跳转由调用方决定） */
   clearUser: () => set({ userInfo: null }),
 
@@ -38,16 +41,17 @@ export const useUserStore = create((set, get) => ({
    * 授权后回调 /sso/callback 换 token 建会话，再 302 回前端页面。
    *
    * @param redirectUri 登录成功后的回跳地址（/login?redirect_uri=xxx 传入，缺省 '/'）：
-   *   1. 转成绝对地址（当前前端源 + 路径）作为 query 参数透传给后端，后端存会话、
-   *      回调成功后直接跳过去；后端按 CORS 允许来源校验 origin，不依赖 Location 相对路径的解析规则；
-   *   2. 同时存 localStorage（带 30 分钟过期，见 utils/auth.js），
+   *   1. 以「站内相对路径」透传给后端（不再拼当前源）：前端与后端同域部署、开发环境走 vite 代理时，
+   *      浏览器都按前端当前源解析 302 的 Location，能准确回到前端页面；
+   *      后端对相对路径直接放行，不必依赖 CORS 白名单，也就不会退到 SSO_LOGIN_SUCCESS_URL 兜底页；
+   *   2. 若调用方明确传了绝对地址（跨域部署场景），后端会按 CORS 允许来源校验 origin；
+   *   3. 同时存 localStorage（带 30 分钟过期，见 utils/auth.js），
    *      作为兜底：授权链路没带回跳地址时由登录页 / 布局消费一次。
    */
   loginWithSso: (redirectUri = '') => {
     const target = redirectUri || '/'
     saveRedirectUri(target)
-    const absolute = /^https?:\/\//i.test(target) ? target : `${window.location.origin}${target}`
-    window.location.href = `/sso/authorize?redirect_uri=${encodeURIComponent(absolute)}`
+    window.location.href = `/sso/authorize?redirect_uri=${encodeURIComponent(target)}`
   },
 
   /** 拉取 SSO 登录态（BFF 聚合接口；未登录返回 401 时静默忽略） */
@@ -70,6 +74,7 @@ export const useUserStore = create((set, get) => ({
       return info
     })().finally(() => {
       fetchPromise = null
+      set({ loginChecked: true })
     })
     return fetchPromise
   },
@@ -123,6 +128,9 @@ export const useUserStore = create((set, get) => ({
 
 /** 是否已登录 */
 export const useIsLoggedIn = () => useUserStore((s) => !!s.userInfo)
+
+/** 首次登录态探测是否已完成（未完成时布局不渲染登录按钮，避免闪烁） */
+export const useLoginChecked = () => useUserStore((s) => s.loginChecked)
 
 /** 是否为管理员（由后端按 SSO_ADMIN_UID 判定，通过 BFF /api/bff/me 下发） */
 export const useIsAdmin = () => useUserStore((s) => s.userInfo?.isAdmin === true)
