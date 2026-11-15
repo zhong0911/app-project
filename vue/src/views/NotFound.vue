@@ -22,5 +22,6 @@ const { t } = useI18n()
   align-items: center;
   justify-content: center;
   height: 100vh;
+  height: 100svh;
 }
 </style>

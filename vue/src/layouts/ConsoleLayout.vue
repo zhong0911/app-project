@@ -230,6 +230,7 @@ onMounted(async () => {
 /* 布局根：铺满视口 */
 .layout-root {
   min-height: 100vh;
+  min-height: 100svh;
 }
 
 /* 侧边栏：fixed 固定不滚动，高度撑满视口；背景由 :theme + Layout token 控制 */
@@ -239,6 +240,7 @@ onMounted(async () => {
   left: 0;
   bottom: 0;
   height: 100vh;
+  height: 100svh;
   overflow-y: auto;
   z-index: 100;
 }
@@ -246,6 +248,7 @@ onMounted(async () => {
 /* 主区域：左移侧边栏宽度（折叠 80 / 展开 220，由 JS 绑定） */
 .layout-main {
   min-height: 100vh;
+  min-height: 100svh;
   transition: margin-left 0.2s;
 }
 
@@ -309,12 +312,14 @@ onMounted(async () => {
   margin: 16px;
   padding: 24px;
   min-height: calc(100vh - 64px - 32px);
+  min-height: calc(100svh - 64px - 32px);
 }
 
 /* 路由懒加载 loading：wrapper 撑满内容区高度，antdv spinner 默认在容器内居中；
    注意不要用 flex，否则页面内容也会被居中 */
 .route-spin {
   min-height: calc(100vh - 64px - 96px);
+  min-height: calc(100svh - 64px - 96px);
 }
 
 /* ============ 移动端适配（<768px） ============ */
@@ -348,6 +353,7 @@ onMounted(async () => {
     margin: 8px;
     padding: 12px;
     min-height: calc(100vh - 64px - 16px);
+    min-height: calc(100svh - 64px - 16px);
   }
 }
 </style>
