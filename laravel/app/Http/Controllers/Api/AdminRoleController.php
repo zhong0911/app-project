@@ -3,26 +3,24 @@
  * 管理后台角色字典（对标 Spring Boot 的 controller/RoleController）。
  * 仅管理员可访问（sso.admin 中间件）。
  *
- * 模板里角色是子应用本地字典，内置 ADMIN / USER，users.role 引用这里的 code；
- * 本实现不落角色表，内置两项之外把 users 表里已出现过的自定义 role 一并补出来，
- * 保证管理后台的筛选下拉与角色标签不会出现「查不到名字」的编码。
+ * 角色是子应用本地字典，内置 ADMIN / USER（built_in=1：编码不可改、不可删），
+ * 可新增自定义角色；users.role 引用这里的 code，仍被用户引用的角色不可删。
  */
 
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Http\Requests\RoleRequest;
+use App\Services\RoleService;
 use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminRoleController extends Controller
 {
-    /** 内置角色（users.role 的取值来源） */
-    private const BUILTIN_ROLES = [
-        ['code' => 'ADMIN', 'name' => '管理员', 'enabled' => true, 'builtin' => true, 'sort' => 1],
-        ['code' => 'USER', 'name' => '普通用户', 'enabled' => true, 'builtin' => true, 'sort' => 2],
-    ];
+    public function __construct(private readonly RoleService $roleService)
+    {
+    }
 
     /**
      * GET /api/admin/roles?includeDisabled=true
@@ -32,31 +30,25 @@ class AdminRoleController extends Controller
     {
         $includeDisabled = filter_var($request->query('includeDisabled', false), FILTER_VALIDATE_BOOLEAN);
 
-        $roles = self::BUILTIN_ROLES;
-        $codes = array_column($roles, 'code');
+        return Result::success($this->roleService->listRoles($includeDisabled));
+    }
 
-        // 已落库的自定义角色：去重补进字典，避免 users.role 出现字典外的编码
-        $used = User::query()->distinct()->pluck('role')->all();
-        foreach ($used as $code) {
-            $code = trim((string) $code);
-            if ($code === '' || in_array($code, $codes, true)) {
-                continue;
-            }
-            $roles[] = [
-                'code' => $code,
-                'name' => $code,
-                'enabled' => true,
-                'builtin' => false,
-                'sort' => count($roles) + 1,
-            ];
-            $codes[] = $code;
-        }
+    /** POST /api/admin/roles 新增角色 */
+    public function create(RoleRequest $request): JsonResponse
+    {
+        return Result::success($this->roleService->createRole($request->validated()));
+    }
 
-        if (! $includeDisabled) {
-            // 当前角色字典没有禁用态；保留参数语义，接入角色表后在此过滤 enabled=false
-            $roles = array_values(array_filter($roles, static fn (array $role): bool => $role['enabled']));
-        }
+    /** PUT /api/admin/roles/{id} 更新角色（内置角色编码不可改） */
+    public function update(int $id, RoleRequest $request): JsonResponse
+    {
+        return Result::success($this->roleService->updateRole($id, $request->validated()));
+    }
 
-        return Result::success($roles);
+    /** DELETE /api/admin/roles/{id} 删除角色（内置角色、仍被用户使用的角色不可删） */
+    public function remove(int $id): JsonResponse
+    {
+        $this->roleService->deleteRole($id);
+        return Result::success();
     }
 }

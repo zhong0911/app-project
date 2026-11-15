@@ -179,7 +179,7 @@ export default function AdminRecycle() {
                 rowKey="id"
                 scroll={{ x: 'max-content' }}
                 onChange={handleTableChange}
-                locale={{ emptyText: <Empty description={t('adminRecycle.empty')} /> }}
+                locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('adminRecycle.empty')} /> }}
               />
             ),
           },

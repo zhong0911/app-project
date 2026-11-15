@@ -31,6 +31,9 @@ Route::middleware('sso.auth')->group(function () {
 // 管理端（需管理员）
 Route::middleware('sso.admin')->group(function () {
     Route::get('/admin/roles', [AdminRoleController::class, 'list']);
+    Route::post('/admin/roles', [AdminRoleController::class, 'create']);
+    Route::put('/admin/roles/{id}', [AdminRoleController::class, 'update'])->whereNumber('id');
+    Route::delete('/admin/roles/{id}', [AdminRoleController::class, 'remove'])->whereNumber('id');
     Route::get('/admin/users', [AdminUserController::class, 'page']);
     Route::get('/admin/users/recycle', [AdminUserController::class, 'recycle']);
     Route::post('/admin/users', [AdminUserController::class, 'create']);

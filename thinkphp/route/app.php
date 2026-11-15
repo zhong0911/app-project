@@ -30,6 +30,10 @@ Route::group('api', function () {
 
     // 管理端（需管理员）
     Route::group(function () {
+        Route::get('admin/roles', 'AdminRole/list');
+        Route::post('admin/roles', 'AdminRole/create');
+        Route::put('admin/roles/:id', 'AdminRole/update');
+        Route::delete('admin/roles/:id', 'AdminRole/remove');
         Route::get('admin/users', 'AdminUser/page');
         Route::get('admin/users/recycle', 'AdminUser/recycle');
         Route::post('admin/users', 'AdminUser/create');

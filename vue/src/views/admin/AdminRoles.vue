@@ -3,6 +3,7 @@
 // 内置 ADMIN / USER 由后端标记 builtIn=1：编码不可改、不可删除；仍被用户引用的角色也不可删（后端校验）。
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Empty } from 'antdv-next'
 import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { createAdminRoleApi, deleteAdminRoleApi, getAdminRolesApi, updateAdminRoleApi } from '@/api/admin'
@@ -202,8 +203,11 @@ onMounted(load)
       :pagination="false"
       row-key="id"
       :scroll="{ x: 'max-content' }"
-      :locale="{ emptyText: t('adminRoles.empty') }"
     >
+      <template #emptyText>
+        <a-empty :image="Empty.PRESENTED_IMAGE_SIMPLE" :description="t('adminRoles.empty')" />
+      </template>
+
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'code'">
           <span class="mono">{{ record.code }}</span>

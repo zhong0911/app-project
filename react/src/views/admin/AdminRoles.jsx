@@ -255,7 +255,7 @@ export default function AdminRoles() {
           pagination={false}
           rowKey="id"
           scroll={{ x: 'max-content' }}
-          locale={{ emptyText: <Empty description={t('adminRoles.empty')} /> }}
+          locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('adminRoles.empty')} /> }}
         />
       </div>
 

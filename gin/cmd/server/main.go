@@ -30,6 +30,8 @@ func main() {
 	// 依赖装配（Go 没有内置 DI 容器，全部显式注入）
 	userRepo := repository.NewUserRepository(db)
 	userService := service.NewUserService(userRepo, cfg.SSO.AdminUID)
+	roleRepo := repository.NewRoleRepository(db)
+	roleService := service.NewRoleService(roleRepo)
 	store := session.NewStore(time.Duration(cfg.Session.MaxAge) * time.Second)
 	ssoClient := sso.NewClient(&cfg.SSO)
 
@@ -41,7 +43,7 @@ func main() {
 	engine.Use(gin.Logger(), middleware.Recovery(cfg), middleware.CORS(cfg))
 	engine.Use(middleware.SessionMiddleware(store, cfg), middleware.IdentityMiddleware(cfg, ssoClient))
 
-	router.Setup(engine, cfg, store, ssoClient, userService)
+	router.Setup(engine, cfg, store, ssoClient, userService, roleService)
 
 	log.Printf("[boot] %s 已启动: http://localhost:%s", cfg.App.Name, cfg.App.Port)
 	log.Printf("[boot] SSO 回调地址: %s", cfg.SSO.RedirectURI)

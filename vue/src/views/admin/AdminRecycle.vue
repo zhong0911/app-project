@@ -4,6 +4,7 @@
 // 表格只用 a-table 本身的能力（分页用表格自带的）
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Empty } from 'antdv-next'
 import { ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
@@ -117,7 +118,7 @@ onMounted(load)
           @change="handleTableChange"
         >
           <template #emptyText>
-            <a-empty :description="t('adminRecycle.empty')" />
+            <a-empty :image="Empty.PRESENTED_IMAGE_SIMPLE" :description="t('adminRecycle.empty')" />
           </template>
 
           <template #bodyCell="{ column, record }">

@@ -12,6 +12,7 @@ import { SsoModule } from './modules/sso/sso.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BffModule } from './modules/bff/bff.module';
 import { AdminUserModule } from './modules/admin-user/admin-user.module';
+import { RoleModule } from './modules/role/role.module';
 import { DemoModule } from './modules/demo/demo.module';
 
 @Module({
@@ -23,6 +24,7 @@ import { DemoModule } from './modules/demo/demo.module';
     AuthModule,
     BffModule,
     AdminUserModule,
+    RoleModule,
     DemoModule,
   ],
   providers: [

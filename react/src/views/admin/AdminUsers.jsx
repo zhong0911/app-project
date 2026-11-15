@@ -338,7 +338,7 @@ export default function AdminUsers() {
           rowKey="id"
           scroll={{ x: 'max-content' }}
           onChange={handleTableChange}
-          locale={{ emptyText: <Empty description={t('adminUsers.empty')} /> }}
+          locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('adminUsers.empty')} /> }}
         />
       </div>
 

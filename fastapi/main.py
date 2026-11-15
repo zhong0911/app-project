@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.api import sso
-from app.api.v1 import admin_user, auth, bff, demo, user
+from app.api.v1 import admin_role, admin_user, auth, bff, demo, user
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.exceptions import register_exception_handlers
@@ -47,6 +47,7 @@ app.include_router(auth.router)       # /api/auth/me、/api/auth/logout
 app.include_router(bff.router)        # /api/bff/me
 app.include_router(user.router)       # /api/users
 app.include_router(admin_user.router) # /api/admin/users
+app.include_router(admin_role.router) # /api/admin/roles
 app.include_router(demo.router)       # /api/demo/*
 
 

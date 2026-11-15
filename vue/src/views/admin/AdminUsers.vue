@@ -3,6 +3,7 @@
 // 列为用户唯一标识 / 角色 / 状态 / 操作（编辑 · 停用启用 · 删除）
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { Empty } from 'antdv-next'
 import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { useUserStore } from '@/stores/modules/user'
@@ -266,7 +267,8 @@ onMounted(async () => {
       @change="handleTableChange"
     >
       <template #emptyText>
-        <a-empty :description="t('adminUsers.empty')" />
+        <!-- 简洁线框图：配色跟随主题 token，暗色下不会出现写死浅灰的大插图 -->
+        <a-empty :image="Empty.PRESENTED_IMAGE_SIMPLE" :description="t('adminUsers.empty')" />
       </template>
 
       <template #bodyCell="{ column, record }">

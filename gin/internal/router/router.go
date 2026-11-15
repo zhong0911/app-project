@@ -21,13 +21,15 @@ import (
 //	/api/bff/*             公开（未登录返回空对象）
 //	/api/users/*           需登录
 //	/api/admin/users/*     需管理员
+//	/api/admin/roles/*     需管理员
 //	/api/demo/*            权限示例
-func Setup(engine *gin.Engine, cfg *config.Config, store *session.Store, client *sso.Client, users *service.UserService) {
+func Setup(engine *gin.Engine, cfg *config.Config, store *session.Store, client *sso.Client, users *service.UserService, roles *service.RoleService) {
 	ssoHandler := handler.NewSsoHandler(cfg, client, store, users)
 	authHandler := handler.NewAuthHandler(cfg, client, store)
 	bffHandler := handler.NewBffHandler(cfg, users)
 	userHandler := handler.NewUserHandler(users)
 	adminHandler := handler.NewAdminUserHandler(users)
+	roleHandler := handler.NewAdminRoleHandler(roles)
 	demoHandler := handler.NewDemoHandler()
 
 	engine.GET("/health", func(c *gin.Context) {
@@ -67,6 +69,15 @@ func Setup(engine *gin.Engine, cfg *config.Config, store *session.Store, client 
 		adminRoutes.DELETE("/:id", adminHandler.Delete)
 		adminRoutes.POST("/:id/restore", adminHandler.Restore)
 		adminRoutes.DELETE("/:id/purge", adminHandler.Purge)
+	}
+
+	// 管理端角色字典（需管理员）
+	roleRoutes := api.Group("/admin/roles", middleware.RequireAdmin(users))
+	{
+		roleRoutes.GET("", roleHandler.List)
+		roleRoutes.POST("", roleHandler.Create)
+		roleRoutes.PUT("/:id", roleHandler.Update)
+		roleRoutes.DELETE("/:id", roleHandler.Delete)
 	}
 
 	// 权限示例

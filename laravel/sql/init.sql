@@ -28,6 +28,34 @@ CREATE TABLE IF NOT EXISTS `users`
 -- 存量表补列表索引（新库已包含，可忽略）：
 -- ALTER TABLE users ADD INDEX idx_deleted_create_time (deleted, create_time);
 
+-- ============================================
+-- 角色表（子应用本地角色字典，默认内置 ADMIN / USER）
+-- ============================================
+CREATE TABLE IF NOT EXISTS `roles`
+(
+    `id`          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `code`        VARCHAR(32)  NOT NULL COMMENT '角色编码（大写，如 ADMIN / USER / AUDITOR）',
+    `name`        VARCHAR(64)  NOT NULL COMMENT '角色名称',
+    `description` VARCHAR(255) NULL COMMENT '角色描述',
+    `built_in`    TINYINT      NOT NULL DEFAULT 0 COMMENT '内置角色：1-内置（不可删除、不可改编码）',
+    `status`      TINYINT      NOT NULL DEFAULT 1 COMMENT '状态：1-启用，0-禁用',
+    `sort`        INT          NOT NULL DEFAULT 0 COMMENT '排序（升序）',
+    `create_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `uk_code` (`code`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_general_ci COMMENT ='角色表（子应用本地角色字典，内置 ADMIN / USER）';
+
+-- 默认角色：ADMIN（管理员）、USER（普通用户），均为内置角色，不可删除
+INSERT INTO `roles` (`code`, `name`, `description`, `built_in`, `status`, `sort`)
+VALUES ('ADMIN', '管理员', '拥有管理后台全部权限', 1, 1, 1),
+       ('USER', '普通用户', '仅可访问普通功能', 1, 1, 2)
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`),
+                        `description` = VALUES(`description`),
+                        `built_in` = 1;
+
 -- ============ 初始数据（执行一次） ============
 -- 初始管理员：唯一标识为 "1" 的用户默认为 ADMIN
 --（管理员同时以 SSO_ADMIN_UID 判定，默认 1，按字符串比较）。
