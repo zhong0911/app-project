@@ -213,7 +213,9 @@ onMounted(async () => {
         @search="handleSearch"
       >
         <template #enterButton>
-          <SearchOutlined />
+          <a-button>
+            <SearchOutlined />
+          </a-button>
         </template>
       </a-input-search>
 

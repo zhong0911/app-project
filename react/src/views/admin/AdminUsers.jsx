@@ -290,7 +290,7 @@ export default function AdminUsers() {
             onChange={(e) => setUidInput(e.target.value)}
             placeholder={t('adminUsers.searchUid')}
             allowClear
-            enterButton={<SearchOutlined />}
+            enterButton={<Button icon={<SearchOutlined />} />}
             className="search-input"
             onSearch={handleSearch}
           />

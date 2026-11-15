@@ -3,7 +3,7 @@
 // 内置 ADMIN / USER 由后端标记 builtIn=1：编码不可改、不可删除；仍被用户引用的角色也不可删（后端校验）。
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
+import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { createAdminRoleApi, deleteAdminRoleApi, getAdminRolesApi, updateAdminRoleApi } from '@/api/admin'
 
@@ -11,7 +11,6 @@ const { t } = useI18n()
 
 const loading = ref(false)
 const allRecords = ref([])
-const filters = reactive({ keyword: '', status: undefined })
 
 /** 正在提交「停用 / 启用」的行 id：按钮显示 loading，避免重复点击 */
 const actingId = ref(null)
@@ -29,7 +28,7 @@ const visibleKeys = ref(['code', 'name', 'description', 'status', 'action'])
 
 const columns = computed(() => columnDefs.value.filter((col) => visibleKeys.value.includes(col.key)))
 
-/** 接口只按启用状态维度返回数据，关键字与状态在页面内过滤（角色总量很小，不分页） */
+/** 接口按启用状态维度返回全部角色（角色总量很小，不分页，页面不做关键字 / 状态筛选） */
 const load = async () => {
   loading.value = true
   try {
@@ -43,21 +42,7 @@ const load = async () => {
   }
 }
 
-const records = computed(() => {
-  const keyword = filters.keyword.trim().toLowerCase()
-  return allRecords.value.filter((role) => {
-    if (filters.status !== undefined && Number(role.status) !== Number(filters.status)) {
-      return false
-    }
-    if (!keyword) {
-      return true
-    }
-    return (
-      String(role.code || '').toLowerCase().includes(keyword) ||
-      String(role.name || '').toLowerCase().includes(keyword)
-    )
-  })
-})
+const records = computed(() => allRecords.value)
 
 /** 编码规则与后端 RoleDTO 一致：字母开头，字母 / 数字 / 下划线，长度 2-32 */
 const CODE_PATTERN = /^[A-Za-z][A-Za-z0-9_]{1,31}$/
@@ -189,30 +174,8 @@ onMounted(load)
 
 <template>
   <div class="admin-page">
-    <!-- 工具栏：搜索框整行 → 状态筛选 → 新增按钮 + 刷新 / 列设置 -->
+    <!-- 工具栏：角色总量很小且不分页，只保留新增按钮 + 刷新 / 列设置 -->
     <div class="user-toolbar">
-      <a-input-search
-        v-model:value="filters.keyword"
-        :placeholder="t('adminRoles.searchPlaceholder')"
-        allow-clear
-        class="search-input"
-      >
-        <template #enterButton>
-          <SearchOutlined />
-        </template>
-      </a-input-search>
-
-      <a-select
-        v-model:value="filters.status"
-        :placeholder="t('adminRoles.statusPlaceholder')"
-        allow-clear
-        :options="[
-          { value: 1, label: t('common.enabled') },
-          { value: 0, label: t('common.disabled') },
-        ]"
-        class="status-select"
-      />
-
       <div class="toolbar-row action-row">
         <a-button type="primary" @click="openAdd">
           <PlusOutlined />
@@ -334,10 +297,6 @@ onMounted(load)
 
 <style scoped>
 /* 工具栏 / 列设置样式在全局（assets/styles/index.css），三张后台页共用 */
-.status-select {
-  grid-column: 1 / -1;
-}
-
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }

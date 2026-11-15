@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Badge, Button, Empty, Form, Input, Modal, Select, Space, Table, Tag } from 'antd'
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { Alert, Badge, Button, Empty, Form, Input, Modal, Space, Table, Tag } from 'antd'
+import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
 
 import { createAdminRoleApi, deleteAdminRoleApi, getAdminRolesApi, updateAdminRoleApi } from '@/api/admin'
 import ColumnPicker from '@/components/ColumnPicker'
@@ -21,8 +21,6 @@ export default function AdminRoles() {
 
   const [loading, setLoading] = useState(false)
   const [allRecords, setAllRecords] = useState([])
-  const [keyword, setKeyword] = useState('')
-  const [status, setStatus] = useState(undefined)
 
   /** 正在提交「停用 / 启用」的行 id：按钮显示 loading，避免重复点击 */
   const [actingId, setActingId] = useState(null)
@@ -55,21 +53,7 @@ export default function AdminRoles() {
     load()
   }, [])
 
-  const records = useMemo(() => {
-    const kw = keyword.trim().toLowerCase()
-    return allRecords.filter((role) => {
-      if (status !== undefined && Number(role.status) !== Number(status)) {
-        return false
-      }
-      if (!kw) {
-        return true
-      }
-      return (
-        String(role.code || '').toLowerCase().includes(kw) ||
-        String(role.name || '').toLowerCase().includes(kw)
-      )
-    })
-  }, [allRecords, keyword, status])
+  const records = allRecords
 
   const openAdd = () => {
     setAddForm({ code: '', name: '', description: '' })
@@ -245,29 +229,8 @@ export default function AdminRoles() {
   return (
     <>
       <div className="admin-page">
-        {/* 工具栏：搜索框整行 → 状态筛选 → 新增按钮 + 刷新 / 列设置 */}
+        {/* 工具栏：角色总量很小且不分页，只保留新增按钮 + 刷新 / 列设置 */}
         <div className="user-toolbar">
-          <Input.Search
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder={t('adminRoles.searchPlaceholder')}
-            allowClear
-            enterButton={<SearchOutlined />}
-            className="search-input"
-          />
-
-          <Select
-            value={status}
-            placeholder={t('adminRoles.statusPlaceholder')}
-            allowClear
-            options={[
-              { value: 1, label: t('common.enabled') },
-              { value: 0, label: t('common.disabled') },
-            ]}
-            onChange={(value) => setStatus(value)}
-            className="status-select"
-          />
-
           <div className="toolbar-row action-row">
             <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
               {t('adminRoles.addRole')}

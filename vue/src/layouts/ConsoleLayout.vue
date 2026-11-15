@@ -1,16 +1,15 @@
 <script setup>
-import { computed, nextTick, ref, onMounted, watch } from 'vue'
+import { computed, h, nextTick, ref, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
-import { LOCALES, localeKey, setLocale } from '@/config/locale'
+import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
 import { ACCOUNT_CENTER_URL } from '@/config/app'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { releaseDrawerScrollLock, restoreDrawerScrollLock } from '@/utils/scroll-lock'
 import SideMenu from './SideMenu.vue'
 import {
-  GlobalOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MenuOutlined,
@@ -75,6 +74,19 @@ const menuItems = computed(() => {
 function handleLocaleChange({ key }) {
   setLocale(key)
 }
+
+/** 语言下拉项：每一项前面带对应国旗（下拉 teleport 出去，样式用行内兜底） */
+const localeMenuItems = computed(() => LOCALES.map((l) => ({
+  key: l.key,
+  label: h('span', { style: 'display:inline-flex;align-items:center;gap:8px' }, [
+    h('img', {
+      src: l.flag,
+      alt: '',
+      style: 'width:18px;height:12px;object-fit:cover;display:block;border-radius:2px',
+    }),
+    h('span', null, l.label),
+  ]),
+})))
 
 const selectedKeys = computed(() => [route.path])
 
@@ -180,7 +192,7 @@ onMounted(async () => {
       :style="{ marginLeft: isMobile ? 0 : appStore.collapsed ? '80px' : '220px' }"
     >
       <!-- 顶栏 -->
-      <a-layout-header class="header">
+      <a-layout-header class="header" :style="{ height: '52px', lineHeight: 'normal' }">
         <div class="header-left">
           <!-- 移动端：菜单按钮打开抽屉；桌面端：折叠/展开 -->
           <component
@@ -192,18 +204,19 @@ onMounted(async () => {
           <span v-if="currentMenuTitle" class="page-title">{{ currentMenuTitle }}</span>
         </div>
         <div class="header-right">
-          <!-- 语言切换：与主题按钮同款的圆形图标按钮，不显示当前语言文字 -->
+          <!-- 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 -->
           <a-dropdown
             :trigger="['click']"
             :menu="{
-              items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
+              items: localeMenuItems,
               selectable: true,
               selectedKeys: [localeKey],
             }"
             @menu-click="handleLocaleChange"
           >
-            <a-button size="small" type="text" shape="circle" class="lang-btn">
-              <GlobalOutlined />
+            <a-button size="small" type="text" class="lang-btn">
+              <img class="lang-flag" :src="currentLocale.flag" alt="" />
+              <span class="lang-text">{{ currentLocale.label }}</span>
             </a-button>
           </a-dropdown>
           <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
@@ -278,6 +291,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  height: 52px;
   padding: 0 16px;
 }
 
@@ -310,7 +324,22 @@ onMounted(async () => {
 .lang-btn {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  height: 28px;
+  padding: 0 6px;
+}
+
+.lang-flag {
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
+  display: block;
+  border-radius: 2px;
+}
+
+.lang-text {
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* 主题切换按钮（图标尺寸对齐原 trigger） */

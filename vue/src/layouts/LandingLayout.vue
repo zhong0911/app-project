@@ -1,12 +1,11 @@
 <script setup>
 // 落地页布局（LandingLayout）：顶部 header + 内容插槽 + 页脚，无侧边菜单
 // 用于首页等对外展示页面；后台/示例页面使用 ConsoleLayout
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, h, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useBreakpoint } from 'antdv-next'
 import {
-  GlobalOutlined,
   SunOutlined,
   MoonOutlined,
   LoginOutlined,
@@ -16,7 +15,7 @@ import {
 } from '@antdv-next/icons'
 import AppIcon from '@/components/AppIcon.vue'
 import SideMenu from './SideMenu.vue'
-import { LOCALES, localeKey, setLocale } from '@/config/locale'
+import { LOCALES, currentLocale, localeKey, setLocale } from '@/config/locale'
 import { useAppStore } from '@/stores/modules/app'
 import { useUserStore } from '@/stores/modules/user'
 import { toggleTheme } from '@/utils/app'
@@ -140,6 +139,19 @@ function handleLocaleChange({ key }) {
   setLocale(key)
 }
 
+/** 语言下拉项：每一项前面带对应国旗（下拉 teleport 出去，样式用行内兜底） */
+const localeMenuItems = computed(() => LOCALES.map((l) => ({
+  key: l.key,
+  label: h('span', { style: 'display:inline-flex;align-items:center;gap:8px' }, [
+    h('img', {
+      src: l.flag,
+      alt: '',
+      style: 'width:18px;height:12px;object-fit:cover;display:block;border-radius:2px',
+    }),
+    h('span', null, l.label),
+  ]),
+})))
+
 function handleUserMenu({ key }) {
   if (key === 'admin') {
     // 后台入口（仅管理员可见）：/admin 默认重定向到用户管理
@@ -205,18 +217,19 @@ onMounted(async () => {
         </nav>
 
         <div class="header-actions">
-          <!-- 语言切换：与主题按钮同款的圆形图标按钮，不显示当前语言文字 -->
+          <!-- 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 -->
           <a-dropdown
             :trigger="['click']"
             :menu="{
-              items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
+              items: localeMenuItems,
               selectable: true,
               selectedKeys: [localeKey],
             }"
             @menu-click="handleLocaleChange"
           >
-            <a-button type="text" shape="circle" class="icon-btn">
-              <GlobalOutlined />
+            <a-button type="text" class="lang-btn">
+              <img class="lang-flag" :src="currentLocale.flag" alt="" />
+              <span class="lang-text">{{ currentLocale.label }}</span>
             </a-button>
           </a-dropdown>
 
@@ -299,12 +312,34 @@ html.dark .site-header {
 
 .header-inner {
   max-width: 1120px;
-  height: 64px;
+  height: 52px;
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
   align-items: center;
   gap: 24px;
+}
+
+/* 语言切换按钮：国旗 + 语言名，按 text 按钮排版，不占额外高度 */
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+}
+
+.lang-flag {
+  width: 18px;
+  height: 12px;
+  object-fit: cover;
+  display: block;
+  border-radius: 2px;
+}
+
+.lang-text {
+  font-size: 13px;
+  line-height: 1;
 }
 
 /* 品牌区：标题可能很长（读 APP_TITLE），允许收缩 + 省略号，不把右侧按钮挤出屏幕 */

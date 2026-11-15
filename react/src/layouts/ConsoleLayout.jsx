@@ -5,7 +5,6 @@ import { Button, Drawer, Dropdown, Grid, Layout } from 'antd'
 import {
   AppstoreOutlined,
   DeleteOutlined,
-  GlobalOutlined,
   HomeOutlined,
   InfoCircleOutlined,
   LogoutOutlined,
@@ -53,6 +52,7 @@ export default function ConsoleLayout() {
   const toggleDark = useAppStore((s) => s.toggleDark)
 
   const localeKey = useLocaleStore((s) => s.key)
+  const currentLocale = useLocaleStore((s) => s.locale)
   const setLocale = useLocaleStore((s) => s.setLocale)
 
   const isLoggedIn = useIsLoggedIn()
@@ -196,7 +196,7 @@ export default function ConsoleLayout() {
 
       <Layout className="layout-main" style={{ marginLeft: isMobile ? 0 : collapsed ? 80 : 220 }}>
         {/* 顶栏 */}
-        <Header className="header">
+        <Header className="header" style={{ height: 52, lineHeight: 'normal' }}>
           <div className="header-left">
             {/* 移动端：菜单按钮打开抽屉；桌面端：折叠/展开 */}
             {isMobile ? (
@@ -211,11 +211,19 @@ export default function ConsoleLayout() {
           </div>
 
           <div className="header-right">
-            {/* 语言切换：与主题按钮同款的圆形图标按钮，不显示当前语言文字 */}
+            {/* 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 */}
             <Dropdown
               trigger={['click']}
               menu={{
-                items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
+                items: LOCALES.map((l) => ({
+                  key: l.key,
+                  label: (
+                    <span className="lang-item">
+                      <img className="lang-flag" src={l.flag} alt="" />
+                      <span>{l.label}</span>
+                    </span>
+                  ),
+                })),
                 selectable: true,
                 selectedKeys: [localeKey],
                 onClick: ({ key }) => {
@@ -224,7 +232,10 @@ export default function ConsoleLayout() {
                 },
               }}
             >
-              <Button size="small" type="text" shape="circle" className="lang-btn" icon={<GlobalOutlined />} />
+              <Button size="small" type="text" className="lang-btn">
+                <img className="lang-flag" src={currentLocale.flag} alt="" />
+                <span className="lang-text">{currentLocale.label}</span>
+              </Button>
             </Dropdown>
 
             {/* 主题切换：暗色显示太阳，亮色显示月亮 */}

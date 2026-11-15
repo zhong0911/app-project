@@ -11,6 +11,11 @@ import zhCN from 'antd/locale/zh_CN'
 import zhTW from 'antd/locale/zh_TW'
 import enUS from 'antd/locale/en_US'
 
+// 语言切换用的旗帜（简体=中国旗 / 繁体=香港旗 / 英文=美国旗）
+import flagCn from '@/assets/flags/cn.svg'
+import flagHk from '@/assets/flags/hk.svg'
+import flagUs from '@/assets/flags/us.svg'
+
 import { setI18nLocale } from '@/locales'
 
 /**
@@ -25,11 +30,11 @@ import { setI18nLocale } from '@/locales'
  */
 const LOCALE_KEY = 'app-locale'
 
-/** 支持的语言（antd: antd 语言包；dayjs: dayjs locale 名） */
+/** 支持的语言（antd: antd 语言包；dayjs: dayjs locale 名；flag: 语言切换展示的旗帜） */
 export const LOCALES = [
-  { key: 'zh-CN', label: '简体中文', dayjs: 'zh-cn', antd: zhCN },
-  { key: 'zh-TW', label: '繁體中文', dayjs: 'zh-tw', antd: zhTW },
-  { key: 'en-US', label: 'English', dayjs: 'en', antd: enUS },
+  { key: 'zh-CN', label: '简体中文', dayjs: 'zh-cn', antd: zhCN, flag: flagCn },
+  { key: 'zh-TW', label: '繁體中文', dayjs: 'zh-tw', antd: zhTW, flag: flagHk },
+  { key: 'en-US', label: 'English', dayjs: 'en', antd: enUS, flag: flagUs },
 ]
 
 function initialKey() {

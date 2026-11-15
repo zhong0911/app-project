@@ -4,7 +4,6 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Drawer, Dropdown, Grid } from 'antd'
 import {
   DashboardOutlined,
-  GlobalOutlined,
   LoginOutlined,
   LogoutOutlined,
   MoonOutlined,
@@ -47,6 +46,7 @@ export default function LandingLayout() {
   const isDark = useAppStore((s) => s.isDark)
   const toggleDark = useAppStore((s) => s.toggleDark)
   const localeKey = useLocaleStore((s) => s.key)
+  const currentLocale = useLocaleStore((s) => s.locale)
   const setLocale = useLocaleStore((s) => s.setLocale)
   const isLoggedIn = useIsLoggedIn()
   const isAdmin = useIsAdmin()
@@ -221,11 +221,19 @@ export default function LandingLayout() {
           </nav>
 
           <div className="header-actions">
-            {/* 语言切换 */}
+            {/* 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 */}
             <Dropdown
               trigger={['click']}
               menu={{
-                items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
+                items: LOCALES.map((l) => ({
+                  key: l.key,
+                  label: (
+                    <span className="lang-item">
+                      <img className="lang-flag" src={l.flag} alt="" />
+                      <span>{l.label}</span>
+                    </span>
+                  ),
+                })),
                 selectable: true,
                 selectedKeys: [localeKey],
                 onClick: ({ key }) => {
@@ -234,7 +242,10 @@ export default function LandingLayout() {
                 },
               }}
             >
-              <Button type="text" shape="circle" className="icon-btn" icon={<GlobalOutlined />} />
+              <Button type="text" className="lang-btn">
+                <img className="lang-flag" src={currentLocale.flag} alt="" />
+                <span className="lang-text">{currentLocale.label}</span>
+              </Button>
             </Dropdown>
 
             {/* 主题切换：暗色显示太阳，亮色显示月亮 */}
