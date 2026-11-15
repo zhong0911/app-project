@@ -295,7 +295,6 @@ export default {
     tabUsers: '使用者',
     empty: '回收站是空的',
     title: '回收站',
-    searchUid: '按使用者唯一識別搜尋',
     hint: '回收站中的使用者為軟刪除狀態，可還原到使用者列表，或徹底刪除（不可還原）。',
     columns: {
       id: 'ID',

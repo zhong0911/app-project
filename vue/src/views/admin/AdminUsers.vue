@@ -3,7 +3,7 @@
 // 列为用户唯一标识 / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, ReloadOutlined } from '@antdv-next/icons'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { useUserStore } from '@/stores/modules/user'
 import {
@@ -48,8 +48,8 @@ const editForm = reactive({ role: '' })
 
 const columns = computed(() => [
   { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
-  { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role' },
-  { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status' },
+  { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role', width: 140 },
+  { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status', width: 120 },
   { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 170 },
   { title: t('adminUsers.columns.action'), key: 'action', width: 170 },
 ])
@@ -191,43 +191,56 @@ onMounted(async () => {
   <a-card variant="borderless" class="admin-card">
     <template #title>{{ t('adminUsers.title') }}</template>
     <template #extra>
-      <a-space wrap>
-        <a-input
-          v-model:value="filters.uid"
-          :placeholder="t('adminUsers.searchUid')"
-          allow-clear
-          style="width: 180px"
-          @press-enter="handleSearch"
-        />
-        <a-select
-          v-model:value="filters.role"
-          :placeholder="t('common.role')"
-          allow-clear
-          style="width: 130px"
-          :options="roleOptions"
-          @change="handleSearch"
-        />
-        <a-select
-          v-model:value="filters.status"
-          :placeholder="t('adminUsers.statusPlaceholder')"
-          allow-clear
-          style="width: 110px"
-          :options="[
-            { value: 1, label: t('common.enabled') },
-            { value: 0, label: t('common.disabled') },
-          ]"
-          @change="handleSearch"
-        />
-        <a-button type="primary" @click="handleSearch">
-          <ReloadOutlined />
-          {{ t('common.refresh') }}
-        </a-button>
+      <a-space>
+        <a-tooltip :title="t('common.refresh')">
+          <a-button :loading="loading" @click="handleSearch">
+            <ReloadOutlined />
+          </a-button>
+        </a-tooltip>
         <a-button type="primary" @click="openAdd">
           <PlusOutlined />
           {{ t('adminUsers.addUser') }}
         </a-button>
       </a-space>
     </template>
+
+    <!-- 筛选栏：输入框回车或点「查询」触发；角色 / 状态选择后立即刷新 -->
+    <div class="filter-bar">
+      <a-input
+        v-model:value="filters.uid"
+        :placeholder="t('adminUsers.searchUid')"
+        allow-clear
+        style="width: 220px"
+        @press-enter="handleSearch"
+      >
+        <template #prefix>
+          <SearchOutlined />
+        </template>
+      </a-input>
+      <a-select
+        v-model:value="filters.role"
+        :placeholder="t('common.role')"
+        allow-clear
+        style="width: 150px"
+        :options="roleOptions"
+        @change="handleSearch"
+      />
+      <a-select
+        v-model:value="filters.status"
+        :placeholder="t('adminUsers.statusPlaceholder')"
+        allow-clear
+        style="width: 120px"
+        :options="[
+          { value: 1, label: t('common.enabled') },
+          { value: 0, label: t('common.disabled') },
+        ]"
+        @change="handleSearch"
+      />
+      <a-button @click="handleSearch">
+        <SearchOutlined />
+        {{ t('common.query') }}
+      </a-button>
+    </div>
 
     <a-table
       :columns="columns"
@@ -256,9 +269,10 @@ onMounted(async () => {
         </template>
 
         <template v-else-if="column.key === 'status'">
-          <a-tag :color="record.status === 1 ? 'success' : 'default'" class="row-tag">
-            {{ record.status === 1 ? t('common.enabled') : t('common.disabled') }}
-          </a-tag>
+          <a-badge
+            :status="record.status === 1 ? 'success' : 'default'"
+            :text="record.status === 1 ? t('common.enabled') : t('common.disabled')"
+          />
         </template>
 
         <template v-else-if="column.key === 'lastLoginAt'">
@@ -330,6 +344,22 @@ onMounted(async () => {
 <style scoped>
 .admin-card {
   border-radius: 12px;
+}
+
+/* 筛选栏：位于表格上方，窄屏整行堆叠 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 575px) {
+  .filter-bar > * {
+    flex: 1 1 100%;
+    width: 100% !important;
+  }
 }
 
 .mono {

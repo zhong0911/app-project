@@ -2,7 +2,7 @@
 // 回收站：按资源类型分 tab 展示软删除数据，当前只实现「用户」回收站
 // （角色 / 部门等其他类型的 tab 预留，等有对应数据再补 tab 项，避免空壳）
 // 表格只用 a-table 本身的能力（分页用表格自带的）
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
@@ -18,7 +18,6 @@ const records = ref([])
 const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(10)
-const filters = reactive({ uid: '' })
 
 const columns = computed(() => [
   { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
@@ -43,7 +42,6 @@ const load = async () => {
     const { data } = await getAdminRecycleApi({
       pageNum: pageNum.value,
       pageSize: pageSize.value,
-      uid: filters.uid || undefined,
     })
     records.value = data.records || []
     total.value = data.total || 0
@@ -56,11 +54,11 @@ const load = async () => {
   }
 }
 
-const handleSearch = () => {
+/** 刷新列表（回收站不再提供条件筛选，回到第一页重拉） */
+const handleRefresh = () => {
   pageNum.value = 1
   load()
 }
-
 /** 表格分页变化 */
 const handleTableChange = (pag) => {
   pageNum.value = pag.current
@@ -104,19 +102,11 @@ onMounted(load)
   <a-card variant="borderless" class="admin-card">
     <template #title>{{ t('adminRecycle.title') }}</template>
     <template #extra>
-      <a-space wrap>
-        <a-input
-          v-model:value="filters.uid"
-          :placeholder="t('adminRecycle.searchUid')"
-          allow-clear
-          style="width: 180px"
-          @press-enter="handleSearch"
-        />
-        <a-button type="primary" @click="handleSearch">
+      <a-tooltip :title="t('common.refresh')">
+        <a-button :loading="loading" @click="handleRefresh">
           <ReloadOutlined />
-          {{ t('common.query') }}
         </a-button>
-      </a-space>
+      </a-tooltip>
     </template>
 
     <!-- 按类型分 tab：当前只有「用户」回收站；其他类型（角色/部门等）预留，等有数据再补 tab 项 -->

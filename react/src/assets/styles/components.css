@@ -247,6 +247,22 @@
   margin-bottom: 12px;
 }
 
+/* 列表页筛选栏：位于表格上方，窄屏整行堆叠 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 575px) {
+  .filter-bar > * {
+    flex: 1 1 100%;
+    width: 100% !important;
+  }
+}
+
 .recycle-hint {
   font-size: 12px;
   color: var(--text-secondary);

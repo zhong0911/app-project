@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, Empty, Form, Input, Modal, Select, Space, Table, Tag } from 'antd'
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons'
+import { Alert, Badge, Button, Card, Empty, Form, Input, Modal, Select, Space, Table, Tag, Tooltip } from 'antd'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 
 import {
   createAdminUserApi,
@@ -215,6 +215,7 @@ export default function AdminUsers() {
       title: t('adminUsers.columns.role'),
       dataIndex: 'role',
       key: 'role',
+      width: 140,
       render: (value) => (
         <Tag color={value === 'ADMIN' ? 'gold' : 'default'} className="row-tag">
           {roleName(value)}
@@ -225,10 +226,12 @@ export default function AdminUsers() {
       title: t('adminUsers.columns.status'),
       dataIndex: 'status',
       key: 'status',
+      width: 120,
       render: (value) => (
-        <Tag color={value === 1 ? 'success' : 'default'} className="row-tag">
-          {value === 1 ? t('common.enabled') : t('common.disabled')}
-        </Tag>
+        <Badge
+          status={value === 1 ? 'success' : 'default'}
+          text={value === 1 ? t('common.enabled') : t('common.disabled')}
+        />
       ),
     },
     {
@@ -280,43 +283,51 @@ export default function AdminUsers() {
         className="admin-card"
         title={t('adminUsers.title')}
         extra={
-          <Space wrap>
-            <Input
-              value={uidInput}
-              onChange={(e) => setUidInput(e.target.value)}
-              placeholder={t('adminUsers.searchUid')}
-              allowClear
-              style={{ width: 180 }}
-              onPressEnter={handleSearch}
-            />
-            <Select
-              value={query.role}
-              placeholder={t('common.role')}
-              allowClear
-              style={{ width: 130 }}
-              options={roleOptions}
-              onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, role: value }))}
-            />
-            <Select
-              value={query.status}
-              placeholder={t('adminUsers.statusPlaceholder')}
-              allowClear
-              style={{ width: 110 }}
-              options={[
-                { value: 1, label: t('common.enabled') },
-                { value: 0, label: t('common.disabled') },
-              ]}
-              onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, status: value }))}
-            />
-            <Button type="primary" icon={<ReloadOutlined />} onClick={handleSearch}>
-              {t('common.refresh')}
-            </Button>
+          <Space>
+            <Tooltip title={t('common.refresh')}>
+              <Button icon={<ReloadOutlined />} loading={loading} onClick={handleSearch} />
+            </Tooltip>
             <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
               {t('adminUsers.addUser')}
             </Button>
           </Space>
         }
       >
+        {/* 筛选栏：输入框回车或点「查询」触发；角色 / 状态选择后立即刷新 */}
+        <div className="filter-bar">
+          <Input
+            value={uidInput}
+            onChange={(e) => setUidInput(e.target.value)}
+            placeholder={t('adminUsers.searchUid')}
+            allowClear
+            prefix={<SearchOutlined />}
+            style={{ width: 220 }}
+            onPressEnter={handleSearch}
+          />
+          <Select
+            value={query.role}
+            placeholder={t('common.role')}
+            allowClear
+            style={{ width: 150 }}
+            options={roleOptions}
+            onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, role: value }))}
+          />
+          <Select
+            value={query.status}
+            placeholder={t('adminUsers.statusPlaceholder')}
+            allowClear
+            style={{ width: 120 }}
+            options={[
+              { value: 1, label: t('common.enabled') },
+              { value: 0, label: t('common.disabled') },
+            ]}
+            onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, status: value }))}
+          />
+          <Button icon={<SearchOutlined />} onClick={handleSearch}>
+            {t('common.query')}
+          </Button>
+        </div>
+
         <Table
           columns={columns}
           dataSource={records}

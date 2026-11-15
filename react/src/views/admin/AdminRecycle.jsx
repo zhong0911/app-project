@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, Empty, Input, Space, Table, Tabs, Tag } from 'antd'
+import { Alert, Button, Card, Empty, Table, Tabs, Tag, Tooltip } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
 
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
@@ -21,8 +21,7 @@ export default function AdminRecycle() {
   /** 当前 tab：默认用户回收站；后续新增类型时在此切换对应数据源 */
   const [activeTab, setActiveTab] = useState('users')
 
-  const [query, setQuery] = useState({ pageNum: 1, pageSize: 10, uid: '' })
-  const [uidInput, setUidInput] = useState('')
+  const [query, setQuery] = useState({ pageNum: 1, pageSize: 10 })
 
   const [records, setRecords] = useState([])
   const [total, setTotal] = useState(0)
@@ -36,7 +35,6 @@ export default function AdminRecycle() {
         const { data } = await getAdminRecycleApi({
           pageNum: query.pageNum,
           pageSize: query.pageSize,
-          uid: query.uid || undefined,
         })
         if (cancelled) return
         setRecords(data.records || [])
@@ -62,7 +60,8 @@ export default function AdminRecycle() {
       records.length === 1 && q.pageNum > 1 ? { ...q, pageNum: q.pageNum - 1 } : { ...q, _t: Date.now() },
     )
 
-  const handleSearch = () => setQuery((q) => ({ ...q, pageNum: 1, uid: uidInput }))
+  /** 刷新列表（回收站不再提供条件筛选，回到第一页重拉） */
+  const handleRefresh = () => setQuery((q) => ({ ...q, pageNum: 1, _t: Date.now() }))
 
   const handleTableChange = (pag) => {
     setQuery((q) => ({ ...q, pageNum: pag.current, pageSize: pag.pageSize }))
@@ -164,19 +163,9 @@ export default function AdminRecycle() {
       className="admin-card"
       title={t('adminRecycle.title')}
       extra={
-        <Space wrap>
-          <Input
-            value={uidInput}
-            onChange={(e) => setUidInput(e.target.value)}
-            placeholder={t('adminRecycle.searchUid')}
-            allowClear
-            style={{ width: 180 }}
-            onPressEnter={handleSearch}
-          />
-          <Button type="primary" icon={<ReloadOutlined />} onClick={handleSearch}>
-            {t('common.query')}
-          </Button>
-        </Space>
+        <Tooltip title={t('common.refresh')}>
+          <Button icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />
+        </Tooltip>
       }
     >
       {/* 按类型分 tab：当前只有「用户」回收站 */}
