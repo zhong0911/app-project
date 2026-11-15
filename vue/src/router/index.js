@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
-import SimpleLayout from '@/layouts/SimpleLayout.vue'
 import { APP_TITLE } from '@/config/app'
 import { AUTH_UNAUTHORIZED_EVENT } from '@/api/request'
 import { useUserStore } from '@/stores/modules/user'
@@ -27,18 +26,12 @@ const routes = [
     component: () => import('@/views/Logout.vue'),
     meta: { title: '退出登录' },
   },
-  // 图床（极简布局：无侧边菜单，右上角仅管理员可见控制台入口）
+  // 图床（页面独立，不套任何布局：整页就是图床，右上角仅管理员可见控制台入口）
   {
     path: '/image-bed',
-    component: SimpleLayout,
-    children: [
-      {
-        path: '',
-        name: 'ImageBed',
-        component: () => import('@/views/image/ImageBed.vue'),
-        meta: { title: '图床' },
-      },
-    ],
+    name: 'ImageBed',
+    component: () => import('@/views/image/ImageBed.vue'),
+    meta: { title: '图床' },
   },
   // 管理后台（ConsoleLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
   {

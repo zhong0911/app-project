@@ -2,14 +2,25 @@
 // 图床页：拖拽/批量上传、Ctrl+V 粘贴上传、缩略图列表、复制直链/Markdown/HTML、回收站恢复与彻底删除
 // 图片直链由后端按 uuid 生成（同内容 sha256 命中时自动复用已有链接）
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { LOCALES, localeKey, setLocale } from '@/config/locale'
+import { ACCOUNT_CENTER_URL } from '@/config/app'
+import { useAppStore } from '@/stores/modules/app'
+import { useUserStore } from '@/stores/modules/user'
 import {
   CopyOutlined,
+  DashboardOutlined,
   DeleteOutlined,
+  GlobalOutlined,
   InboxOutlined,
+  LogoutOutlined,
+  MoonOutlined,
   ReloadOutlined,
+  SunOutlined,
   UndoOutlined,
   UploadOutlined,
+  UserOutlined,
 } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import {
@@ -22,6 +33,30 @@ import {
 } from '@/api/image'
 
 const { t } = useI18n()
+
+// 图床页不再套布局，原先由布局承担的登录态与应用级开关收在页面卡片右上角
+const router = useRouter()
+const appStore = useAppStore()
+const userStore = useUserStore()
+
+const userMenuItems = computed(() => [
+  { key: 'account', label: t('common.accountCenter'), icon: UserOutlined },
+  { key: 'logout', label: t('common.logout'), icon: LogoutOutlined },
+])
+
+const handleLocaleChange = ({ key }) => setLocale(key)
+
+const handleUserMenu = ({ key }) => {
+  if (key === 'account') {
+    // 账号中心在 SSO（passport.antx.cc）侧，新标签打开
+    window.open(ACCOUNT_CENTER_URL, '_blank', 'noopener')
+    return
+  }
+  router.push('/logout')
+}
+
+/** 控制台入口：只有管理员可见（isAdmin 由后端按 SSO_ADMIN_UID 判定并下发） */
+const goConsole = () => router.push('/admin/users')
 
 /** 单图上限（与后端 IMAGE_MAX_SIZE 保持一致，后端仍会二次校验） */
 const MAX_SIZE = 10 * 1024 * 1024
@@ -287,7 +322,15 @@ const handlePurge = (record) => {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // 登录态与回跳恢复原由布局负责，页面独立后在这里补上
+  await userStore.fetchLoginUser()
+  const redirect = userStore.readRedirectUri()
+  if (redirect && userStore.isLoggedIn) {
+    userStore.clearRedirectUri()
+    userStore.markLoggedIn()
+    router.replace(redirect)
+  }
   load()
   window.addEventListener('paste', handlePaste)
 })
@@ -319,6 +362,40 @@ onUnmounted(() => {
             <UploadOutlined />
             {{ t('imageBed.upload') }}
           </a-button>
+          <!-- 页面级开关：语言 / 主题 / 用户 / 控制台（右起第一个即管理员入口） -->
+          <a-dropdown
+            :trigger="['click']"
+            :menu="{
+              items: LOCALES.map((l) => ({ key: l.key, label: l.label })),
+              selectable: true,
+              selectedKeys: [localeKey],
+            }"
+            @menu-click="handleLocaleChange"
+          >
+            <a-button type="text" shape="circle" class="icon-btn">
+              <GlobalOutlined />
+            </a-button>
+          </a-dropdown>
+          <a-button type="text" shape="circle" class="icon-btn" @click="appStore.toggleDark()">
+            <component :is="appStore.isDark ? SunOutlined : MoonOutlined" />
+          </a-button>
+          <a-button
+            v-if="!userStore.isLoggedIn"
+            type="primary"
+            @click="router.push('/login')"
+          >
+            {{ t('common.login') }}
+          </a-button>
+          <a-dropdown v-else :trigger="['click']" :menu="{ items: userMenuItems }" @menu-click="handleUserMenu">
+            <a-button type="text" shape="circle" class="icon-btn">
+              <UserOutlined />
+            </a-button>
+          </a-dropdown>
+          <a-tooltip v-if="userStore.isAdmin" :title="t('common.console')">
+            <a-button type="text" shape="circle" class="icon-btn console-btn" @click="goConsole">
+              <DashboardOutlined />
+            </a-button>
+          </a-tooltip>
         </a-space>
       </template>
 
@@ -440,8 +517,23 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+/* 页面独立后自行负责外边距（原先由布局的内容区提供） */
 .tool-page-card {
   width: 100%;
+  min-height: 100svh;
+  padding: 16px 24px 24px;
+  box-sizing: border-box;
+}
+
+/* 页面右上角的小圆按钮：语言 / 主题 / 用户 / 控制台 */
+.icon-btn {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .image-card {
@@ -518,6 +610,10 @@ onUnmounted(() => {
 
 /* 窄屏：操作列文字按钮收紧，避免换行 */
 @media (max-width: 767px) {
+  .tool-page-card {
+    padding: 8px 12px 16px;
+  }
+
   .image-card :deep(.ant-card-head) {
     padding-inline: 12px;
   }
