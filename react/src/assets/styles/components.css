@@ -122,12 +122,20 @@
   flex: none;
 }
 
+/* 语言按钮：antd 会再包一层 span，flex 只作用到最外层，
+   所以旗帜与文字的对齐放在内层 .lang-inner 上，避免两者基线错位 */
 .lang-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   height: 28px;
   padding: 0 6px;
+}
+
+.lang-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
 }
 
 .lang-flag {

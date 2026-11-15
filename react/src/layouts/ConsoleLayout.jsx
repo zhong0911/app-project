@@ -233,8 +233,10 @@ export default function ConsoleLayout() {
               }}
             >
               <Button size="small" type="text" className="lang-btn">
-                <img className="lang-flag" src={currentLocale.flag} alt="" />
-                <span className="lang-text">{currentLocale.label}</span>
+                <span className="lang-inner">
+                  <img className="lang-flag" src={currentLocale.flag} alt="" />
+                  <span className="lang-text">{currentLocale.label}</span>
+                </span>
               </Button>
             </Dropdown>
 

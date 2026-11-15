@@ -211,8 +211,10 @@ onMounted(async () => {
             @menu-click="handleLocaleChange"
           >
             <a-button size="small" type="text" class="lang-btn">
-              <img class="lang-flag" :src="currentLocale.flag" alt="" />
-              <span class="lang-text">{{ currentLocale.label }}</span>
+              <span class="lang-inner">
+                <img class="lang-flag" :src="currentLocale.flag" alt="" />
+                <span class="lang-text">{{ currentLocale.label }}</span>
+              </span>
             </a-button>
           </a-dropdown>
           <a-button size="small" type="text" shape="circle" class="theme-btn" @click="appStore.toggleDark()">
@@ -323,12 +325,20 @@ onMounted(async () => {
   flex: none;
 }
 
+/* 语言按钮：antd 会再包一层 span，flex 只作用到最外层，
+   所以旗帜与文字的对齐放在内层 .lang-inner 上，避免两者基线错位 */
 .lang-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   height: 28px;
   padding: 0 6px;
+}
+
+.lang-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
 }
 
 .lang-flag {
