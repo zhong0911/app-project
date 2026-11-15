@@ -5,6 +5,7 @@ export default {
     logout: '登出',
     accountCenter: '帳號中心',
     adminPanel: '管理後台',
+    console: '控制台',
     query: '查詢',
     refresh: '重新整理',
     reset: '重設',

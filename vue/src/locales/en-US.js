@@ -5,6 +5,7 @@ export default {
     logout: 'Sign out',
     accountCenter: 'Account center',
     adminPanel: 'Admin',
+    console: 'Console',
     query: 'Search',
     refresh: 'Refresh',
     reset: 'Reset',

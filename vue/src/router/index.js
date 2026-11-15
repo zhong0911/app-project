@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
+import SimpleLayout from '@/layouts/SimpleLayout.vue'
 import { APP_TITLE } from '@/config/app'
 import { AUTH_UNAUTHORIZED_EVENT } from '@/api/request'
 import { useUserStore } from '@/stores/modules/user'
@@ -26,10 +27,10 @@ const routes = [
     component: () => import('@/views/Logout.vue'),
     meta: { title: '退出登录' },
   },
-  // 图床（ConsoleLayout + 左侧菜单）
+  // 图床（极简布局：无侧边菜单，右上角仅管理员可见控制台入口）
   {
     path: '/image-bed',
-    component: ConsoleLayout,
+    component: SimpleLayout,
     children: [
       {
         path: '',

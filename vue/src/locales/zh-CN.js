@@ -5,6 +5,7 @@ export default {
     logout: '退出登录',
     accountCenter: '账号中心',
     adminPanel: '管理后台',
+    console: '控制台',
     query: '查询',
     refresh: '刷新',
     reset: '重置',
