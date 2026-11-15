@@ -260,6 +260,7 @@ export default {
     uid: '用户唯一标识',
     me: '我',
     addUser: '添加',
+    columnSetting: '列设置',
     statusPlaceholder: '状态',
     columns: {
       id: 'ID',

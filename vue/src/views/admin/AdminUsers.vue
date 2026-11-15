@@ -1,9 +1,9 @@
 <script setup>
 // 用户管理页：只用 a-table 本身的能力（不额外传 scroll / size / 外置分页），
 // 列为用户唯一标识 / 角色 / 状态 / 操作（编辑 · 停用启用 · 删除）
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
+import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { useUserStore } from '@/stores/modules/user'
 import {
@@ -48,12 +48,34 @@ const editForm = reactive({ role: '' })
 /** 正在提交「停用 / 启用」的行 id：按钮显示 loading，避免重复点击 */
 const actingId = ref(null)
 
-const columns = computed(() => [
+/** 列定义（可由「列设置」控制显隐；操作列固定显示） */
+const columnDefs = computed(() => [
   { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
   { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role', width: 140 },
   { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status', width: 120 },
   { title: t('adminUsers.columns.action'), key: 'action', width: 170 },
 ])
+
+/** 当前显示的列（默认全显） */
+const visibleKeys = ref(['uid', 'role', 'status', 'action'])
+
+const columns = computed(() => columnDefs.value.filter((col) => visibleKeys.value.includes(col.key)))
+
+/** 列设置选项：操作列禁用取消，避免隐藏后无从操作 */
+const columnOptions = computed(() =>
+  columnDefs.value.map((col) => ({
+    label: col.title,
+    value: col.key,
+    disabled: col.key === 'action',
+  })),
+)
+
+// 兜底：操作列即便被取消勾选也会自动恢复，保证每行始终有可用操作
+watch(visibleKeys, (keys) => {
+  if (!keys.includes('action')) {
+    visibleKeys.value = [...keys, 'action']
+  }
+})
 
 /** 表格自带分页（默认靠右） */
 const pagination = computed(() => ({
@@ -197,56 +219,68 @@ onMounted(async () => {
 
 <template>
   <a-card variant="borderless" class="admin-card">
-    <template #extra>
-      <a-space>
-        <a-tooltip :title="t('common.refresh')">
-          <a-button :loading="loading" @click="handleSearch">
-            <ReloadOutlined />
-          </a-button>
-        </a-tooltip>
-        <a-button type="primary" @click="openAdd">
-          <PlusOutlined />
-          {{ t('adminUsers.addUser') }}
-        </a-button>
-      </a-space>
-    </template>
-
-    <!-- 筛选栏：输入框回车或点「查询」触发；角色 / 状态选择后立即刷新 -->
-    <div class="filter-bar">
-      <a-input
-        v-model:value="filters.uid"
-        :placeholder="t('adminUsers.searchUid')"
-        allow-clear
-        style="width: 220px"
-        @press-enter="handleSearch"
-      >
-        <template #prefix>
+    <!-- 工具栏：搜索框整行 → 状态 / 角色并排 → 添加按钮 + 刷新 / 列设置 -->
+    <div class="user-toolbar">
+      <div class="toolbar-row search-row">
+        <a-input
+          v-model:value="filters.uid"
+          :placeholder="t('adminUsers.searchUid')"
+          allow-clear
+          class="search-input"
+          @press-enter="handleSearch"
+        >
+          <template #prefix>
+            <SearchOutlined />
+          </template>
+        </a-input>
+        <a-button class="search-btn" @click="handleSearch">
           <SearchOutlined />
-        </template>
-      </a-input>
-      <a-select
-        v-model:value="filters.role"
-        :placeholder="t('common.role')"
-        allow-clear
-        style="width: 150px"
-        :options="roleOptions"
-        @change="handleSearch"
-      />
+        </a-button>
+      </div>
+
       <a-select
         v-model:value="filters.status"
         :placeholder="t('adminUsers.statusPlaceholder')"
         allow-clear
-        style="width: 120px"
         :options="[
           { value: 1, label: t('common.enabled') },
           { value: 0, label: t('common.disabled') },
         ]"
         @change="handleSearch"
       />
-      <a-button @click="handleSearch">
-        <SearchOutlined />
-        {{ t('common.query') }}
-      </a-button>
+      <a-select
+        v-model:value="filters.role"
+        :placeholder="t('common.role')"
+        allow-clear
+        :options="roleOptions"
+        @change="handleSearch"
+      />
+
+      <div class="toolbar-row action-row">
+        <a-button type="primary" @click="openAdd">
+          <PlusOutlined />
+          {{ t('adminUsers.addUser') }}
+        </a-button>
+        <a-space :size="8">
+          <a-tooltip :title="t('common.refresh')">
+            <a-button shape="circle" :loading="loading" @click="handleSearch">
+              <ReloadOutlined />
+            </a-button>
+          </a-tooltip>
+          <a-popover trigger="click" placement="bottomRight">
+            <template #content>
+              <div class="column-setting">
+                <a-checkbox-group v-model:value="visibleKeys" :options="columnOptions" />
+              </div>
+            </template>
+            <a-tooltip :title="t('adminUsers.columnSetting')">
+              <a-button shape="circle">
+                <SettingOutlined />
+              </a-button>
+            </a-tooltip>
+          </a-popover>
+        </a-space>
+      </div>
     </div>
 
     <a-table
@@ -254,6 +288,7 @@ onMounted(async () => {
       :data-source="records"
       :loading="loading"
       :pagination="pagination"
+      :scroll="{ x: 'max-content' }"
       row-key="id"
       @change="handleTableChange"
     >
@@ -348,20 +383,45 @@ onMounted(async () => {
   border-radius: 12px;
 }
 
-/* 筛选栏：位于表格上方，窄屏整行堆叠 */
-.filter-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+/* 工具栏：两列栅格 —— 搜索整行、状态/角色并排、操作行两端对齐 */
+.user-toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin-bottom: 16px;
 }
 
-@media (max-width: 575px) {
-  .filter-bar > * {
-    flex: 1 1 100%;
-    width: 100% !important;
-  }
+.toolbar-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  padding-inline: 0;
+}
+
+.action-row {
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.column-setting {
+  min-width: 150px;
+}
+
+.column-setting :deep(.ant-checkbox-group) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .mono {

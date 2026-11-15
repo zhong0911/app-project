@@ -259,6 +259,7 @@ export default {
     uid: '使用者唯一識別',
     me: '我',
     addUser: '新增',
+    columnSetting: '欄位設定',
     statusPlaceholder: '狀態',
     columns: {
       id: 'ID',

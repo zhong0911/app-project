@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Badge, Button, Card, Empty, Form, Input, Modal, Select, Space, Table, Tag, Tooltip } from 'antd'
-import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
+import { Alert, Badge, Button, Card, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag, Tooltip } from 'antd'
+import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
 
 import {
   createAdminUserApi,
@@ -52,6 +52,8 @@ export default function AdminUsers() {
   const [submitting, setSubmitting] = useState(false)
   /** 正在提交「停用 / 启用」的行 id：按钮显示 loading，避免重复点击 */
   const [actingId, setActingId] = useState(null)
+  /** 当前显示的列（「列设置」控制；操作列固定） */
+  const [visibleKeys, setVisibleKeys] = useState(['uid', 'role', 'status', 'action'])
 
   // 新增弹窗
   const [addOpen, setAddOpen] = useState(false)
@@ -200,8 +202,8 @@ export default function AdminUsers() {
     })
   }
 
-  /* ---------------- 表格列 ---------------- */
-  const columns = [
+  /* ---------------- 表格列（可按「列设置」控制显隐） ---------------- */
+  const columnDefs = [
     {
       title: t('adminUsers.columns.uid'),
       dataIndex: 'uid',
@@ -269,6 +271,14 @@ export default function AdminUsers() {
     },
   ]
 
+  /** 当前显示的列（默认全显；操作列固定显示，避免隐藏后无从操作） */
+  const visibleColumns = columnDefs.filter((col) => visibleKeys.includes(col.key))
+  const columnOptions = columnDefs.map((col) => ({
+    label: col.title,
+    value: col.key,
+    disabled: col.key === 'action',
+  }))
+
   /** 表格自带分页（默认靠右） */
   const pagination = {
     current: query.pageNum,
@@ -281,61 +291,77 @@ export default function AdminUsers() {
 
   return (
     <>
-      <Card
-        variant="borderless"
-        className="admin-card"
-        extra={
-          <Space>
-            <Tooltip title={t('common.refresh')}>
-              <Button icon={<ReloadOutlined />} loading={loading} onClick={handleSearch} />
-            </Tooltip>
-            <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
-              {t('adminUsers.addUser')}
-            </Button>
-          </Space>
-        }
-      >
-        {/* 筛选栏：输入框回车或点「查询」触发；角色 / 状态选择后立即刷新 */}
-        <div className="filter-bar">
-          <Input
-            value={uidInput}
-            onChange={(e) => setUidInput(e.target.value)}
-            placeholder={t('adminUsers.searchUid')}
-            allowClear
-            prefix={<SearchOutlined />}
-            style={{ width: 220 }}
-            onPressEnter={handleSearch}
-          />
-          <Select
-            value={query.role}
-            placeholder={t('common.role')}
-            allowClear
-            style={{ width: 150 }}
-            options={roleOptions}
-            onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, role: value }))}
-          />
+      <Card variant="borderless" className="admin-card">
+        {/* 工具栏：搜索框整行 → 状态 / 角色并排 → 添加按钮 + 刷新 / 列设置 */}
+        <div className="user-toolbar">
+          <div className="toolbar-row">
+            <Input
+              value={uidInput}
+              onChange={(e) => setUidInput(e.target.value)}
+              placeholder={t('adminUsers.searchUid')}
+              allowClear
+              prefix={<SearchOutlined />}
+              className="search-input"
+              onPressEnter={handleSearch}
+            />
+            <Button className="search-btn" icon={<SearchOutlined />} onClick={handleSearch} />
+          </div>
+
           <Select
             value={query.status}
             placeholder={t('adminUsers.statusPlaceholder')}
             allowClear
-            style={{ width: 120 }}
             options={[
               { value: 1, label: t('common.enabled') },
               { value: 0, label: t('common.disabled') },
             ]}
             onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, status: value }))}
           />
-          <Button icon={<SearchOutlined />} onClick={handleSearch}>
-            {t('common.query')}
-          </Button>
+          <Select
+            value={query.role}
+            placeholder={t('common.role')}
+            allowClear
+            options={roleOptions}
+            onChange={(value) => setQuery((q) => ({ ...q, pageNum: 1, role: value }))}
+          />
+
+          <div className="toolbar-row action-row">
+            <Button type="primary" icon={<PlusOutlined />} onClick={openAdd}>
+              {t('adminUsers.addUser')}
+            </Button>
+            <Space size={8}>
+              <Tooltip title={t('common.refresh')}>
+                <Button shape="circle" icon={<ReloadOutlined />} loading={loading} onClick={handleSearch} />
+              </Tooltip>
+              <Popover
+                trigger="click"
+                placement="bottomRight"
+                content={
+                  <div className="column-setting">
+                    <Checkbox.Group
+                      value={visibleKeys}
+                      options={columnOptions}
+                      onChange={(keys) => {
+                        // 操作列固定：取消勾选也自动补回
+                        setVisibleKeys(keys.includes('action') ? keys : [...keys, 'action'])
+                      }}
+                    />
+                  </div>
+                }
+              >
+                <Button shape="circle" icon={<SettingOutlined />} />
+              </Popover>
+            </Space>
+          </div>
         </div>
 
         <Table
-          columns={columns}
+          columns={visibleColumns}
           dataSource={records}
           loading={loading}
           pagination={pagination}
           rowKey="id"
+          scroll={{ x: 'max-content' }}
           onChange={handleTableChange}
           locale={{ emptyText: <Empty description={t('adminUsers.empty')} /> }}
         />

@@ -260,6 +260,7 @@ export default {
     uid: 'User identifier',
     me: 'Me',
     addUser: 'Add',
+    columnSetting: 'Columns',
     statusPlaceholder: 'Status',
     columns: {
       id: 'ID',
