@@ -62,11 +62,11 @@ class UserRepository
         return [$records, $total];
     }
 
-    public function create(string $uid): User
+    public function create(string $uid, string $role = 'USER'): User
     {
         return User::create([
             'uid' => $uid,
-            'role' => 'USER',
+            'role' => $role,
             'status' => 1,
             'deleted' => 0,
             'version' => 1,

@@ -24,11 +24,11 @@ export function toEntity(row) {
   };
 }
 
-/** 新建实体的默认值 */
-export function createEntity(uid) {
+/** 新建实体的默认值（role 由调用方按 SSO_ADMIN_UID 决定，默认普通用户） */
+export function createEntity(uid, role = 'USER') {
   return {
     uid,
-    role: 'USER',
+    role,
     status: 1,
     deleted: 0,
     version: 1,

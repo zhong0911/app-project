@@ -300,6 +300,30 @@
   margin-top: 4px;
 }
 
+/* 显示列选择器（ColumnPicker 组件） */
+.column-picker {
+  width: 260px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.column-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.column-picker-title {
+  font-weight: 500;
+}
+
+.column-picker-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
 .column-setting {
   min-width: 150px;
 }

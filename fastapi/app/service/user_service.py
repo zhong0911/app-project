@@ -6,6 +6,7 @@
 from sqlalchemy.orm import Session
 
 from app.common.result_code import ResultCode
+from app.core.config import settings
 from app.core.exceptions import BusinessException
 from app.models.user import User
 from app.repository.user_repo import UserRepository
@@ -13,6 +14,15 @@ from app.schemas.common import PageResult
 from app.schemas.user import UserCreateDTO, UserQueryDTO, UserUpdateDTO, UserVO
 
 ALLOWED_ROLES = {"ADMIN", "USER"}
+
+
+def is_admin_uid(uid: str | None) -> bool:
+    """管理员由 SSO_ADMIN_UID 配置决定（与 security.py 同一口径）。
+
+    本地 users.role 必须同步为 ADMIN，否则后台列表里管理员会显示成普通用户。
+    """
+
+    return bool(uid) and str(uid) == str(settings.sso_admin_uid)
 
 
 def to_vo(user: User) -> UserVO:
@@ -33,7 +43,7 @@ class UserService:
                 raise BusinessException(ResultCode.DATA_CONFLICT, f"该 uid 已在回收站，请先恢复: {dto.uid}")
             raise BusinessException(ResultCode.DATA_CONFLICT, f"SSO 用户已存在: {dto.uid}")
 
-        user = User(uid=dto.uid, role="USER", status=1, deleted=0, version=1)
+        user = User(uid=dto.uid, role="ADMIN" if is_admin_uid(dto.uid) else "USER", status=1, deleted=0, version=1)
         return to_vo(self.repo.create(user))
 
     def update_user(self, dto: UserUpdateDTO) -> UserVO:
@@ -96,18 +106,24 @@ class UserService:
         return self.repo.get_by_uid(uid)
 
     def get_or_create_default_user(self, uid: str) -> User | None:
-        """新登录用户自动注册为 USER（并发下靠唯一键兜底）。"""
+        """新登录用户自动注册为 USER；配置的管理员直接 ADMIN（并发下靠唯一键兜底）。"""
 
         if not uid:
             return None
         existing = self.repo.get_by_uid(uid)
         if existing is not None:
+            # 已有记录与管理员配置不一致时顺手纠正角色
+            if is_admin_uid(uid) and existing.role != "ADMIN":
+                existing.role = "ADMIN"
+                existing.version += 1
+                return self.repo.update(existing)
             return existing
         existing = self.repo.get_by_uid_including_deleted(uid)
         if existing is not None:
             return existing
         try:
-            return self.repo.create(User(uid=uid, role="USER", status=1, deleted=0, version=1))
+            return self.repo.create(User(uid=uid, role="ADMIN" if is_admin_uid(uid) else "USER",
+                                        status=1, deleted=0, version=1))
         except Exception:
             self.repo.db.rollback()
             return self.repo.get_by_uid(uid)

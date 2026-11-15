@@ -34,7 +34,12 @@ func (s *UserService) CreateUser(req dto.UserCreateDTO) (*vo.UserVO, error) {
 		return nil, err
 	}
 
-	user := &entity.User{UID: req.UID, Role: "USER", Status: 1, Deleted: 0, Version: 1}
+	// 管理员由 SSO_ADMIN_UID 配置决定（见 IsAdmin），本地角色直接落 ADMIN
+	role := "USER"
+	if s.IsAdmin(req.UID) {
+		role = "ADMIN"
+	}
+	user := &entity.User{UID: req.UID, Role: role, Status: 1, Deleted: 0, Version: 1}
 	if err := s.repo.Create(user); err != nil {
 		return nil, err
 	}
@@ -166,18 +171,28 @@ func (s *UserService) GetByUID(uid string) *entity.User {
 	return user
 }
 
-// GetOrCreateDefaultUser 新登录用户默认注册为 USER。
+// GetOrCreateDefaultUser 新登录用户默认注册为 USER；配置的管理员直接 ADMIN。
 func (s *UserService) GetOrCreateDefaultUser(uid string) *entity.User {
 	if uid == "" {
 		return nil
 	}
 	if existing := s.GetByUID(uid); existing != nil {
+		// 已有记录与管理员配置不一致时顺手纠正角色
+		if s.IsAdmin(uid) && existing.Role != "ADMIN" {
+			if err := s.repo.UpdateRole(existing.ID, "ADMIN"); err == nil {
+				existing.Role = "ADMIN"
+			}
+		}
 		return existing
 	}
 	if user, err := s.repo.FindByUIDIncludingDeleted(uid); err == nil {
 		return user
 	}
-	user := &entity.User{UID: uid, Role: "USER", Status: 1, Deleted: 0, Version: 1}
+	role := "USER"
+	if s.IsAdmin(uid) {
+		role = "ADMIN"
+	}
+	user := &entity.User{UID: uid, Role: role, Status: 1, Deleted: 0, Version: 1}
 	if err := s.repo.Create(user); err != nil {
 		// 并发唯一键冲突：查回已有记录
 		if existing := s.GetByUID(uid); existing != nil {

@@ -52,9 +52,9 @@ export class UserRepository {
     return { total, records };
   }
 
-  insert(uid: string): Promise<User> {
+  insert(uid: string, role = 'USER'): Promise<User> {
     return this.repo.save(
-      this.repo.create({ uid, role: 'USER', status: 1, deleted: 0, version: 1 }),
+      this.repo.create({ uid, role, status: 1, deleted: 0, version: 1 }),
     );
   }
 

@@ -67,9 +67,13 @@ class UserRepository
 
     public function create(string $uid): User
     {
+        // 管理员由 sso.admin_uid 配置决定（见 UserService::isAdmin），本地角色直接落 ADMIN，
+        // 否则后台列表里管理员会显示成普通用户
+        $adminUid = trim((string) config('sso.admin_uid'));
+
         return User::query()->create([
             'uid' => $uid,
-            'role' => 'USER',
+            'role' => ($adminUid !== '' && $uid === $adminUid) ? 'ADMIN' : 'USER',
             'status' => 1,
             'deleted' => 0,
             'version' => 1,

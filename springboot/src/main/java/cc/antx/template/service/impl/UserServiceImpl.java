@@ -14,7 +14,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -26,13 +29,50 @@ import java.util.Locale;
  *
  * <p>体现 DTO（入参）→ 实体 → VO（出参）的转换链路。</p>
  */
+@Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final RoleService roleService;
 
+    /** 管理员 SSO uid（= access_token 的 sub，与 sso.admin-uid 同一配置） */
+    @Value("${sso.admin-uid:1}")
+    private String adminUid;
+
     public UserServiceImpl(RoleService roleService) {
         this.roleService = roleService;
+    }
+
+    /**
+     * 管理员身份由 sso.admin-uid 配置决定（见 CurrentUserService），
+     * 本地 users.role 必须同步为 ADMIN，否则后台列表里管理员会显示成普通用户。
+     */
+    private boolean isAdminUid(String uid) {
+        return StringUtils.hasText(uid)
+                && StringUtils.hasText(adminUid)
+                && adminUid.equals(uid.trim());
+    }
+
+    /**
+     * 启动时纠正历史数据：配置的管理员若本地角色不是 ADMIN，直接同步，
+     * 保证列表展示 / 角色筛选 / 权限判定三者一致（幂等，每次启动执行一次）。
+     */
+    @PostConstruct
+    public void syncAdminRole() {
+        if (!StringUtils.hasText(adminUid)) {
+            return;
+        }
+        try {
+            User admin = baseMapper.selectByUidIncludingDeleted(adminUid);
+            if (admin == null || "ADMIN".equals(admin.getRole())) {
+                return;
+            }
+            admin.setRole("ADMIN");
+            this.updateById(admin);
+        } catch (Exception e) {
+            // 启动早期数据库可能尚未就绪，交给后续登录时的 getOrCreateDefaultUser 纠正
+            log.warn("同步管理员角色失败，忽略: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -49,11 +89,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         User user = new User();
         BeanUtils.copyProperties(dto, user);
-        // 逻辑删除、启停、乐观锁、默认角色（新用户默认 USER）
+        // 逻辑删除、启停、乐观锁、默认角色（新用户默认 USER，配置的管理员直接 ADMIN）
         user.setDeleted(0);
         user.setStatus(1);
         user.setVersion(1);
-        user.setRole("USER");
+        user.setRole(isAdminUid(dto.getUid()) ? "ADMIN" : "USER");
         this.save(user);
 
         return toVO(user);
@@ -179,12 +219,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         User existing = getByUid(uid);
         if (existing != null) {
+            // 已有记录但角色与管理员配置不一致时顺手纠正
+            if (isAdminUid(uid) && !"ADMIN".equals(existing.getRole())) {
+                existing.setRole("ADMIN");
+                this.updateById(existing);
+            }
             return existing;
         }
-        // 新登录用户默认注册为普通用户（USER）
+        // 新登录用户默认注册为普通用户（USER）；配置的管理员直接注册为 ADMIN
         User user = new User();
         user.setUid(uid);
-        user.setRole("USER");
+        user.setRole(isAdminUid(uid) ? "ADMIN" : "USER");
         user.setStatus(1);
         user.setDeleted(0);
         user.setVersion(1);

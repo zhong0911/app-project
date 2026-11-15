@@ -3,7 +3,7 @@
 // 列为用户唯一标识 / 角色 / 状态 / 操作（编辑 · 停用启用 · 删除）
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@antdv-next/icons'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { useUserStore } from '@/stores/modules/user'
 import {
@@ -56,26 +56,10 @@ const columnDefs = computed(() => [
   { title: t('adminUsers.columns.action'), key: 'action', width: 170 },
 ])
 
-/** 当前显示的列（默认全显） */
+/** 当前显示的列（默认全显；列设置结果由 ColumnPicker 缓存到 localStorage） */
 const visibleKeys = ref(['uid', 'role', 'status', 'action'])
 
 const columns = computed(() => columnDefs.value.filter((col) => visibleKeys.value.includes(col.key)))
-
-/** 列设置选项：操作列禁用取消，避免隐藏后无从操作 */
-const columnOptions = computed(() =>
-  columnDefs.value.map((col) => ({
-    label: col.title,
-    value: col.key,
-    disabled: col.key === 'action',
-  })),
-)
-
-// 兜底：操作列即便被取消勾选也会自动恢复，保证每行始终有可用操作
-watch(visibleKeys, (keys) => {
-  if (!keys.includes('action')) {
-    visibleKeys.value = [...keys, 'action']
-  }
-})
 
 /** 表格自带分页（默认靠右） */
 const pagination = computed(() => ({
@@ -260,16 +244,12 @@ onMounted(async () => {
           <a-button :loading="loading" @click="handleSearch">
             <ReloadOutlined />
           </a-button>
-          <a-popover trigger="click" placement="bottomRight">
-            <template #content>
-              <div class="column-setting">
-                <a-checkbox-group v-model:value="visibleKeys" :options="columnOptions" />
-              </div>
-            </template>
-            <a-button>
-              <SettingOutlined />
-            </a-button>
-          </a-popover>
+          <ColumnPicker
+            v-model="visibleKeys"
+            :columns="columnDefs"
+            storage-key="admin-users"
+            :locked-keys="['action']"
+          />
         </a-space>
       </div>
     </div>
@@ -291,7 +271,6 @@ onMounted(async () => {
         <template v-if="column.key === 'uid'">
           <span class="cell-uid">
             <span class="mono uid-text" :title="record.uid">{{ record.uid }}</span>
-            <a-tag v-if="isSelf(record)" color="blue" class="row-tag">{{ t('adminUsers.me') }}</a-tag>
           </span>
         </template>
 

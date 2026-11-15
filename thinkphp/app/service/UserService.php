@@ -28,7 +28,8 @@ class UserService
             }
             throw BusinessException::conflict("SSO 用户已存在: {$uid}");
         }
-        return $this->toVO($this->repository->create($uid));
+        // 管理员由 sso.admin_uid 配置决定（见 isAdmin），本地角色直接落 ADMIN
+        return $this->toVO($this->repository->create($uid, $this->isAdmin($uid) ? 'ADMIN' : 'USER'));
     }
 
     public function updateUser(int $id, string $role): array
@@ -112,7 +113,7 @@ class UserService
         return $uid !== '' ? $this->repository->findByUid($uid) : null;
     }
 
-    /** 新登录用户默认注册为 USER（并发下靠唯一键兜底） */
+    /** 新登录用户默认注册为 USER；配置的管理员直接 ADMIN（并发下靠唯一键兜底） */
     public function getOrCreateDefaultUser(string $uid): ?User
     {
         if ($uid === '') {
@@ -121,11 +122,16 @@ class UserService
 
         $existing = $this->repository->findByUid($uid) ?? $this->repository->findByUidIncludingDeleted($uid);
         if ($existing !== null) {
+            // 已有记录与管理员配置不一致时顺手纠正角色
+            if ($this->isAdmin($uid) && $existing->role !== 'ADMIN') {
+                $this->repository->updateRole((int) $existing->id, 'ADMIN');
+                $existing->role = 'ADMIN';
+            }
             return $existing;
         }
 
         try {
-            return $this->repository->create($uid);
+            return $this->repository->create($uid, $this->isAdmin($uid) ? 'ADMIN' : 'USER');
         } catch (\Throwable) {
             return $this->repository->findByUidIncludingDeleted($uid);
         }

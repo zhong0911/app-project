@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag } from 'antd'
-import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
+import { Alert, Badge, Button, Empty, Form, Input, Modal, Select, Space, Table, Tag } from 'antd'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 
 import { createAdminRoleApi, deleteAdminRoleApi, getAdminRolesApi, updateAdminRoleApi } from '@/api/admin'
+import ColumnPicker from '@/components/ColumnPicker'
 import { message, modal } from '@/utils/app'
 
 /**
@@ -241,13 +242,6 @@ export default function AdminRoles() {
 
   const columns = columnDefs.filter((col) => visibleKeys.includes(col.key))
 
-  /** 列设置选项：操作列禁用取消，避免隐藏后无从操作 */
-  const columnOptions = columnDefs.map((col) => ({
-    label: col.title,
-    value: col.key,
-    disabled: col.key === 'action',
-  }))
-
   return (
     <>
       <div className="admin-page">
@@ -280,24 +274,13 @@ export default function AdminRoles() {
             </Button>
             <Space size={8}>
               <Button icon={<ReloadOutlined />} loading={loading} onClick={load} />
-              <Popover
-                trigger="click"
-                placement="bottomRight"
-                content={
-                  <div className="column-setting">
-                    <Checkbox.Group
-                      value={visibleKeys}
-                      options={columnOptions}
-                      onChange={(keys) => {
-                        // 操作列固定：取消勾选也自动补回
-                        setVisibleKeys(keys.includes('action') ? keys : [...keys, 'action'])
-                      }}
-                    />
-                  </div>
-                }
-              >
-                <Button icon={<SettingOutlined />} />
-              </Popover>
+              <ColumnPicker
+                columns={columnDefs}
+                value={visibleKeys}
+                onChange={setVisibleKeys}
+                storageKey="admin-roles"
+                lockedKeys={['action']}
+              />
             </Space>
           </div>
         </div>

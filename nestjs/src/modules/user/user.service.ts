@@ -2,6 +2,7 @@
  * 用户业务层（对标 Spring Boot 的 service/impl/UserServiceImpl）。
  */
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { BusinessException } from '../../common/exceptions/business.exception';
 import { pageResult, PageResult } from '../../common/result/result';
 import { UserCreateDto, UserQueryDto, UserUpdateDto } from './dto/user.dto';
@@ -13,7 +14,15 @@ const ALLOWED_ROLES = ['ADMIN', 'USER'];
 
 @Injectable()
 export class UserService {
-  constructor(private readonly repo: UserRepository) {}
+  constructor(
+    private readonly repo: UserRepository,
+    private readonly config: ConfigService,
+  ) {}
+
+  /** 管理员由 SSO_ADMIN_UID 配置决定（与 AdminGuard 同一口径），本地角色同步为 ADMIN */
+  private isAdminUid(uid: string): boolean {
+    return Boolean(uid) && String(uid) === String(this.config.get<string>('sso.adminUid'));
+  }
 
   async createUser(dto: UserCreateDto): Promise<UserVO> {
     const exists = await this.repo.findByUidIncludingDeleted(dto.uid);
@@ -21,7 +30,7 @@ export class UserService {
       if (exists.deleted === 1) throw BusinessException.conflict(`该 uid 已在回收站，请先恢复: ${dto.uid}`);
       throw BusinessException.conflict(`SSO 用户已存在: ${dto.uid}`);
     }
-    return toUserVO(await this.repo.insert(dto.uid))!;
+    return toUserVO(await this.repo.insert(dto.uid, this.isAdminUid(dto.uid) ? 'ADMIN' : 'USER'))!;
   }
 
   async updateUser(dto: UserUpdateDto): Promise<UserVO> {
@@ -79,13 +88,19 @@ export class UserService {
     return uid ? this.repo.findByUid(uid) : Promise.resolve(null);
   }
 
-  /** 新登录用户默认注册为 USER（并发下靠唯一键兜底） */
+  /** 新登录用户默认注册为 USER；配置的管理员直接 ADMIN（并发下靠唯一键兜底） */
   async getOrCreateDefaultUser(uid: string): Promise<User | null> {
     if (!uid) return null;
     const existing = (await this.repo.findByUid(uid)) ?? (await this.repo.findByUidIncludingDeleted(uid));
-    if (existing) return existing;
+    if (existing) {
+      // 已有记录与管理员配置不一致时顺手纠正角色
+      if (this.isAdminUid(uid) && existing.role !== 'ADMIN') {
+        return this.repo.updateRole(existing.id, 'ADMIN');
+      }
+      return existing;
+    }
     try {
-      return await this.repo.insert(uid);
+      return await this.repo.insert(uid, this.isAdminUid(uid) ? 'ADMIN' : 'USER');
     } catch (error: any) {
       if (error?.code === 'ER_DUP_ENTRY') return this.repo.findByUidIncludingDeleted(uid);
       throw error;

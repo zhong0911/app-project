@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Badge, Button, Checkbox, Empty, Form, Input, Modal, Popover, Select, Space, Table, Tag } from 'antd'
-import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons'
+import { Alert, Badge, Button, Empty, Form, Input, Modal, Select, Space, Table, Tag } from 'antd'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@ant-design/icons'
 
 import {
   createAdminUserApi,
@@ -12,6 +12,7 @@ import {
   updateAdminUserStatusApi,
 } from '@/api/admin'
 import { useUserStore } from '@/stores/user'
+import ColumnPicker from '@/components/ColumnPicker'
 import { message, modal } from '@/utils/app'
 import { usePageTitle } from '@/utils/useTitle'
 
@@ -214,11 +215,6 @@ export default function AdminUsers() {
           <span className="mono uid-text" title={record.uid}>
             {record.uid}
           </span>
-          {isSelf(record) && (
-            <Tag color="blue" className="row-tag">
-              {t('adminUsers.me')}
-            </Tag>
-          )}
         </span>
       ),
     },
@@ -271,13 +267,8 @@ export default function AdminUsers() {
     },
   ]
 
-  /** 当前显示的列（默认全显；操作列固定显示，避免隐藏后无从操作） */
+  /** 当前显示的列（默认全显；列设置结果由 ColumnPicker 缓存到 localStorage） */
   const visibleColumns = columnDefs.filter((col) => visibleKeys.includes(col.key))
-  const columnOptions = columnDefs.map((col) => ({
-    label: col.title,
-    value: col.key,
-    disabled: col.key === 'action',
-  }))
 
   /** 表格自带分页（默认靠右） */
   const pagination = {
@@ -328,24 +319,13 @@ export default function AdminUsers() {
             </Button>
             <Space size={8}>
               <Button icon={<ReloadOutlined />} loading={loading} onClick={handleSearch} />
-              <Popover
-                trigger="click"
-                placement="bottomRight"
-                content={
-                  <div className="column-setting">
-                    <Checkbox.Group
-                      value={visibleKeys}
-                      options={columnOptions}
-                      onChange={(keys) => {
-                        // 操作列固定：取消勾选也自动补回
-                        setVisibleKeys(keys.includes('action') ? keys : [...keys, 'action'])
-                      }}
-                    />
-                  </div>
-                }
-              >
-                <Button icon={<SettingOutlined />} />
-              </Popover>
+              <ColumnPicker
+                columns={columnDefs}
+                value={visibleKeys}
+                onChange={setVisibleKeys}
+                storageKey="admin-users"
+                lockedKeys={['action']}
+              />
             </Space>
           </div>
         </div>

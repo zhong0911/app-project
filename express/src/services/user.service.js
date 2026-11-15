@@ -7,6 +7,13 @@ import { BusinessError } from '../utils/business-error.js';
 import { pageResult } from '../utils/result.js';
 import { createEntity, ROLES } from '../models/user.model.js';
 import { userPageVO, userVO } from '../vos/user.vo.js';
+import { config } from '../config/index.js';
+
+/**
+ * 管理员由 SSO_ADMIN_UID 配置决定（与 currentUserService.isAdmin 同一口径），
+ * 本地角色必须同步为 ADMIN，否则后台列表里管理员会显示成普通用户。
+ */
+const isAdminUid = (uid) => Boolean(uid) && String(uid) === String(config.sso.adminUid);
 
 export const userService = {
   async createUser(dto) {
@@ -17,7 +24,7 @@ export const userService = {
       }
       throw BusinessError.conflict(`SSO 用户已存在: ${dto.uid}`);
     }
-    const entity = await userRepository.insert(createEntity(dto.uid));
+    const entity = await userRepository.insert(createEntity(dto.uid, isAdminUid(dto.uid) ? 'ADMIN' : 'USER'));
     return userVO(entity);
   },
 
@@ -74,13 +81,19 @@ export const userService = {
     return uid ? userRepository.findByUid(uid) : null;
   },
 
-  /** 新登录用户默认注册为 USER（并发下靠唯一键兜底） */
+  /** 新登录用户默认注册为 USER；配置的管理员直接 ADMIN（并发下靠唯一键兜底） */
   async getOrCreateDefaultUser(uid) {
     if (!uid) return null;
     const existing = (await userRepository.findByUid(uid)) || (await userRepository.findByUidIncludingDeleted(uid));
-    if (existing) return existing;
+    if (existing) {
+      // 已有记录与管理员配置不一致时顺手纠正角色
+      if (isAdminUid(uid) && existing.role !== 'ADMIN') {
+        return userRepository.updateRole(existing.id, 'ADMIN');
+      }
+      return existing;
+    }
     try {
-      return await userRepository.insert(createEntity(uid));
+      return await userRepository.insert(createEntity(uid, isAdminUid(uid) ? 'ADMIN' : 'USER'));
     } catch (error) {
       if (error.code === 'ER_DUP_ENTRY') return userRepository.findByUidIncludingDeleted(uid);
       throw error;

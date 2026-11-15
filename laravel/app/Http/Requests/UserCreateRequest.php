@@ -37,8 +37,8 @@ class UserCreateRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'uid.required' => '用户唯一标识不能为空',
-            'uid.max' => '用户唯一标识长度不能超过 64 个字符',
+            'uid.required' => '用户标识不能为空',
+            'uid.max' => '用户标识长度不能超过 64 个字符',
         ];
     }
 }

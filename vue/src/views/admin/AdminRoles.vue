@@ -1,9 +1,9 @@
 <script setup>
 // 角色管理页：本地角色字典（编码 / 名称 / 描述 / 状态）。
 // 内置 ADMIN / USER 由后端标记 builtIn=1：编码不可改、不可删除；仍被用户引用的角色也不可删（后端校验）。
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { PlusOutlined, ReloadOutlined, SearchOutlined, SettingOutlined } from '@antdv-next/icons'
+import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { createAdminRoleApi, deleteAdminRoleApi, getAdminRolesApi, updateAdminRoleApi } from '@/api/admin'
 
@@ -28,21 +28,6 @@ const columnDefs = computed(() => [
 const visibleKeys = ref(['code', 'name', 'description', 'status', 'action'])
 
 const columns = computed(() => columnDefs.value.filter((col) => visibleKeys.value.includes(col.key)))
-
-/** 列设置选项：操作列禁用取消，避免隐藏后无从操作 */
-const columnOptions = computed(() =>
-  columnDefs.value.map((col) => ({
-    label: col.title,
-    value: col.key,
-    disabled: col.key === 'action',
-  })),
-)
-
-watch(visibleKeys, (keys) => {
-  if (!keys.includes('action')) {
-    visibleKeys.value = [...keys, 'action']
-  }
-})
 
 /** 接口只按启用状态维度返回数据，关键字与状态在页面内过滤（角色总量很小，不分页） */
 const load = async () => {
@@ -237,16 +222,12 @@ onMounted(load)
           <a-button :loading="loading" @click="load">
             <ReloadOutlined />
           </a-button>
-          <a-popover trigger="click" placement="bottomRight">
-            <template #content>
-              <div class="column-setting">
-                <a-checkbox-group v-model:value="visibleKeys" :options="columnOptions" />
-              </div>
-            </template>
-            <a-button>
-              <SettingOutlined />
-            </a-button>
-          </a-popover>
+          <ColumnPicker
+            v-model="visibleKeys"
+            :columns="columnDefs"
+            storage-key="admin-roles"
+            :locked-keys="['action']"
+          />
         </a-space>
       </div>
     </div>

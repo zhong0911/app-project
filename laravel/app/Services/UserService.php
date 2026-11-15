@@ -28,16 +28,16 @@ class UserService
     {
         $uid = UserIdentity::orEmpty($uid);
         if ($uid === '') {
-            throw BusinessException::badRequest('用户唯一标识不能为空');
+            throw BusinessException::badRequest('用户标识不能为空');
         }
         if (! UserIdentity::fits($uid)) {
-            throw BusinessException::badRequest('用户唯一标识长度不能超过 ' . UserIdentity::MAX_LENGTH . ' 个字符');
+            throw BusinessException::badRequest('用户标识长度不能超过 ' . UserIdentity::MAX_LENGTH . ' 个字符');
         }
 
         $exists = $this->repository->findByUidIncludingDeleted($uid);
         if ($exists !== null) {
             if ($exists->deleted === 1) {
-                throw BusinessException::conflict("该用户唯一标识已在回收站，请先恢复: {$uid}");
+                throw BusinessException::conflict("该用户标识已在回收站，请先恢复: {$uid}");
             }
             throw BusinessException::conflict("该用户已存在: {$uid}");
         }
@@ -140,6 +140,11 @@ class UserService
 
         $existing = $this->repository->findByUid($uid) ?? $this->repository->findByUidIncludingDeleted($uid);
         if ($existing !== null) {
+            // 管理员身份由 sso.admin_uid 决定，本地角色与配置不一致时顺手纠正
+            if ($this->isAdmin($uid) && $existing->role !== 'ADMIN') {
+                $this->repository->updateRole($existing->id, 'ADMIN');
+                $existing->refresh();
+            }
             return $existing;
         }
 
