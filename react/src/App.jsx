@@ -47,7 +47,8 @@ export default function App() {
     <ConfigProvider locale={locale.antd} theme={getThemeConfig(isDark)}>
       {/* antd App 提供 message / modal 的 context，同时承载全局样式基线 */}
       <AntApp>
-        <RouterProvider router={router} />
+        {/* future: 提前启用 v7 的 startTransition 行为，消除控制台 future flag 警告 */}
+        <RouterProvider router={router} future={{ v7_startTransition: true }} />
       </AntApp>
     </ConfigProvider>
   )

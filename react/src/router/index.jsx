@@ -20,36 +20,38 @@ const RequireAdmin = lazy(() => import('@/components/RequireAdmin'))
  * - 管理后台走管理员守卫，普通用户无法进入
  * - 兜底 404
  */
-export const router = createBrowserRouter([
-  { path: '/', element: <Navigate to="/image-bed" replace /> },
+export const router = createBrowserRouter(
+  [
+    { path: '/', element: <Navigate to="/image-bed" replace /> },
 
-  // 历史营销页 → 统一收敛到图床
-  { path: '/home', element: <Navigate to="/image-bed" replace /> },
-  { path: '/about', element: <Navigate to="/image-bed" replace /> },
-  { path: '/components', element: <Navigate to="/image-bed" replace /> },
+    // 历史营销页 → 统一收敛到图床
+    { path: '/home', element: <Navigate to="/image-bed" replace /> },
+    { path: '/about', element: <Navigate to="/image-bed" replace /> },
+    { path: '/components', element: <Navigate to="/image-bed" replace /> },
 
-  { path: '/login', element: <Login /> },
-  { path: '/logout', element: <Logout /> },
+    { path: '/login', element: <Login /> },
+    { path: '/logout', element: <Logout /> },
 
-  {
-    path: '/image-bed',
-    element: <ConsoleLayout />,
-    children: [{ index: true, element: <ImageBed /> }],
-  },
+    {
+      path: '/image-bed',
+      element: <ConsoleLayout />,
+      children: [{ index: true, element: <ImageBed /> }],
+    },
 
-  {
-    path: '/admin',
-    element: (
-      <RequireAdmin>
-        <ConsoleLayout />
-      </RequireAdmin>
-    ),
-    children: [
-      { index: true, element: <Navigate to="/admin/users" replace /> },
-      { path: 'users', element: <AdminUsers /> },
-      { path: 'recycle', element: <AdminRecycle /> },
-    ],
-  },
+    {
+      path: '/admin',
+      element: (
+        <RequireAdmin>
+          <ConsoleLayout />
+        </RequireAdmin>
+      ),
+      children: [
+        { index: true, element: <Navigate to="/admin/users" replace /> },
+        { path: 'users', element: <AdminUsers /> },
+        { path: 'recycle', element: <AdminRecycle /> },
+      ],
+    },
 
-  { path: '*', element: <NotFound /> },
-])
+    { path: '*', element: <NotFound /> },
+  ],
+)
