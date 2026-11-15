@@ -27,12 +27,6 @@ return Application::configure(basePath: dirname(__DIR__))
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
         health: '/up',
-        // 图片公开访问：/i/{uuid}，走独立路由组（不启动会话、不鉴权）
-        then: function () {
-            \Illuminate\Support\Facades\Route::middleware([])
-                ->prefix(trim((string) config('image.prefix', 'i'), '/'))
-                ->group(base_path('routes/image.php'));
-        },
     )
     ->withMiddleware(function (Middleware $middleware) {
         // API 组也需要 Session（SSO 登录态存服务端会话）

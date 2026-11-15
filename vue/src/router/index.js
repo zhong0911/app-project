@@ -1,17 +1,26 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
 import ConsoleLayout from '@/layouts/ConsoleLayout.vue'
+import LandingLayout from '@/layouts/LandingLayout.vue'
 import { APP_TITLE } from '@/config/app'
 import { AUTH_UNAUTHORIZED_EVENT } from '@/api/request'
 import { useUserStore } from '@/stores/modules/user'
 
 const routes = [
-  // 站点首页就是图床（ConsoleLayout + 左侧菜单），不再经过模板营销页
-  { path: '/', redirect: '/image-bed' },
-  // 兼容旧链接（模板时期首页、示例页）
-  { path: '/home', redirect: '/image-bed' },
-  { path: '/about', redirect: '/image-bed' },
-  { path: '/components', redirect: '/image-bed' },
+  // 站点首页：模板落地页（LandingLayout + Home）
+  {
+    path: '/',
+    component: LandingLayout,
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/views/Home.vue'),
+      },
+    ],
+  },
+  // 兼容旧链接
+  { path: '/home', redirect: '/' },
   // 登录页（独立全屏，不在布局内）
   {
     path: '/login',
@@ -26,12 +35,31 @@ const routes = [
     component: () => import('@/views/Logout.vue'),
     meta: { title: '退出登录' },
   },
-  // 图床（页面独立，不套任何布局：整页就是图床，右上角仅管理员可见控制台入口）
+  // 示例页：关于（ConsoleLayout + 左侧菜单）
   {
-    path: '/image-bed',
-    name: 'ImageBed',
-    component: () => import('@/views/image/ImageBed.vue'),
-    meta: { title: '图床' },
+    path: '/about',
+    component: ConsoleLayout,
+    children: [
+      {
+        path: '',
+        name: 'About',
+        component: () => import('@/views/About.vue'),
+        meta: { title: '关于' },
+      },
+    ],
+  },
+  // 示例页：组件预览（ConsoleLayout + 左侧菜单）
+  {
+    path: '/components',
+    component: ConsoleLayout,
+    children: [
+      {
+        path: '',
+        name: 'Components',
+        component: () => import('@/views/Components.vue'),
+        meta: { title: '组件预览' },
+      },
+    ],
   },
   // 管理后台（ConsoleLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
   {

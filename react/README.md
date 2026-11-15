@@ -1,6 +1,6 @@
 # React 前端模板
 
-一套可直接落地业务的 React 前端基线：内置落地页、示例页、SSO 会话登录、管理后台、亮暗主题、国际化与图床示例模块。能力与仓库里 `vue/` 模板一一对齐，只把框架层换成 React 生态；页面结构按模板形态组织（首页是项目介绍落地页，不是业务首页）。
+一套可直接落地业务的 React 前端基线：内置落地页、示例页、SSO 会话登录、管理后台、亮暗主题与国际化。能力与仓库里 `vue/` 模板一一对齐，只把框架层换成 React 生态；页面结构按模板形态组织（首页是项目介绍落地页，不是业务首页）。
 
 - 前端框架：React 18
 - 构建工具：Vite 6
@@ -38,7 +38,6 @@
 | `/home` | — | 旧链接兼容，redirect 到 `/` |
 | `/about` | `ConsoleLayout` | 示例页：模板使用的技术栈与版本 |
 | `/components` | `ConsoleLayout` | 示例页：常用 Ant Design 组件一览（含暗色适配） |
-| `/image-bed` | `ConsoleLayout` | 图床示例模块：上传 / 粘贴 / 复制直链 / 回收站（**可整块删除**） |
 | `/admin/users`、`/admin/recycle` | `ConsoleLayout` + `RequireAdmin` | 管理后台，仅管理员可进 |
 | `/login`、`/logout` | 独立全屏 | SSO 登录入口 / 退出确认 |
 | `*` | — | 404 |
@@ -66,8 +65,7 @@ react/
     ├── api/
     │   ├── request.js          # axios 实例：baseURL / withCredentials / 取消请求 / 5 字段响应
     │   ├── user.js             # /auth/logout、/bff/me
-    │   ├── admin.js            # 用户管理、角色字典、回收站
-    │   └── image.js            # 图床列表、上传、删除、恢复、彻底删除
+    │   └── admin.js            # 用户管理、角色字典、回收站
     ├── assets/styles/
     │   ├── index.css           # Tailwind + 设计令牌 + 滚动条（视口高度用 100vh + 100svh）
     │   ├── components.css      # 布局与页面结构样式
@@ -103,7 +101,6 @@ react/
         ├── Login.jsx           # SSO 登录入口
         ├── Logout.jsx          # 退出确认（含 SSO 全局退出跳转）
         ├── NotFound.jsx        # 404
-        ├── ImageBed.jsx        # 图床示例：上传 / 粘贴 / 复制 / 回收站
         └── admin/
             ├── AdminUsers.jsx  # 用户管理
             └── AdminRecycle.jsx
@@ -169,7 +166,6 @@ min-height: 100svh; /* 移动端用可见视口高度，避免被浏览器地址
 
 | 要删的能力 | 删除步骤 |
 | --- | --- |
-| 图床示例模块 | 删 `views/ImageBed.jsx`、`api/image.js`；`router/index.jsx` 去掉 `/image-bed` 路由；`ConsoleLayout` 的 `menuItems` 去掉图床项 |
 | 示例页 | 删 `views/About.jsx`、`views/Components.jsx`；`router` 去掉 `/about`、`/components`；`landing`/`home` 文案里的对应 key 可一并清理 |
 | 落地页首页 | 删 `layouts/LandingLayout.jsx`、`views/Home.jsx`、`assets/styles/landing.css`；`router` 的 `/` 改成自己的首页（可直接用 `ConsoleLayout`） |
 | 管理后台 | 删 `views/admin/`、`components/RequireAdmin.jsx`、`api/admin.js`；`router/index.jsx` 去掉 `/admin` 路由；`ConsoleLayout` 的 `menuItems` 去掉后台项 |
@@ -181,4 +177,4 @@ min-height: 100svh; /* 移动端用可见视口高度，避免被浏览器地址
 
 - 品牌文案显示 `AntX`（X 大写），包名 / 域名用小写 `antx`。
 - 接口统一五字段响应：`{ code, success, message, data, timestamp }`，`code` 为 `200` 或 `0` 都视为成功。
-- 图床模块是模板里唯一有完整业务闭环的示例（上传、去重、直链、回收站），用来演示「列表 + 操作 + 上传」这类典型页面怎么写；不需要可直接按上表删除。
+- 本模板只保留与业务无关的基础设施与示例页，不带具体业务模块（图床等业务实现请见独立仓库）。

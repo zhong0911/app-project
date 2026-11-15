@@ -13,7 +13,6 @@ import {
   MenuOutlined,
   MenuUnfoldOutlined,
   MoonOutlined,
-  PictureOutlined,
   SettingOutlined,
   SunOutlined,
   TeamOutlined,
@@ -32,7 +31,7 @@ import SideMenu from './SideMenu'
 const { Sider, Header, Content } = Layout
 
 /**
- * 控制台布局（图床 / 管理后台复用）
+ * 控制台布局（示例页 / 管理后台复用）
  *
  * - 桌面端：fixed 侧边栏（220px，折叠 80px）+ 顶栏 + 内容区
  * - 移动端（<768px）：侧边栏收进 Drawer，顶栏左侧按钮打开
@@ -96,7 +95,7 @@ export default function ConsoleLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 菜单数据：管理后台（/admin）显示后台 tabs；业务区放首页 / 示例页 / 图床
+  // 菜单数据：管理后台（/admin）显示后台 tabs；业务区放首页 / 示例页
   const isAdminArea = location.pathname.startsWith('/admin')
   const menuItems = isAdminArea
     ? [
@@ -108,7 +107,6 @@ export default function ConsoleLayout() {
         { key: '/', label: t('nav.home'), icon: <HomeOutlined /> },
         { key: '/about', label: t('nav.about'), icon: <InfoCircleOutlined /> },
         { key: '/components', label: t('nav.components'), icon: <AppstoreOutlined /> },
-        { key: '/image-bed', label: t('nav.imageBed'), icon: <PictureOutlined /> },
         // 管理员身份由后端下发，非管理员看不到后台入口
         ...(isAdmin
           ? [{ key: '/admin/users', label: t('common.adminPanel'), icon: <SettingOutlined /> }]

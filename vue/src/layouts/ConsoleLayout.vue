@@ -21,7 +21,9 @@ import {
   SettingOutlined,
   TeamOutlined,
   DeleteOutlined,
-  PictureOutlined,
+  HomeOutlined,
+  InfoCircleOutlined,
+  AppstoreOutlined,
 } from '@antdv-next/icons'
 
 const route = useRoute()
@@ -47,7 +49,7 @@ watch(drawerOpen, (open) => {
   nextTick(releaseDrawerScrollLock)
 })
 
-// 菜单数据：管理后台（/admin）显示后台 tabs；业务区只放图床
+// 菜单数据：管理后台（/admin）显示后台 tabs；业务区放模板示例页
 const isAdminArea = computed(() => route.path.startsWith('/admin'))
 const menuItems = computed(() => {
   if (isAdminArea.value) {
@@ -56,8 +58,12 @@ const menuItems = computed(() => {
       { key: '/admin/recycle', label: t('nav.adminRecycle'), icon: DeleteOutlined },
     ]
   }
-  // 菜单只放业务页面；首页入口由侧边栏 logo（图标 + 标题）承担，点击即回到图床
-  const items = [{ key: '/image-bed', label: t('nav.imageBed'), icon: PictureOutlined }]
+  // 业务区：模板自带的示例页；首页入口由侧边栏 logo（图标 + 标题）承担
+  const items = [
+    { key: '/', label: t('nav.home'), icon: HomeOutlined },
+    { key: '/about', label: t('nav.about'), icon: InfoCircleOutlined },
+    { key: '/components', label: t('nav.components'), icon: AppstoreOutlined },
+  ]
   if (userStore.isAdmin) {
     items.push({ key: '/admin/users', label: t('common.adminPanel'), icon: SettingOutlined })
   }

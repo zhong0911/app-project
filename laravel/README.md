@@ -14,7 +14,6 @@ laravel/
 │   │   │   ├── BffController.php     #   /api/bff/me
 │   │   │   ├── UserController.php    #   /api/users
 │   │   │   ├── AdminUserController.php # /api/admin/users
-│   │   │   ├── ImageController.php   #   /api/image（图床）
 │   │   │   └── DemoController.php    #   /api/demo
 │   │   ├── Middleware/
 │   │   │   ├── ResolveIdentity.php   #   身份解析（= Security 过滤器链）
@@ -82,32 +81,6 @@ php artisan serve --port=8080
 | DELETE | `/api/admin/users/{id}`、`/purge` | 软删除 / 彻底删除 |
 | POST | `/api/admin/users/{id}/restore` | 恢复 |
 | GET | `/api/demo/admin`、`/api/demo/user` | 权限示例 |
-| POST | `/api/image` | 上传图片（multipart `file`），返回直链，同内容自动去重 |
-| GET | `/api/image` | 我的图片分页列表（`pageNum` / `pageSize` / `keyword`） |
-| GET | `/api/image/recycle` | 回收站列表 |
-| DELETE | `/api/image/{uuid}` | 移入回收站（软删除） |
-| POST | `/api/image/{uuid}/restore` | 从回收站恢复 |
-| DELETE | `/api/image/{uuid}/purge` | 彻底删除（连同存储文件） |
-| GET | `/i/{uuid}` | **公开**读图（长缓存 + ETag，不鉴权不写会话） |
-
-## 图床
-
-配置见 `config/image.php` 与 `.env` 的 `IMAGE_*` 变量：
-
-| 变量 | 说明 |
-| --- | --- |
-| `IMAGE_DISK` | 存储磁盘，`images`-本地（`storage/app/images`）/ `s3`-MinIO 或云对象存储 |
-| `IMAGE_DOMAIN` | 图片直链域名，留空回退 `APP_URL`（生产建议 `https://img.antx.cc`） |
-| `IMAGE_PREFIX` | 公开访问前缀，默认 `i` |
-| `IMAGE_MAX_SIZE` | 单图上限（字节），默认 10MB |
-| `IMAGE_COUNT_VISIT` | 是否累计访问次数 |
-
-- 表结构：`images`（迁移 `2025_11_15_000000_create_images_table.php`，或 `sql/init.sql` 里的建表语句）
-- 安全：MIME 按文件内容识别（不信任后缀）、uuid 命名（不落原始文件名）、只允许本人读写自己的图片、单图大小上限、`X-Content-Type-Options: nosniff`
-- 读图路由 `/i/{uuid}` 注册在 `bootstrap/app.php` 的 `withRouting(then:)`，不启动会话，可被 Nginx/CDN 直接缓存
-- 切 MinIO：`IMAGE_DISK=s3`，并执行 `composer require league/flysystem-aws-s3-v3 "^3.0"`，再填 `AWS_*`（MinIO 需 `AWS_USE_PATH_STYLE_ENDPOINT=true`）
-- PHP 侧还要放开上传限制：`upload_max_filesize` / `post_max_size` 不小于 `IMAGE_MAX_SIZE`
-- 本地磁盘：`storage/app/images` 需要 PHP-FPM 用户可写（`chmod -R 775 storage`）
 
 ## SSO 接入
 
