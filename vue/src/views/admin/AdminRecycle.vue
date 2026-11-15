@@ -100,7 +100,6 @@ onMounted(load)
 
 <template>
   <a-card variant="borderless" class="admin-card">
-    <template #title>{{ t('adminRecycle.title') }}</template>
     <template #extra>
       <a-tooltip :title="t('common.refresh')">
         <a-button :loading="loading" @click="handleRefresh">

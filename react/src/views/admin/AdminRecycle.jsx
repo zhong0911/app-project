@@ -161,7 +161,6 @@ export default function AdminRecycle() {
     <Card
       variant="borderless"
       className="admin-card"
-      title={t('adminRecycle.title')}
       extra={
         <Tooltip title={t('common.refresh')}>
           <Button icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />

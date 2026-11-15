@@ -254,7 +254,6 @@ export default {
     },
   },
   adminUsers: {
-    title: '用户管理',
     empty: '暂无用户',
     searchUid: '按用户唯一标识搜索',
     uid: '用户唯一标识',
@@ -277,8 +276,6 @@ export default {
     addSuccess: '用户已添加',
     enableSuccess: '已启用',
     disableSuccess: '已禁用',
-    lastLoginAt: '上次登录时间',
-    neverLoggedIn: '从未登录',
     editTitle: '编辑用户',
     editOk: '保存',
     editSuccess: '用户角色已更新',
@@ -291,7 +288,6 @@ export default {
     deleteSuccess: '已移入回收站',
   },
   adminRecycle: {
-    title: '回收站',
     tabUsers: '用户',
     empty: '回收站是空的',
     columns: {

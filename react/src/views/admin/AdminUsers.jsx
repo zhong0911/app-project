@@ -18,7 +18,7 @@ import { usePageTitle } from '@/utils/useTitle'
 /**
  * 用户管理页
  *
- * 列：用户唯一标识 / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
+ * 列：用户唯一标识 / 角色 / 状态 / 操作（编辑 · 停用启用 · 删除）
  * - 用户唯一标识取自 access_token 的 sub：SSO 应用可配置成 uid / username / email / phone，
  *   所以一律按字符串处理（SSO 的 uid 是整数，落库时也转成字符串），本地表不存昵称邮箱
  * - 角色来自后端「角色管理」，内置 ADMIN / USER；角色同时决定 JWT 里下发的权限
@@ -50,6 +50,8 @@ export default function AdminUsers() {
   const [roles, setRoles] = useState([])
 
   const [submitting, setSubmitting] = useState(false)
+  /** 正在提交「停用 / 启用」的行 id：按钮显示 loading，避免重复点击 */
+  const [actingId, setActingId] = useState(null)
 
   // 新增弹窗
   const [addOpen, setAddOpen] = useState(false)
@@ -167,6 +169,11 @@ export default function AdminUsers() {
   }
 
   const handleStatus = async (record, enabled) => {
+    // 同一时刻只允许一行在提交，按钮用 loading 反馈，避免重复点击
+    if (actingId !== null) {
+      return
+    }
+    setActingId(record.id)
     try {
       await updateAdminUserStatusApi(record.id, enabled ? 1 : 0)
       message.success(t(enabled ? 'adminUsers.enableSuccess' : 'adminUsers.disableSuccess'))
@@ -174,6 +181,8 @@ export default function AdminUsers() {
     } catch {
       // 失败时重新拉取，保证状态与后端一致
       refresh()
+    } finally {
+      setActingId(null)
     }
   }
 
@@ -235,13 +244,6 @@ export default function AdminUsers() {
       ),
     },
     {
-      title: t('adminUsers.lastLoginAt'),
-      dataIndex: 'lastLoginAt',
-      key: 'lastLoginAt',
-      width: 170,
-      render: (value) => <span className="meta-text mono">{value || t('adminUsers.neverLoggedIn')}</span>,
-    },
-    {
       title: t('adminUsers.columns.action'),
       key: 'action',
       width: 170,
@@ -253,6 +255,7 @@ export default function AdminUsers() {
           <Button
             type="link"
             size="small"
+            loading={actingId === record.id}
             disabled={isSelf(record)}
             onClick={() => handleStatus(record, record.status !== 1)}
           >
@@ -281,7 +284,6 @@ export default function AdminUsers() {
       <Card
         variant="borderless"
         className="admin-card"
-        title={t('adminUsers.title')}
         extra={
           <Space>
             <Tooltip title={t('common.refresh')}>

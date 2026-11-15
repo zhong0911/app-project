@@ -255,7 +255,6 @@ export default {
   },
   adminUsers: {
     empty: '暫無使用者',
-    title: '使用者管理',
     searchUid: '按使用者唯一識別搜尋',
     uid: '使用者唯一識別',
     me: '我',
@@ -277,8 +276,6 @@ export default {
     addSuccess: '使用者已新增',
     enableSuccess: '已啟用',
     disableSuccess: '已停用',
-    lastLoginAt: '上次登入時間',
-    neverLoggedIn: '從未登入',
     editTitle: '編輯使用者',
     editOk: '儲存',
     editSuccess: '使用者角色已更新',
@@ -293,7 +290,6 @@ export default {
   adminRecycle: {
     tabUsers: '使用者',
     empty: '回收站是空的',
-    title: '回收站',
     columns: {
       id: 'ID',
       uid: '使用者唯一識別',

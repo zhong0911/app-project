@@ -254,7 +254,6 @@ export default {
     },
   },
   adminUsers: {
-    title: 'User management',
     empty: 'No users yet',
     searchUid: 'Search by user unique identifier',
     uid: 'User identifier',
@@ -277,8 +276,6 @@ export default {
     addSuccess: 'User added',
     enableSuccess: 'Enabled',
     disableSuccess: 'Disabled',
-    lastLoginAt: 'Last login',
-    neverLoggedIn: 'Never signed in',
     editTitle: 'Edit user',
     editOk: 'Save',
     editSuccess: 'User role updated',
@@ -291,7 +288,6 @@ export default {
     deleteSuccess: 'Moved to recycle bin',
   },
   adminRecycle: {
-    title: 'Recycle bin',
     tabUsers: 'Users',
     empty: 'Recycle bin is empty',
     columns: {

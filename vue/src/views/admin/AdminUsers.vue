@@ -1,6 +1,6 @@
 <script setup>
 // 用户管理页：只用 a-table 本身的能力（不额外传 scroll / size / 外置分页），
-// 列为用户唯一标识 / 角色 / 状态 / 上次登录时间 / 操作（编辑 · 停用启用 · 删除）
+// 列为用户唯一标识 / 角色 / 状态 / 操作（编辑 · 停用启用 · 删除）
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { PlusOutlined, ReloadOutlined, SearchOutlined } from '@antdv-next/icons'
@@ -45,12 +45,13 @@ const addForm = reactive({ uid: '' })
 const editOpen = ref(false)
 const editing = ref(null)
 const editForm = reactive({ role: '' })
+/** 正在提交「停用 / 启用」的行 id：按钮显示 loading，避免重复点击 */
+const actingId = ref(null)
 
 const columns = computed(() => [
   { title: t('adminUsers.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
   { title: t('adminUsers.columns.role'), dataIndex: 'role', key: 'role', width: 140 },
   { title: t('adminUsers.columns.status'), dataIndex: 'status', key: 'status', width: 120 },
-  { title: t('adminUsers.lastLoginAt'), dataIndex: 'lastLoginAt', key: 'lastLoginAt', width: 170 },
   { title: t('adminUsers.columns.action'), key: 'action', width: 170 },
 ])
 
@@ -156,6 +157,11 @@ const handleEdit = async () => {
 }
 
 const handleStatus = async (record, checked) => {
+  // 同一时刻只允许一行在提交，按钮用 loading 反馈，避免重复点击
+  if (actingId.value !== null) {
+    return
+  }
+  actingId.value = record.id
   try {
     await updateAdminUserStatusApi(record.id, checked ? 1 : 0)
     message.success(t(checked ? 'adminUsers.enableSuccess' : 'adminUsers.disableSuccess'))
@@ -163,6 +169,8 @@ const handleStatus = async (record, checked) => {
   } catch {
     // 失败时重新拉取，保证状态与后端一致
     await load()
+  } finally {
+    actingId.value = null
   }
 }
 
@@ -189,7 +197,6 @@ onMounted(async () => {
 
 <template>
   <a-card variant="borderless" class="admin-card">
-    <template #title>{{ t('adminUsers.title') }}</template>
     <template #extra>
       <a-space>
         <a-tooltip :title="t('common.refresh')">
@@ -275,12 +282,6 @@ onMounted(async () => {
           />
         </template>
 
-        <template v-else-if="column.key === 'lastLoginAt'">
-          <span class="meta-text mono">
-            {{ record.lastLoginAt || t('adminUsers.neverLoggedIn') }}
-          </span>
-        </template>
-
         <template v-else-if="column.key === 'action'">
           <span class="cell-action">
             <a-button type="link" size="small" :disabled="isSelf(record)" @click="openEdit(record)">
@@ -289,6 +290,7 @@ onMounted(async () => {
             <a-button
               type="link"
               size="small"
+              :loading="actingId === record.id"
               :disabled="isSelf(record)"
               @click="handleStatus(record, record.status !== 1)"
             >
