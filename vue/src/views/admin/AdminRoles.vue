@@ -277,7 +277,6 @@ onMounted(load)
       <a-form-item :label="t('adminRoles.descriptionLabel')">
         <a-textarea v-model:value="addForm.description" :maxlength="255" :rows="2" show-count />
       </a-form-item>
-      <a-alert type="info" show-icon :message="t('adminRoles.codeHint')" />
     </a-form>
   </a-modal>
 

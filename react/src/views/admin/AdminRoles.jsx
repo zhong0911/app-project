@@ -308,7 +308,6 @@ export default function AdminRoles() {
               showCount
             />
           </Form.Item>
-          <Alert type="info" showIcon message={t('adminRoles.codeHint')} />
         </Form>
       </Modal>
 
