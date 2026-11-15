@@ -103,17 +103,23 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  /* 允许标题在窄屏收缩，避免和右侧按钮组重叠 */
+  min-width: 0;
 }
 
 .page-title {
   font-size: 16px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* 右侧按钮组由 Space（size=8）控制间距，这里只保证不换行 */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex: none;
 }
 
 .lang-btn {
@@ -167,8 +173,8 @@
 .content {
   margin: 16px;
   padding: 24px;
-  min-height: calc(100vh - 64px - 32px);
-  min-height: calc(100svh - 64px - 32px);
+  min-height: calc(100vh - 52px - 32px);
+  min-height: calc(100svh - 52px - 32px);
 }
 
 /* ---------- 登录页 ---------- */
@@ -415,6 +421,11 @@
     gap: 8px;
   }
 
+  /* 屏幕太窄时只保留旗帜，隐藏语言名称，避免与主题 / 用户按钮挤在一起 */
+  .lang-text {
+    display: none;
+  }
+
   /* 隐藏语言文字后图标按钮统一为等大方块，保证间距一致 */
   .lang-btn,
   .user-btn {
@@ -428,8 +439,8 @@
   .content {
     margin: 8px;
     padding: 12px;
-    min-height: calc(100vh - 64px - 16px);
-    min-height: calc(100svh - 64px - 16px);
+    min-height: calc(100vh - 52px - 16px);
+    min-height: calc(100svh - 52px - 16px);
   }
 
   .image-card .ant-card-head {

@@ -203,7 +203,7 @@ onMounted(async () => {
           <!-- 当前页面标题（对应左侧菜单） -->
           <span v-if="currentMenuTitle" class="page-title">{{ currentMenuTitle }}</span>
         </div>
-        <div class="header-right">
+        <a-space :size="8" class="header-right">
           <!-- 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 -->
           <a-dropdown
             :trigger="['click']"
@@ -245,7 +245,7 @@ onMounted(async () => {
             </a-dropdown>
           </template>
           <span v-else class="auth-slot" aria-hidden="true" />
-        </div>
+        </a-space>
       </a-layout-header>
 
       <!-- 内容区：懒加载组件解析期间（Component 为 null）显示居中 a-spin，
@@ -307,18 +307,24 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 12px;
+  /* 允许标题在窄屏收缩，避免和右侧按钮组重叠 */
+  min-width: 0;
 }
 
-/* 当前页面标题（对应左侧菜单），顶栏靠左显示 */
+/* 当前页面标题（对应左侧菜单），顶栏靠左显示；超长时省略号，不挤占右侧按钮 */
 .page-title {
   font-size: 16px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
+/* 右侧按钮组由 a-space 控制间距（size=8），这里只保证不换行 */
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  flex: none;
 }
 
 .lang-btn {
@@ -369,13 +375,13 @@ onMounted(async () => {
 .content {
   margin: 16px;
   padding: 24px;
-  min-height: calc(100svh - 64px - 32px);
+  min-height: calc(100svh - 52px - 32px);
 }
 
 /* 路由懒加载 loading：wrapper 撑满内容区高度，antdv spinner 默认在容器内居中；
    注意不要用 flex，否则页面内容也会被居中 */
 .route-spin {
-  min-height: calc(100svh - 64px - 96px);
+  min-height: calc(100svh - 52px - 96px);
 }
 
 /* ============ 移动端适配（<768px） ============ */
@@ -386,6 +392,11 @@ onMounted(async () => {
 
   .header-right {
     gap: 8px;
+  }
+
+  /* 屏幕太窄时只保留旗帜，隐藏语言名称，避免与主题 / 用户按钮挤在一起 */
+  .lang-text {
+    display: none;
   }
 
   /* 隐藏语言文字后图标按钮统一为等大方块，保证间距一致 */

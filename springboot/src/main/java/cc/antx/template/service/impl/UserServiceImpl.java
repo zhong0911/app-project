@@ -250,6 +250,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private UserVO toVO(User user) {
         UserVO vo = new UserVO();
         BeanUtils.copyProperties(user, vo);
+        // 读时兜底：配置的管理员（sso.admin-uid）若库里历史角色仍是 USER，输出统一按 ADMIN，
+        // 避免后台用户列表 / 详情把管理员显示成普通用户（落库同步见 syncAdminRole、getOrCreateDefaultUser）
+        if (isAdminUid(user.getUid())) {
+            vo.setRole("ADMIN");
+        }
         return vo;
     }
 }

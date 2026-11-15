@@ -24,13 +24,22 @@ export class UserService {
     return Boolean(uid) && String(uid) === String(this.config.get<string>('sso.adminUid'));
   }
 
+  /** 实体 → VO：配置的管理员即便库里历史角色是 USER，输出也按 ADMIN（与权限判定口径一致） */
+  private toVO(user: User | null): UserVO | null {
+    const vo = toUserVO(user);
+    if (vo && this.isAdminUid(vo.uid)) {
+      vo.role = 'ADMIN';
+    }
+    return vo;
+  }
+
   async createUser(dto: UserCreateDto): Promise<UserVO> {
     const exists = await this.repo.findByUidIncludingDeleted(dto.uid);
     if (exists) {
       if (exists.deleted === 1) throw BusinessException.conflict(`该 uid 已在回收站，请先恢复: ${dto.uid}`);
       throw BusinessException.conflict(`SSO 用户已存在: ${dto.uid}`);
     }
-    return toUserVO(await this.repo.insert(dto.uid, this.isAdminUid(dto.uid) ? 'ADMIN' : 'USER'))!;
+    return this.toVO(await this.repo.insert(dto.uid, this.isAdminUid(dto.uid) ? 'ADMIN' : 'USER'))!;
   }
 
   async updateUser(dto: UserUpdateDto): Promise<UserVO> {
@@ -40,7 +49,7 @@ export class UserService {
     if (!ALLOWED_ROLES.includes(role)) {
       throw BusinessException.badRequest(`角色不合法，仅支持 ADMIN / USER: ${dto.role}`);
     }
-    return toUserVO(await this.repo.updateRole(dto.id, role))!;
+    return this.toVO(await this.repo.updateRole(dto.id, role))!;
   }
 
   async deleteUser(id: number): Promise<void> {
@@ -52,30 +61,30 @@ export class UserService {
   async getUserById(id: number): Promise<UserVO> {
     const user = await this.repo.findById(id);
     if (!user) throw BusinessException.notFound(`用户不存在: ${id}`);
-    return toUserVO(user)!;
+    return this.toVO(user)!;
   }
 
   async pageQuery(dto: UserQueryDto): Promise<PageResult<UserVO>> {
     const { total, records } = await this.repo.page({ ...dto, deleted: 0 });
-    return pageResult(dto.pageNum, dto.pageSize, total, records.map((u) => toUserVO(u)!));
+    return pageResult(dto.pageNum, dto.pageSize, total, records.map((u) => this.toVO(u)!));
   }
 
   async pageRecycle(dto: UserQueryDto): Promise<PageResult<UserVO>> {
     const { total, records } = await this.repo.page({ ...dto, role: undefined, deleted: 1 });
-    return pageResult(dto.pageNum, dto.pageSize, total, records.map((u) => toUserVO(u)!));
+    return pageResult(dto.pageNum, dto.pageSize, total, records.map((u) => this.toVO(u)!));
   }
 
   async updateStatus(id: number, status: number): Promise<UserVO> {
     if (![0, 1].includes(status)) throw BusinessException.badRequest('状态仅支持 0-禁用 / 1-启用');
     const user = await this.repo.findById(id, true);
     if (!user) throw BusinessException.notFound(`用户不存在: ${id}`);
-    return toUserVO(await this.repo.updateStatus(id, status))!;
+    return this.toVO(await this.repo.updateStatus(id, status))!;
   }
 
   async restore(id: number): Promise<UserVO> {
     const user = await this.repo.findById(id, true);
     if (!user || user.deleted !== 1) throw BusinessException.notFound(`回收站中不存在该用户: ${id}`);
-    return toUserVO(await this.repo.restore(id))!;
+    return this.toVO(await this.repo.restore(id))!;
   }
 
   async purge(id: number): Promise<void> {

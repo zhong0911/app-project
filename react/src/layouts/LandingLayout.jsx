@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { Button, Drawer, Dropdown, Grid } from 'antd'
+import { Button, Drawer, Dropdown, Grid, Space } from 'antd'
 import {
   DashboardOutlined,
   LoginOutlined,
@@ -220,7 +220,7 @@ export default function LandingLayout() {
             <Link to="/components">{t('nav.components')}</Link>
           </nav>
 
-          <div className="header-actions">
+          <Space size={8} className="header-actions">
             {/* 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 */}
             <Dropdown
               trigger={['click']}
@@ -272,7 +272,7 @@ export default function LandingLayout() {
                 <Button type="text" shape="circle" className="icon-btn" icon={<UserOutlined />} />
               </Dropdown>
             )}
-          </div>
+          </Space>
         </div>
       </header>
 

@@ -1,7 +1,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, Outlet } from 'react-router-dom'
-import { Button, Drawer, Dropdown, Grid, Layout } from 'antd'
+import { Button, Drawer, Dropdown, Grid, Layout, Space } from 'antd'
 import {
   AppstoreOutlined,
   DeleteOutlined,
@@ -210,7 +210,7 @@ export default function ConsoleLayout() {
             {currentMenuTitle && <span className="page-title">{currentMenuTitle}</span>}
           </div>
 
-          <div className="header-right">
+          <Space size={8} className="header-right">
             {/* 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 */}
             <Dropdown
               trigger={['click']}
@@ -264,7 +264,7 @@ export default function ConsoleLayout() {
                 <Button size="small" type="text" shape="circle" className="user-btn" icon={<UserOutlined />} />
               </Dropdown>
             )}
-          </div>
+          </Space>
         </Header>
 
         {/* 内容区：懒加载页面 chunk 时居中显示 loading */}

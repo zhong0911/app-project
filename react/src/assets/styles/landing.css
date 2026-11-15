@@ -597,6 +597,19 @@ html.dark .dir-item {
     gap: 8px;
   }
 
+  /* 屏幕太窄时语言按钮只保留旗帜，不再显示语言名称 */
+  .lang-text {
+    display: none;
+  }
+
+  .lang-btn {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+
   .header-actions .icon-btn {
     flex: none;
     width: 32px;

@@ -216,7 +216,7 @@ onMounted(async () => {
           <router-link to="/components">{{ t('nav.components') }}</router-link>
         </nav>
 
-        <div class="header-actions">
+        <a-space :size="8" class="header-actions">
           <!-- 语言切换：按钮显示当前国旗 + 语言名，下拉每一项也带国旗 -->
           <a-dropdown
             :trigger="['click']"
@@ -256,7 +256,7 @@ onMounted(async () => {
             </a-dropdown>
           </template>
           <span v-else class="auth-slot" aria-hidden="true" />
-        </div>
+        </a-space>
       </div>
     </header>
 
@@ -467,6 +467,19 @@ html.dark .site-footer {
   /* 隐藏文字后两个图标按钮统一为等大方块，保证间距一致 */
   .header-actions {
     gap: 8px;
+  }
+
+  /* 屏幕太窄时语言按钮只保留旗帜，不再显示语言名称 */
+  .lang-text {
+    display: none;
+  }
+
+  .lang-btn {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
   }
 
   .header-actions .icon-btn {

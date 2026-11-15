@@ -190,7 +190,8 @@ class UserService
             'id' => (int) $user->id,
             // 唯一标识一律输出字符串：整型 uid 也按字符串返回，前端不用区分类型
             'uid' => (string) $user->uid,
-            'role' => $user->role,
+            // 读时兜底：配置的管理员若库里历史角色仍是 USER，输出统一按 ADMIN
+            'role' => $this->isAdmin((string) $user->uid) ? 'ADMIN' : $user->role,
             'status' => (int) $user->status,
             'deleted' => (int) $user->deleted,
             'createTime' => optional($user->create_time)?->format('Y-m-d H:i:s'),

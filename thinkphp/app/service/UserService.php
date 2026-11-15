@@ -168,7 +168,8 @@ class UserService
         return [
             'id' => (int) $user->id,
             'uid' => $user->uid,
-            'role' => $user->role,
+            // 读时兜底：配置的管理员若库里历史角色仍是 USER，输出统一按 ADMIN
+            'role' => $this->isAdmin((string) $user->uid) ? 'ADMIN' : $user->role,
             'status' => (int) $user->status,
             'deleted' => (int) $user->deleted,
             'createTime' => $user->create_time ? (string) $user->create_time : null,

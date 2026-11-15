@@ -28,7 +28,11 @@ def is_admin_uid(uid: str | None) -> bool:
 def to_vo(user: User) -> UserVO:
     """Entity → VO（隐藏内部字段，只暴露前端需要的）。"""
 
-    return UserVO.model_validate(user)
+    vo = UserVO.model_validate(user)
+    # 读时兜底：配置的管理员若库里历史角色仍是 USER，输出统一按 ADMIN
+    if is_admin_uid(vo.uid):
+        vo.role = "ADMIN"
+    return vo
 
 
 class UserService:

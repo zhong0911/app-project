@@ -43,7 +43,7 @@ func (s *UserService) CreateUser(req dto.UserCreateDTO) (*vo.UserVO, error) {
 	if err := s.repo.Create(user); err != nil {
 		return nil, err
 	}
-	return vo.ToUserVO(user), nil
+	return s.toVO(user), nil
 }
 
 // UpdateUser 调整角色。
@@ -64,7 +64,7 @@ func (s *UserService) UpdateUser(req dto.UserUpdateDTO) (*vo.UserVO, error) {
 		return nil, err
 	}
 	user.Role = role
-	return vo.ToUserVO(user), nil
+	return s.toVO(user), nil
 }
 
 // DeleteUser 逻辑删除。
@@ -87,7 +87,27 @@ func (s *UserService) GetUser(id uint64) (*vo.UserVO, error) {
 		}
 		return nil, err
 	}
-	return vo.ToUserVO(user), nil
+	return s.toVO(user), nil
+}
+
+// toVO 实体转 VO：配置的管理员即便库里历史角色是 USER，输出也按 ADMIN（与权限判定口径一致）。
+func (s *UserService) toVO(user *entity.User) *vo.UserVO {
+	out := vo.ToUserVO(user)
+	if out != nil && s.IsAdmin(out.UID) {
+		out.Role = "ADMIN"
+	}
+	return out
+}
+
+// toVOList 批量转换，规则同 toVO。
+func (s *UserService) toVOList(users []entity.User) []vo.UserVO {
+	list := vo.ToUserVOList(users)
+	for i := range list {
+		if s.IsAdmin(list[i].UID) {
+			list[i].Role = "ADMIN"
+		}
+	}
+	return list
 }
 
 // PageQuery 分页查询。
@@ -100,7 +120,7 @@ func (s *UserService) PageQuery(req dto.UserQueryDTO) (response.PageResult, erro
 	if err != nil {
 		return response.PageResult{}, err
 	}
-	return response.NewPageResult(req.PageNum, req.PageSize, total, vo.ToUserVOList(users)), nil
+	return response.NewPageResult(req.PageNum, req.PageSize, total, s.toVOList(users)), nil
 }
 
 // PageRecycle 回收站分页。
@@ -113,7 +133,7 @@ func (s *UserService) PageRecycle(req dto.UserQueryDTO) (response.PageResult, er
 	if err != nil {
 		return response.PageResult{}, err
 	}
-	return response.NewPageResult(req.PageNum, req.PageSize, total, vo.ToUserVOList(users)), nil
+	return response.NewPageResult(req.PageNum, req.PageSize, total, s.toVOList(users)), nil
 }
 
 // UpdateStatus 启停。
@@ -134,7 +154,7 @@ func (s *UserService) UpdateStatus(id uint64, status int) (*vo.UserVO, error) {
 	if err != nil {
 		return nil, err
 	}
-	return vo.ToUserVO(user), nil
+	return s.toVO(user), nil
 }
 
 // Restore 从回收站恢复。
@@ -147,7 +167,7 @@ func (s *UserService) Restore(id uint64) (*vo.UserVO, error) {
 		return nil, err
 	}
 	user.Deleted = 0
-	return vo.ToUserVO(user), nil
+	return s.toVO(user), nil
 }
 
 // Purge 彻底删除。
