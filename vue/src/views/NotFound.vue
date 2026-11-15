@@ -21,7 +21,6 @@ const { t } = useI18n()
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
   height: 100svh;
 }
 </style>

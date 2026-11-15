@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>%VITE_APP_TITLE%</title>
+    <script>
+      /* 首屏主题预置：在样式表与入口脚本加载前就按持久化的主题给 <html> 打上 dark 类并铺底色，
+         避免暗色模式进入页面时先白一帧（FOUC）。与 stores/app.js 的 THEME_KEY 保持一致。 */
+      (function () {
+        var KEY = 'theme-mode'
+        var root = document.documentElement
+        try {
+          var match = document.cookie.match(new RegExp('(^|; )' + KEY + '=([^;]*)'))
+          var mode = (match && decodeURIComponent(match[2])) || localStorage.getItem(KEY)
+          var isDark = mode === 'dark'
+          root.classList.toggle('dark', isDark)
+          root.style.colorScheme = isDark ? 'dark' : 'light'
+          root.style.backgroundColor = isDark ? '#12141b' : '#f0f4fc'
+        } catch (e) {
+          // localStorage / 正则异常时按亮色渲染，不影响后续主题切换
+          root.style.backgroundColor = '#f0f4fc'
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

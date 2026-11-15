@@ -1,0 +1,318 @@
+/* ==============================================================
+   布局与页面结构样式（配色一律交给 antd 主题 token / 全局 CSS 变量，
+   这里只保留定位、尺寸、间距等结构属性）
+   ============================================================== */
+
+/* ---------- 应用图标 ---------- */
+.app-icon {
+  display: block;
+  flex: none;
+}
+
+/* ---------- 侧边菜单 ---------- */
+.side-menu .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 64px;
+  padding: 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+
+.side-menu .logo:hover {
+  color: inherit;
+}
+
+.side-menu .logo-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- 控制台布局 ---------- */
+.layout-root {
+  min-height: 100vh;
+  min-height: 100svh; /* 移动端用可见视口高度，避免被浏览器工具栏遮挡 */
+}
+
+.layout-sider {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100vh;
+  height: 100svh;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.layout-main {
+  min-height: 100vh;
+  min-height: 100svh;
+  transition: margin-left 0.2s;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+}
+
+.trigger {
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+  margin-left: 8px;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.theme-btn {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+}
+
+.user-btn {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.content {
+  margin: 16px;
+  padding: 24px;
+  min-height: calc(100vh - 64px - 32px);
+  min-height: calc(100svh - 64px - 32px);
+}
+
+/* ---------- 登录页 ---------- */
+.login-page,
+.logout-page {
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-card,
+.logout-card {
+  width: 100%;
+  max-width: 380px;
+  border-radius: 12px;
+}
+
+.login-card {
+  text-align: center;
+}
+
+.login-home {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.login-icon {
+  margin: 8px auto 16px;
+}
+
+.login-title {
+  margin-bottom: 8px !important;
+}
+
+.login-subtitle {
+  color: var(--text-secondary) !important;
+  margin-bottom: 24px !important;
+}
+
+.login-hint {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ---------- 退出页 ---------- */
+.logout-body {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logout-sub {
+  color: var(--text-secondary);
+}
+
+/* ---------- 404 ---------- */
+.not-found {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  height: 100svh;
+}
+
+/* ---------- 工具类页面（图床等） ---------- */
+.tool-page-card {
+  width: 100%;
+}
+
+.image-card,
+.admin-card {
+  border-radius: 12px;
+}
+
+.hidden-input {
+  display: none;
+}
+
+.drop-zone {
+  margin-bottom: 16px;
+}
+
+.drop-zone .ant-upload-drag {
+  border-radius: 12px;
+}
+
+.drop-zone .ant-upload-drag-icon {
+  margin-bottom: 8px;
+}
+
+.drop-zone .ant-upload-drag-icon .anticon {
+  font-size: 34px;
+}
+
+.tabs-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.recycle-hint {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.recycle-hint-block {
+  margin-bottom: 16px;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.meta-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.name-text {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.thumb {
+  border-radius: 6px;
+}
+
+.thumb .ant-image-img {
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.cell-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.cell-uid {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.uid-text {
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.row-tag {
+  margin-inline-end: 0;
+}
+
+/* ============ 移动端适配（<768px） ============ */
+@media (max-width: 767px) {
+  .header {
+    padding: 0 8px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  /* 隐藏语言文字后图标按钮统一为等大方块，保证间距一致 */
+  .lang-btn,
+  .user-btn {
+    flex: none;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .content {
+    margin: 8px;
+    padding: 12px;
+    min-height: calc(100vh - 64px - 16px);
+    min-height: calc(100svh - 64px - 16px);
+  }
+
+  .image-card .ant-card-head {
+    padding-inline: 12px;
+  }
+
+  .cell-action {
+    gap: 0;
+  }
+
+  .cell-action .ant-btn-link {
+    padding-inline: 4px;
+  }
+}

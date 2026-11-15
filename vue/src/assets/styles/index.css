@@ -9,7 +9,6 @@
 html,
 body {
   height: 100%;
-  min-height: 100vh;
   min-height: 100svh; /* 移动端用可见视口高度，避免被浏览器工具栏遮挡 */
   margin: 0;
   padding: 0;
@@ -62,7 +61,6 @@ html::before {
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
   height: 100svh;
   z-index: -1;
   pointer-events: none;

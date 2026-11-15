@@ -71,7 +71,6 @@ async function handleLogout() {
 <style scoped>
 /* 透明背景露出全局渐变底色（亮/暗自动跟随 html.dark） */
 .logout-page {
-  min-height: 100vh;
   min-height: 100svh;
   display: flex;
   align-items: center;
