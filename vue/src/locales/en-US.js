@@ -263,7 +263,7 @@ export default {
     searchUid: 'Search by user identifier',
     uid: 'User identifier',
     me: 'Me',
-    addUser: 'Add',
+    addUser: 'Add user',
     columnSetting: 'Columns',
     statusPlaceholder: 'Status',
     columns: {
@@ -317,7 +317,7 @@ export default {
     empty: 'No roles yet',
     searchPlaceholder: 'Search code / name',
     statusPlaceholder: 'Status',
-    addRole: 'New role',
+    addRole: 'Add role',
     builtIn: 'Built-in',
     builtInHint: 'Built-in roles are managed by the system; the code cannot be changed.',
     codeHint: 'Code is uppercase, starts with a letter, allows letters, digits and underscore, length 2-32.',

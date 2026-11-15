@@ -263,7 +263,7 @@ export default {
     searchUid: '按使用者識別搜尋',
     uid: '使用者識別',
     me: '我',
-    addUser: '新增',
+    addUser: '新增用戶',
     columnSetting: '欄位設定',
     statusPlaceholder: '狀態',
     columns: {

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button, Empty, Table, Tabs, Tag } from 'antd'
-import { ReloadOutlined } from '@ant-design/icons'
 
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
 import { message, modal } from '@/utils/app'
@@ -60,9 +59,6 @@ export default function AdminRecycle() {
       records.length === 1 && q.pageNum > 1 ? { ...q, pageNum: q.pageNum - 1 } : { ...q, _t: Date.now() },
     )
 
-  /** 刷新列表（回收站不再提供条件筛选，回到第一页重拉） */
-  const handleRefresh = () => setQuery((q) => ({ ...q, pageNum: 1, _t: Date.now() }))
-
   const handleTableChange = (pag) => {
     setQuery((q) => ({ ...q, pageNum: pag.current, pageSize: pag.pageSize }))
   }
@@ -112,16 +108,10 @@ export default function AdminRecycle() {
       dataIndex: 'role',
       key: 'role',
       render: (value) => (
-        <Tag color={value === 'ADMIN' ? 'gold' : 'default'} className="row-tag">
+        <Tag bordered={false} className="row-tag">
           {value}
         </Tag>
       ),
-    },
-    {
-      title: t('adminRecycle.columns.id'),
-      dataIndex: 'id',
-      key: 'id',
-      render: (value) => <span className="meta-text mono">#{value}</span>,
     },
     {
       title: t('adminRecycle.columns.deletedAt'),
@@ -159,13 +149,10 @@ export default function AdminRecycle() {
 
   return (
     <div className="admin-page">
-      {/* 按类型分 tab：当前只有「用户」回收站；刷新按钮挂在 tab 栏右侧 */}
+      {/* 按类型分 tab：当前只有「用户」回收站（不提供刷新按钮，翻页即重新拉取） */}
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
-        tabBarExtraContent={
-          <Button icon={<ReloadOutlined />} loading={loading} onClick={handleRefresh} />
-        }
         items={[
           {
             key: 'users',

@@ -262,7 +262,7 @@ export default {
     searchUid: '按用户标识搜索',
     uid: '用户标识',
     me: '我',
-    addUser: '添加',
+    addUser: '添加用户',
     columnSetting: '列设置',
     statusPlaceholder: '状态',
     columns: {
@@ -316,7 +316,7 @@ export default {
     empty: '暂无角色',
     searchPlaceholder: '按角色编码 / 名称搜索',
     statusPlaceholder: '状态',
-    addRole: '新增角色',
+    addRole: '添加角色',
     builtIn: '内置',
     builtInHint: '内置角色由系统维护，编码不可修改。',
     codeHint: '编码统一大写，字母开头，只允许字母、数字与下划线，长度 2-32。',

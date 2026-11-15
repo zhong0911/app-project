@@ -5,7 +5,6 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Empty } from 'antdv-next'
-import { ReloadOutlined } from '@antdv-next/icons'
 import { message, modal } from '@/utils/app'
 import { getAdminRecycleApi, purgeAdminUserApi, restoreAdminUserApi } from '@/api/admin'
 
@@ -20,10 +19,10 @@ const total = ref(0)
 const pageNum = ref(1)
 const pageSize = ref(10)
 
+/** 回收站只保留必要列：用户标识 + 角色 + 删除时间 + 操作（不展示自增 ID） */
 const columns = computed(() => [
   { title: t('adminRecycle.columns.uid'), dataIndex: 'uid', key: 'uid', ellipsis: true },
   { title: t('adminRecycle.columns.role'), dataIndex: 'role', key: 'role' },
-  { title: t('adminRecycle.columns.id'), dataIndex: 'id', key: 'id' },
   { title: t('adminRecycle.columns.deletedAt'), dataIndex: 'updateTime', key: 'updateTime', width: 170 },
   { title: t('adminRecycle.columns.action'), key: 'action', width: 150 },
 ])
@@ -55,11 +54,6 @@ const load = async () => {
   }
 }
 
-/** 刷新列表（回收站不再提供条件筛选，回到第一页重拉） */
-const handleRefresh = () => {
-  pageNum.value = 1
-  load()
-}
 /** 表格分页变化 */
 const handleTableChange = (pag) => {
   pageNum.value = pag.current
@@ -103,11 +97,6 @@ onMounted(load)
   <div class="admin-page">
     <!-- 按类型分 tab：当前只有「用户」回收站；其他类型（角色/部门等）预留，等有数据再补 tab 项 -->
     <a-tabs v-model:active-key="activeTab" class="recycle-tabs">
-      <template #rightExtra>
-        <a-button :loading="loading" @click="handleRefresh">
-          <ReloadOutlined />
-        </a-button>
-      </template>
       <a-tab-pane key="users" :tab="t('adminRecycle.tabUsers')">
         <a-table
           :columns="columns"
@@ -127,13 +116,7 @@ onMounted(load)
             </template>
 
             <template v-else-if="column.key === 'role'">
-              <a-tag :color="record.role === 'ADMIN' ? 'gold' : 'default'" class="row-tag">
-                {{ record.role }}
-              </a-tag>
-            </template>
-
-            <template v-else-if="column.key === 'id'">
-              <span class="meta-text mono">#{{ record.id }}</span>
+              <a-tag :bordered="false" class="row-tag">{{ record.role }}</a-tag>
             </template>
 
             <template v-else-if="column.key === 'updateTime'">
