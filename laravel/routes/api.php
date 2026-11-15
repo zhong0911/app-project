@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BffController;
 use App\Http\Controllers\Api\DemoController;
+use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,3 +42,13 @@ Route::middleware('sso.admin')->group(function () {
 // 权限示例
 Route::get('/demo/user', [DemoController::class, 'anyLoginUser'])->middleware('sso.auth');
 Route::get('/demo/admin', [DemoController::class, 'adminOnly'])->middleware('sso.admin');
+
+// 图床（需登录；图片本体走公开路由 /i/{uuid}，见 routes/image.php）
+Route::middleware('sso.auth')->prefix('image')->group(function () {
+    Route::post('/', [ImageController::class, 'upload']);
+    Route::get('/', [ImageController::class, 'page']);
+    Route::get('/recycle', [ImageController::class, 'recycle']);
+    Route::delete('/{uuid}', [ImageController::class, 'remove'])->where('uuid', '[0-9a-fA-F]{32}');
+    Route::post('/{uuid}/restore', [ImageController::class, 'restore'])->where('uuid', '[0-9a-fA-F]{32}');
+    Route::delete('/{uuid}/purge', [ImageController::class, 'purge'])->where('uuid', '[0-9a-fA-F]{32}');
+});

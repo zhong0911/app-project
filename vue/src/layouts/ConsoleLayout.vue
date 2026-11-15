@@ -23,6 +23,7 @@ import {
   SettingOutlined,
   TeamOutlined,
   DeleteOutlined,
+  PictureOutlined,
 } from '@antdv-next/icons'
 
 const route = useRoute()
@@ -59,6 +60,7 @@ const menuItems = computed(() => {
   }
   // 菜单只放业务页面；首页入口由侧边栏 logo（图标 + 标题）承担，点击即返回首页
   const items = [
+    { key: '/image-bed', label: t('nav.imageBed'), icon: PictureOutlined },
     { key: '/components', label: t('nav.components'), icon: AppstoreOutlined },
     { key: '/about', label: t('nav.about'), icon: InfoCircleOutlined },
   ]

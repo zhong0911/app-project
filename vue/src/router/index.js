@@ -61,6 +61,19 @@ const routes = [
       },
     ],
   },
+  // 图床（ConsoleLayout + 左侧菜单）
+  {
+    path: '/image-bed',
+    component: ConsoleLayout,
+    children: [
+      {
+        path: '',
+        name: 'ImageBed',
+        component: () => import('@/views/image/ImageBed.vue'),
+        meta: { title: '图床' },
+      },
+    ],
+  },
   // 管理后台（ConsoleLayout + 左侧菜单，仅管理员）：/admin 默认进入用户管理
   {
     path: '/admin',
